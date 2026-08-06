@@ -147,4 +147,100 @@ router.post(
   }
 );
 
+router.post(
+  '/fetch-user-pages',
+  requirePermission('page.view'),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { userAccessToken } = req.body;
+      if (!userAccessToken || typeof userAccessToken !== 'string') {
+        throw new BadRequestError('Vui lòng cung cấp Facebook User Access Token (dạng EAAB...)');
+      }
+
+      const cleanToken = userAccessToken.trim();
+      const response = await axios.get('https://graph.facebook.com/v19.0/me/accounts', {
+        params: {
+          access_token: cleanToken,
+          fields: 'id,name,access_token,category',
+          limit: 100,
+        },
+        timeout: 10000,
+      });
+
+      const pages = response.data?.data || [];
+      res.json({
+        success: true,
+        message: `Đã tìm thấy ${pages.length} Facebook Page trong tài khoản của bạn!`,
+        data: pages,
+      });
+    } catch (e) {
+      if (axios.isAxiosError(e)) {
+        return next(new BadRequestError(`Lỗi Facebook Graph API: ${e.response?.data?.error?.message ?? e.message}`));
+      }
+      next(e);
+    }
+  }
+);
+
+router.post(
+  '/batch-import',
+  requirePermission('page.create'),
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+      const { pages } = req.body;
+      if (!Array.isArray(pages) || !pages.length) {
+        throw new BadRequestError('Vui lòng chọn ít nhất 1 Facebook Page để nhập');
+      }
+
+      let importedCount = 0;
+      for (const p of pages) {
+        if (!p.facebookPageId || !p.pageName || !p.pageAccessToken) continue;
+        const exists = await prisma.facebookPage.findUnique({ where: { facebookPageId: p.facebookPageId } });
+        let pageId = '';
+        if (exists) {
+          await prisma.facebookPage.update({
+            where: { id: exists.id },
+            data: {
+              pageName: p.pageName,
+              encryptedPageAccessToken: encryptString(p.pageAccessToken),
+              tokenStatus: 'VALID',
+            },
+          });
+          pageId = exists.id;
+        } else {
+          const created = await prisma.facebookPage.create({
+            data: {
+              ownerId: req.user!.id,
+              pageName: p.pageName,
+              facebookPageId: p.facebookPageId,
+              encryptedPageAccessToken: encryptString(p.pageAccessToken),
+              tokenStatus: 'VALID',
+            },
+          });
+          pageId = created.id;
+        }
+
+        await prisma.userFacebookPage.upsert({
+          where: { userId_facebookPageId: { userId: req.user!.id, facebookPageId: pageId } },
+          update: { canView: true, canEditContent: true, canApproveContent: true, canPublish: true },
+          create: {
+            userId: req.user!.id,
+            facebookPageId: pageId,
+            canView: true,
+            canEditContent: true,
+            canApproveContent: true,
+            canPublish: true,
+          },
+        });
+
+        importedCount++;
+      }
+
+      res.json({ success: true, message: `Đã tự động kết nối ${importedCount} Facebook Page vào hệ thống thành công!` });
+    } catch (e) {
+      next(e);
+    }
+  }
+);
+
 export default router;

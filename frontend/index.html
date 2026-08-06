@@ -171,7 +171,7 @@ tr:hover td{background:#fff0f633}
 <div id="posts" class="panel"><div class="card"><div class="section-title"><h3>Tất cả bài viết</h3><div class="row"><select style="width:180px" id="postStatusFilter" onchange="loadPosts()"><option value="">Tất cả trạng thái</option><option>PENDING_APPROVAL</option><option>APPROVED</option><option>REJECTED</option><option>SCHEDULED</option><option>PUBLISHED</option><option>FAILED</option></select><button class="ghost small" onclick="loadPosts()">Làm mới</button></div></div><table><thead><tr><th>Nội dung bài viết</th><th>Facebook Page</th><th>Trạng thái</th><th>Thời gian lên lịch</th><th>Thao tác</th></tr></thead><tbody id="postsTbody"><tr><td colspan="5" class="empty">Đang tải...</td></tr></tbody></table></div></div>
 
 <!-- TAB 6: PAGES MANAGEMENT -->
-<div id="pages" class="panel"><div class="card"><div class="section-title"><h3>Facebook Page (Quản lý 18+ Page)</h3><button onclick="openAddPageModal()">＋ Thêm Facebook Page</button></div><table><thead><tr><th>Tên Page</th><th>Facebook Page ID</th><th>Trạng thái Token</th><th>Số bài mặc định</th><th>Khoảng cách</th><th>Hành động</th></tr></thead><tbody id="pagesTbody"><tr><td colspan="6">Đang tải...</td></tr></tbody></table></div></div>
+<div id="pages" class="panel"><div class="card"><div class="section-title"><h3>Facebook Page (Quản lý Fanpage)</h3><div class="row" style="gap:10px"><button class="ghost" onclick="openFetchUserPagesModal()" style="border-color:var(--pink);color:var(--pink);font-weight:700">⚡ Tự động tải tất cả Page từ User Token</button><button onclick="openAddPageModal()">＋ Thêm Facebook Page thủ công</button></div></div><table><thead><tr><th>Tên Page</th><th>Facebook Page ID</th><th>Trạng thái Token</th><th>Số bài mặc định</th><th>Khoảng cách</th><th>Hành động</th></tr></thead><tbody id="pagesTbody"><tr><td colspan="6">Đang tải...</td></tr></tbody></table></div></div>
 
 <!-- TAB 7: MEDIA STORE -->
 <div id="media" class="panel"><div class="grid"><div class="card c8"><div class="section-title"><h3>Kho hình ảnh và video</h3><div class="row"><label class="button" style="cursor:pointer;display:inline-block;padding:9px 15px;background:var(--pink);color:#fff;border-radius:9px;font-weight:700">↑ Tải media lên <input type="file" id="globalMediaUpload" multiple accept="image/*,video/*" style="display:none" onchange="uploadGlobalMedia(this)"></label><button class="ghost small" onclick="shuffleMediaAllocation()">🎲 Phân bổ ngẫu nhiên</button></div></div><div class="notice">Bài hình ảnh cần <b>đúng 6 hình</b> ngẫu nhiên (Fisher-Yates shuffle). Bài video cần <b>đúng 1 video</b>.</div><div id="mediaGridDisplay" class="media-grid"></div></div><div class="card c4"><h3>Kiểm tra phân bổ tài nguyên</h3><div class="notice">Thống kê dung lượng kho media dùng chung giữa các chiến dịch.</div><p>Tổng hình ảnh khả dụng: <b id="totalImagesCount">0</b></p><p>Tổng video khả dụng: <b id="totalVideosCount">0</b></p><span id="mediaStatusBadge" class="badge ok">Đủ tài nguyên</span></div></div></div>
@@ -701,6 +701,103 @@ async function rejectPost(id) {
     alert('Đã từ chối bài viết');
     loadApprovalQueue();
   } catch(err) { alert('Lỗi: ' + (err.error?.message || err.message)); }
+}
+
+function openFetchUserPagesModal() {
+  showModal(
+    '⚡ Tự Động Quét & Thêm Danh Sách Facebook Page',
+    `
+    <div class="notice" style="border-left:4px solid var(--pink);background:var(--pale);margin-bottom:15px">
+      🔑 <b>Dùng Facebook User Access Token để hiện tất cả Page:</b><br>
+      Nhập mã <b>User Access Token (bắt đầu bằng EAAB...)</b> cấp từ Graph API Explorer (có quyền <i>pages_show_list</i> / <i>pages_read_engagement</i>).<br>
+      Hệ thống sẽ <b>tự động lấy toàn bộ danh sách Page</b> mà bạn sở hữu kèm Page ID & Token để kết nối vào ứng dụng chỉ với 1 click!
+    </div>
+
+    <label>Facebook User Access Token (Mã token cá nhân EAAB...)</label>
+    <textarea id="mUserTokenInput" style="height:90px;font-size:13px;padding:10px" placeholder="Dán mã Facebook User Access Token (EAAB...) tại đây..."></textarea>
+
+    <div style="margin-top:12px;margin-bottom:15px">
+      <button type="button" class="small" style="background:linear-gradient(135deg,var(--pink),var(--dark));color:#fff;padding:9px 18px;border-radius:10px;font-weight:700" onclick="fetchPagesFromFacebookToken()">🔍 Quét Danh Sách Page</button>
+    </div>
+
+    <div id="fetchedPagesContainer" style="display:none;max-height:240px;overflow-y:auto;border:1px solid var(--line);border-radius:12px;padding:12px;background:#fff;margin-bottom:10px">
+    </div>
+    `,
+    async () => {
+      const checkboxes = document.querySelectorAll('.fetched-page-cb:checked');
+      if (!checkboxes.length) {
+        alert('Vui lòng chọn ít nhất 1 Facebook Page từ danh sách quét!');
+        return;
+      }
+      const selectedPages = [];
+      checkboxes.forEach(cb => {
+        const id = cb.dataset.id;
+        const name = cb.dataset.name;
+        const token = cb.dataset.token;
+        if (id && name && token) {
+          selectedPages.push({ facebookPageId: id, pageName: name, pageAccessToken: token });
+        }
+      });
+
+      const res = await request('/facebook-pages/batch-import', {
+        method: 'POST',
+        body: JSON.stringify({ pages: selectedPages })
+      });
+
+      alert(res.message || '✅ Đã tự động kết nối tất cả Page vào hệ thống thành công!');
+      loadData();
+    }
+  );
+}
+
+async function fetchPagesFromFacebookToken() {
+  const userAccessToken = document.getElementById('mUserTokenInput').value.trim();
+  if (!userAccessToken) {
+    alert('Vui lòng dán mã Facebook User Access Token!');
+    return;
+  }
+
+  const container = document.getElementById('fetchedPagesContainer');
+  if (container) {
+    container.style.display = 'block';
+    container.innerHTML = '<p style="color:var(--muted)">⏳ Đang truy vấn Graph API kết nối danh sách Page của bạn...</p>';
+  }
+
+  try {
+    const res = await request('/facebook-pages/fetch-user-pages', {
+      method: 'POST',
+      body: JSON.stringify({ userAccessToken })
+    });
+
+    const pages = res.data || [];
+    if (!pages.length) {
+      container.innerHTML = '<p style="color:var(--red)">Không tìm thấy Fanpage nào trong Token này. Vui lòng chọn lại Token có quyền <b>pages_show_list</b>.</p>';
+      return;
+    }
+
+    let html = `
+      <div style="font-weight:800;font-size:13px;color:var(--ink);margin-bottom:10px">
+        🎉 Đã tìm thấy ${pages.length} Facebook Page (Chọn các Page để kết nối vào ứng dụng):
+      </div>
+    `;
+
+    html += pages.map(p => `
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:#faf5f8;border:1px solid #f6e3ec;border-radius:10px;margin-bottom:8px">
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-weight:700;margin:0;font-size:13.5px">
+          <input type="checkbox" class="fetched-page-cb" checked data-id="${p.id}" data-name="${p.name}" data-token="${p.access_token}">
+          <div style="width:28px;height:28px;border-radius:8px;background:var(--pink);color:#fff;display:grid;place-items:center;font-weight:800;font-size:12px">f</div>
+          <span>${p.name}</span>
+        </label>
+        <span class="badge ok" style="font-size:11px">ID: ${p.id}</span>
+      </div>
+    `).join('');
+
+    container.innerHTML = html;
+  } catch (err) {
+    if (container) {
+      container.innerHTML = `<p style="color:var(--red)">🔴 Lỗi Graph API: ${err.error?.message || err.message || 'Token không hợp lệ'}</p>`;
+    }
+  }
 }
 
 function openAddPageModal() {
