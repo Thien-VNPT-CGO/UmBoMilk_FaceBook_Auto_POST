@@ -1426,6 +1426,52 @@ function isApproverUser() {
   });
 }
 
+async function generateWizardAiPreviewPosts() {
+  const container = document.getElementById('step7PostsContainer');
+  if (container) {
+    container.innerHTML = `
+      <div style="text-align:center;padding:45px 24px;background:#fff;border-radius:20px;border:1px solid var(--line)">
+        <div style="font-size:36px;margin-bottom:12px">🤖</div>
+        <h3 style="margin:0;color:var(--ink);font-weight:800">Đang khởi chạy AI 9router tự động viết 10 bài content...</h3>
+        <p style="color:var(--muted);font-size:13.5px;margin-top:6px">Vui lòng chờ trong giây lát. Hệ thống đang sinh nội dung hấp dẫn kèm emoji, hashtag & CTA...</p>
+      </div>
+    `;
+  }
+
+  try {
+    const res = await request('/campaigns/generate-preview', {
+      method: 'POST',
+      body: JSON.stringify({
+        prompt: wizardData.prompt || wizardData.name,
+        postCount: wizardData.defaultPostCount || 10,
+        productName: wizardData.productName,
+        brandName: wizardData.brandName,
+        tone: wizardData.tone,
+        allowEmoji: wizardData.allowEmoji,
+        allowHashtag: wizardData.allowHashtag,
+        ctaRequired: wizardData.ctaRequired,
+        mandatoryKeywords: wizardData.mandatoryKeywords ? wizardData.mandatoryKeywords.split(',').map(k=>k.trim()) : []
+      })
+    });
+
+    const list = res.data || [];
+    window.wizardAiPreviewPosts = list.map((text, i) => ({
+      id: `ai_draft_${i+1}`,
+      content: text,
+      status: 'APPROVED',
+      sequenceNumber: i + 1,
+      mediaType: wizardData.mediaMode === 'VIDEO' ? 'VIDEO' : 'IMAGE'
+    }));
+
+    currentCampaignApproved = true;
+    loadStep7Data();
+  } catch (err) {
+    if (container) {
+      container.innerHTML = `<p style="color:var(--red);padding:20px">🔴 Lỗi sinh bài AI: ${err.error?.message || err.message || 'Không thể kết nối AI Engine'}</p>`;
+    }
+  }
+}
+
 async function loadStep7Data() {
   const container = document.getElementById('step7PostsContainer');
   if (!container) return;
@@ -1449,12 +1495,22 @@ async function loadStep7Data() {
 
     let html = '';
 
+    if (!posts.length && window.wizardAiPreviewPosts && window.wizardAiPreviewPosts.length) {
+      posts = window.wizardAiPreviewPosts;
+      currentCampaignApproved = true;
+    }
+
     if (!posts.length) {
       html = `
-        <div style="text-align:center;padding:40px 20px;background:#fff;border-radius:18px;border:1px dashed var(--line)">
-          <div style="font-size:42px;margin-bottom:10px">🤖</div>
-          <h3 style="margin:0;color:var(--ink);font-weight:800">Chưa có bài viết nào trong hàng đợi</h3>
-          <p style="color:var(--muted);font-size:13px;margin-top:6px">Khi tạo chiến dịch mới, 9router / AI sẽ tự động sinh bài viết và hiển thị ở đây để Admin/Manager duyệt.</p>
+        <div style="text-align:center;padding:40px 24px;background:#fff;border-radius:20px;border:1px solid var(--line);box-shadow:0 6px 20px rgba(0,0,0,0.03)">
+          <div style="width:60px;height:60px;border-radius:18px;background:var(--pale);color:var(--dark);display:grid;place-items:center;font-size:28px;margin:0 auto 16px">🤖</div>
+          <h3 style="margin:0;color:var(--ink);font-weight:800;font-size:20px">Tự Động Sinh Nội Dung Content Bằng AI (9router Engine)</h3>
+          <p style="color:var(--muted);font-size:13.5px;margin:8px auto 20px;max-width:560px;line-height:1.6">
+            Bấm vào nút bên dưới để hệ thống AI sử dụng ý tưởng & cấu hình của bạn ở Bước 3 & Bước 4 để tự động sáng tạo <b>10 bài viết xem thử độc đáo</b>!
+          </p>
+          <button type="button" style="padding:12px 28px;border-radius:12px;font-size:15px;font-weight:800;background:linear-gradient(135deg,var(--pink),var(--dark));color:#fff;box-shadow:0 6px 20px rgba(244,91,154,0.35)" onclick="generateWizardAiPreviewPosts()">
+            🤖 Kích Hoạt AI 9router Viết 10 Bài Content
+          </button>
         </div>
       `;
     } else if (!currentCampaignApproved && !isAdmin) {

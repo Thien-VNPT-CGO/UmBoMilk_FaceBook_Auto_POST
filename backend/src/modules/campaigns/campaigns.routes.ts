@@ -95,14 +95,33 @@ router.post(
         include: { campaignPages: true },
       });
 
-      // Synchronously generate initial posts for immediate approval queue visibility
+      // Generate initial AI posts for immediate approval queue visibility
+      const previewPosts: string[] = Array.isArray(req.body.previewPosts) ? req.body.previewPosts : [];
+      let generatedAiTexts: string[] = previewPosts;
+
+      if (!generatedAiTexts.length) {
+        try {
+          const { AiService } = await import('../ai/ai.service');
+          generatedAiTexts = await AiService.generatePosts({
+            originalContent: data.originalContent,
+            productName: data.productName,
+            brandName: data.brandName,
+            tone: data.tone,
+            allowEmoji: data.allowEmoji,
+            allowHashtag: data.allowHashtag,
+            ctaRequired: data.ctaRequired,
+            mandatoryKeywords: data.mandatoryKeywords,
+            postCount: data.defaultPostCount || 10,
+          });
+        } catch (err) {
+          generatedAiTexts = [];
+        }
+      }
+
       for (const cp of created.campaignPages) {
         for (let i = 0; i < cp.postCount; i++) {
           const scheduledAt = new Date(cp.startAt.getTime() + i * cp.intervalMinutes * 60000);
-          let postContent = data.originalContent;
-          if (cp.postCount > 1) {
-            postContent = `[Bài ${i + 1}/${cp.postCount}] ${data.originalContent}`;
-          }
+          const postContent = generatedAiTexts[i % (generatedAiTexts.length || 1)] || `[Bài ${i + 1}/${cp.postCount}] ${data.originalContent}`;
           await prisma.generatedPost.create({
             data: {
               campaignId: created.id,
@@ -279,6 +298,49 @@ router.delete('/:id', requirePermission('campaigns.delete'), async (req: Request
     next(e);
   }
 });
+
+router.post(
+  '/generate-preview',
+  requirePermission('campaigns.create'),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const {
+        prompt,
+        postCount = 10,
+        productName,
+        brandName,
+        tone = 'Thân thiện, Hấp dẫn',
+        allowEmoji = true,
+        allowHashtag = true,
+        ctaRequired,
+        mandatoryKeywords = [],
+      } = req.body;
+
+      const originalContent = prompt || 'Sản phẩm sữa chất lượng cao UmBoMilk giúp bổ sung dinh dưỡng tối ưu';
+      const { AiService } = await import('../ai/ai.service');
+
+      const generated = await AiService.generatePosts({
+        originalContent,
+        productName,
+        brandName,
+        tone,
+        allowEmoji,
+        allowHashtag,
+        ctaRequired,
+        mandatoryKeywords: Array.isArray(mandatoryKeywords) ? mandatoryKeywords : [],
+        postCount: Math.min(Math.max(Number(postCount) || 10, 1), 50),
+      });
+
+      res.json({
+        success: true,
+        message: `Đã dùng AI tự động sinh ${generated.length} bài viết xem thử thành công!`,
+        data: generated,
+      });
+    } catch (e) {
+      next(e);
+    }
+  }
+);
 
 // Idempotency helper to ensure unique keys for post inserts
 export function buildIdempotencyKey(campaignId: string, facebookPageId: string, sequence: number) {

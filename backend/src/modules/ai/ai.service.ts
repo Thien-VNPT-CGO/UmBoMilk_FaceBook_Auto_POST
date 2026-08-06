@@ -29,33 +29,26 @@ export class AiService {
    * Generates rewritten post contents according to campaign specs
    */
   public static async generatePosts(config: CampaignAiConfig): Promise<string[]> {
-    const results: string[] = [];
-    for (let i = 0; i < config.postCount; i++) {
+    const promises = Array.from({ length: config.postCount }, async (_, i) => {
       let content = '';
       let isValid = false;
       let attempts = 0;
-      let errors: string[] = [];
 
-      while (!isValid && attempts < 3) {
+      while (!isValid && attempts < 2) {
         attempts++;
         content = await this.callAiEngine(config, i + 1, attempts);
         const val = this.validateContent(content, config);
         isValid = val.isValid;
-        errors = val.errors;
-        if (!isValid) {
-          logger.warn(`AI content attempt ${attempts} failed validation: ${errors.join(', ')}`);
-        }
       }
 
       if (!isValid) {
-        // Fallback to structured copy of original content with mandatory fields intact
         content = this.generateFallbackContent(config, i + 1);
       }
 
-      results.push(content.trim());
-    }
+      return content.trim();
+    });
 
-    return results;
+    return Promise.all(promises);
   }
 
   /**
@@ -175,7 +168,7 @@ Bắt buộc tuân thủ tuyệt đối:
             'Content-Type': 'application/json',
             ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}),
           },
-          timeout: 20000,
+          timeout: 3000,
         }
       );
 
