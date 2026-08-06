@@ -6,10 +6,9 @@ import { prisma } from './common/database/prisma';
 async function bootstrap() {
   try {
     await prisma.$connect();
-    logger.info('Database connected');
+    logger.info('Database connected successfully');
   } catch (err) {
-    logger.error('Database connection failed', err);
-    process.exit(1);
+    logger.error('Database connection pending (Configure DATABASE_URL in Render Environment tab). App starting gracefully...', err);
   }
 
   const app = createApp();

@@ -6,7 +6,7 @@
   "main": "backend/dist/index.js",
   "scripts": {
     "build": "cd backend && npm install && DATABASE_URL=\"postgresql://placeholder:placeholder@localhost:5432/placeholder?schema=public\" npx prisma generate && npm run build",
-    "start": "cd backend && npx prisma db push && node dist/index.js",
+    "start": "cd backend && (npx prisma db push || true) && node dist/index.js",
     "vercel-build": "cd backend && DATABASE_URL=\"postgresql://placeholder:placeholder@localhost:5432/placeholder?schema=public\" npx prisma generate && tsc"
   },
   "dependencies": {

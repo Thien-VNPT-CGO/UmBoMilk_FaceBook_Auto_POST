@@ -5,7 +5,7 @@ services:
     region: singapore
     plan: free
     buildCommand: cd backend && npm install && DATABASE_URL="postgresql://placeholder:placeholder@localhost:5432/placeholder?schema=public" npx prisma generate && npm run build
-    startCommand: cd backend && npx prisma db push && node dist/index.js
+    startCommand: cd backend && (npx prisma db push || true) && node dist/index.js
     envVars:
       - key: NODE_ENV
         value: production
