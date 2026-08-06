@@ -42,6 +42,25 @@ export async function publishPost(postId: string) {
     throw new Error(`Page ${page.pageName} (${page.facebookPageId}) không hoạt động hoặc Token bị lỗi.`);
   }
 
+  // Fallback: If post has no media assigned, auto-assign from Kho Media right before publishing
+  if (!post.postMedias || post.postMedias.length === 0) {
+    try {
+      const { MediaService } = await import('../modules/media/media.service');
+      await MediaService.assignMediaToCampaign(post.campaignId);
+      const refetchedPost = await prisma.generatedPost.findUnique({
+        where: { id: postId },
+        include: {
+          postMedias: { include: { mediaFile: true }, orderBy: { sortOrder: 'asc' } },
+        },
+      });
+      if (refetchedPost?.postMedias) {
+        post.postMedias = refetchedPost.postMedias;
+      }
+    } catch (e) {
+      logger.warn(`Auto-assigning media before publishing failed: ${(e as Error).message}`);
+    }
+  }
+
   const accessToken = decryptString(page.encryptedPageAccessToken);
   const mediaCount = post.postMedias?.length || 0;
   let facebookPostId: string | null = null;

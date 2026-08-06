@@ -21,15 +21,26 @@ export class MediaService {
     const campaign = await prisma.campaign.findUnique({
       where: { id: campaignId },
       include: {
-        mediaFiles: { where: { status: 'ACTIVE' } },
         generatedPosts: true,
       },
     });
 
     if (!campaign) throw new BadRequestError('Không tìm thấy chiến dịch');
 
-    const imageFiles = campaign.mediaFiles.filter((m) => m.mediaType === 'IMAGE');
-    const videoFiles = campaign.mediaFiles.filter((m) => m.mediaType === 'VIDEO');
+    // Get active media files: both campaign-specific AND global active media (from Kho Media)
+    const mediaFiles = await prisma.mediaFile.findMany({
+      where: {
+        status: 'ACTIVE',
+        OR: [
+          { campaignId: campaignId },
+          { campaignId: null }
+        ]
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    const imageFiles = mediaFiles.filter((m) => m.mediaType === 'IMAGE');
+    const videoFiles = mediaFiles.filter((m) => m.mediaType === 'VIDEO');
 
     const posts = campaign.generatedPosts;
 
@@ -38,10 +49,9 @@ export class MediaService {
       await prisma.postMedia.deleteMany({ where: { generatedPostId: post.id } });
 
       if (post.mediaType === 'IMAGE') {
-        if (imageFiles.length < 6 && !campaign.allowMediaReuse) {
-          throw new BadRequestError(
-            `Không đủ hình ảnh cho bài viết (${imageFiles.length}/6 hình khả dụng, tái sử dụng: tắt). Bài hình cần đúng 6 hình.`
-          );
+        if (imageFiles.length === 0) {
+          console.warn(`[MediaService] Không có hình ảnh nào khả dụng trong Kho Media cho bài viết ${post.id}`);
+          continue;
         }
 
         let selected: typeof imageFiles = [];
@@ -50,10 +60,10 @@ export class MediaService {
           const shuffled = this.shuffleArray(imageFiles);
           selected = shuffled.slice(0, 6);
         } else {
-          // Allow reuse if configured
+          // Allow reuse: shuffle and repeat available images to reach up to 6 images per post
           const shuffled = this.shuffleArray(imageFiles);
-          while (selected.length < 6 && shuffled.length > 0) {
-            selected.push(shuffled[selected.length % shuffled.length]);
+          for (let i = 0; i < 6; i++) {
+            selected.push(shuffled[i % shuffled.length]);
           }
         }
 
@@ -69,7 +79,8 @@ export class MediaService {
         }
       } else if (post.mediaType === 'VIDEO') {
         if (videoFiles.length === 0) {
-          throw new BadRequestError('Không có video nào khả dụng trong chiến dịch');
+          console.warn(`[MediaService] Không có video nào khả dụng trong Kho Media cho bài viết ${post.id}`);
+          continue;
         }
         // Pick 1 video
         const shuffled = this.shuffleArray(videoFiles);

@@ -138,6 +138,13 @@ router.post(
       }
 
       try {
+        const { MediaService } = await import('../media/media.service');
+        await MediaService.assignMediaToCampaign(created.id);
+      } catch (mediaErr) {
+        console.warn(`[CampaignRoutes] Auto-assign media warning: ${(mediaErr as Error).message}`);
+      }
+
+      try {
         await contentGenerationQueue.add(
           'generate',
           { campaignId: created.id },

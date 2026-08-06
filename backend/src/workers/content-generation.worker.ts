@@ -124,6 +124,14 @@ async function processContentGeneration(job: { data: ContentGenerationJob; id?: 
     }
   }
 
+  // Automatically assign media (6 photos / 1 video per post) from Kho Media
+  try {
+    const { MediaService } = await import('../modules/media/media.service');
+    await MediaService.assignMediaToCampaign(campaignId);
+  } catch (mediaErr) {
+    logger.warn(`[ContentGenWorker] Auto-assign media error: ${(mediaErr as Error).message}`);
+  }
+
   await prisma.campaign.update({ where: { id: campaignId }, data: { status: 'PENDING_APPROVAL' } });
   await prisma.jobLog.create({
     data: {
@@ -131,7 +139,7 @@ async function processContentGeneration(job: { data: ContentGenerationJob; id?: 
       queueName: 'content-generation-queue',
       jobId: job.id ?? 'unknown',
       eventType: 'COMPLETED',
-      message: `Đã tạo ${createdCount} bài viết AI`,
+      message: `Đã tạo ${createdCount} bài viết AI và tự động gán media từ Kho Media thành công!`,
     },
   });
 }
