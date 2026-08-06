@@ -2682,6 +2682,9 @@
 
     function renderWizard() {
       const totalSteps = steps.length;
+      if (step < 0) step = 0;
+      if (step >= totalSteps) step = totalSteps - 1;
+
       setElHtml('wizardTabs', steps.map((s, i) => {
         const isCompleted = i < step;
         const isActive = i === step;
@@ -2696,13 +2699,14 @@
           btnStyle += `background:#fff;color:var(--muted);border:1px solid var(--line);`;
         }
 
-        return `<button class="${isActive ? 'active' : ''}" style="${btnStyle}" onclick="gotoWizardStep(${i})">
+        return `<button type="button" class="${isActive ? 'active' : ''}" style="${btnStyle}" onclick="gotoWizardStep(${i})">
       <span style="width:20px;height:20px;border-radius:50%;background:${isActive ? 'rgba(255,255,255,0.25)' : isCompleted ? '#047857' : 'rgba(0,0,0,0.06)'};color:${isActive || isCompleted ? '#fff' : 'inherit'};display:grid;place-items:center;font-size:11px">${icon}</span>
       ${s.title}
     </button>`;
       }).join(''));
 
-      let content = steps[step].getHtml();
+      let currentStepObj = steps[step] || steps[0];
+      let content = currentStepObj.getHtml();
       let progressPercent = Math.round(((step + 1) / totalSteps) * 100);
 
       let buttons = `<div class="row" style="margin-top:28px;justify-content:space-between;padding-top:20px;border-top:1px solid var(--line)">
@@ -2718,7 +2722,7 @@
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
         <div>
           <span style="font-size:12px;font-weight:800;color:var(--pink);text-transform:uppercase;letter-spacing:0.5px">Tiến trình thiết lập chiến dịch (${step + 1}/${totalSteps})</span>
-          <h2 style="margin:4px 0 0;font-size:22px;font-weight:800;color:var(--ink)">Bước ${step + 1}: ${steps[step].title}</h2>
+          <h2 style="margin:4px 0 0;font-size:22px;font-weight:800;color:var(--ink)">Bước ${step + 1}: ${currentStepObj.title}</h2>
         </div>
         <span class="badge ok" style="padding:6px 14px;border-radius:10px;font-size:12px;font-weight:800">${progressPercent}% Hoàn tất</span>
       </div>
@@ -2738,7 +2742,7 @@
     }
 
     function gotoWizardStep(targetStep) {
-      step = targetStep;
+      step = Math.max(0, Math.min(targetStep, steps.length - 1));
       renderWizard();
     }
 
