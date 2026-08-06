@@ -1554,11 +1554,15 @@
         loadMedia();
 
         // Render pages table
-        const pagesHtml = pages.length ? pages.map(p => `
+        const pagesHtml = pages.length ? pages.map(p => {
+          const isExpired = p.tokenStatus === 'EXPIRED';
+          const badgeClass = p.tokenStatus === 'VALID' ? 'ok' : 'err';
+          const badgeText = isExpired ? '🔴 HẾT HẠN' : (p.tokenStatus || 'VALID');
+          return `
       <tr>
         <td><b>${p.pageName || p.name}</b></td>
         <td>${p.facebookPageId}</td>
-        <td><span class="badge ${p.tokenStatus === 'VALID' ? 'ok' : 'err'}">${p.tokenStatus || 'VALID'}</span></td>
+        <td><span class="badge ${badgeClass}">${badgeText}</span></td>
         <td>
           <button type="button" class="ghost small" style="border-radius:10px;padding:4px 10px;font-size:12px;font-weight:800;color:var(--dark);border-color:#cbd5e1;background:#f8fafc" onclick="openEditPageSettingsModal('${p.id}', '${p.pageName || p.name}', ${p.defaultPostCount || 10}, ${p.defaultIntervalMinutes || 15})">
             📝 ${p.defaultPostCount || 10} bài ✏️
@@ -1571,12 +1575,13 @@
         </td>
         <td>
           <button class="ghost small" style="color:var(--dark);border-color:var(--pink);font-weight:700" onclick="openEditPageSettingsModal('${p.id}', '${p.pageName || p.name}', ${p.defaultPostCount || 10}, ${p.defaultIntervalMinutes || 15})">⚙ Cấu hình</button>
-          <button class="ghost small" style="color:var(--dark);border-color:var(--pink)" onclick="openUpdateTokenModal('${p.id}', '${p.pageName || p.name}')">🔑 Cập nhật Token</button>
+          <button class="ghost small" style="${isExpired ? 'background:#ffe4e6;color:#e11d48;border-color:#fda4af;font-weight:800' : 'color:var(--dark);border-color:var(--pink)'}" onclick="openUpdateTokenModal('${p.id}', '${p.pageName || p.name}')">🔑 Cập nhật Token</button>
           <button class="ghost small" onclick="testPageToken('${p.id}')">Kiểm tra Token</button>
           <button class="ghost small" style="color:var(--red);border-color:var(--red)" onclick="deletePage('${p.id}')">Xóa</button>
         </td>
       </tr>
-    `).join('') : '<tr><td colspan="6" class="empty">Chưa có Facebook Page nào</td></tr>';
+    `;
+        }).join('') : '<tr><td colspan="6" class="empty">Chưa có Facebook Page nào</td></tr>';
         setElHtml('pagesTbody', pagesHtml);
 
         // Render users table with rich badges and permission management button

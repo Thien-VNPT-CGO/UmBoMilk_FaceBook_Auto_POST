@@ -184,8 +184,17 @@ export async function publishPost(postId: string) {
       ? err.response?.data?.error?.message ?? err.message
       : (err as Error).message;
 
-    if (errorMsg.includes('283') || errorMsg.includes('pages_read_engagement')) {
-      errorMsg = `Mã Token của Page ${page.pageName} thiếu quyền 'pages_read_engagement'. Vui lòng tích chọn quyền 'pages_read_engagement' khi lấy Token tại Facebook Graph API Explorer và bấm nút '🔑 Cập nhật Token' để cập nhật!`;
+    const isTokenExpired = errorMsg.includes('expired') || errorMsg.includes('access token') || errorMsg.includes('190') || errorMsg.includes('Session has expired');
+
+    if (isTokenExpired) {
+      await prisma.facebookPage.update({
+        where: { id: page.id },
+        data: { tokenStatus: 'EXPIRED' }
+      }).catch(e => logger.error('Lỗi cập nhật tokenStatus EXPIRED:', e));
+
+      errorMsg = `🔑 Access Token của Facebook Page "${page.pageName}" đã HẾT HẠN (Session has expired). Vui lòng chọn tab "Facebook Page" và bấm nút "🔑 Cập nhật Token" để cập nhật Token mới.`;
+    } else if (errorMsg.includes('283') || errorMsg.includes('pages_read_engagement')) {
+      errorMsg = `Mã Token của Page "${page.pageName}" thiếu quyền 'pages_read_engagement'. Vui lòng tích chọn quyền 'pages_read_engagement' khi lấy Token tại Facebook Graph API Explorer và bấm nút '🔑 Cập nhật Token' để cập nhật!`;
     }
 
     logger.error(`Lỗi đăng bài FB (Post ID ${post.id}): ${errorMsg}`);

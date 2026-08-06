@@ -151,10 +151,20 @@ router.post(
         params: { access_token: accessToken, fields: 'id,name' },
         timeout: 10000,
       });
-      res.json({ success: true, message: 'Token hợp lệ!', data: response.data });
+
+      if (page.tokenStatus !== 'VALID') {
+        await prisma.facebookPage.update({ where: { id: page.id }, data: { tokenStatus: 'VALID' } }).catch(() => {});
+      }
+
+      res.json({ success: true, message: `Token hợp lệ cho Page "${page.pageName}"!`, data: response.data });
     } catch (e) {
       if (axios.isAxiosError(e)) {
-        return next(new BadRequestError(`Facebook API: ${e.response?.data?.error?.message ?? e.message}`));
+        const fbError = e.response?.data?.error?.message || e.message;
+        if (fbError.includes('expired') || fbError.includes('access token') || fbError.includes('190') || fbError.includes('Session has expired')) {
+          await prisma.facebookPage.update({ where: { id: req.params.id }, data: { tokenStatus: 'EXPIRED' } }).catch(() => {});
+          return next(new BadRequestError(`🔴 Mã Access Token của Facebook Page đã HẾT HẠN (Session has expired). Vui lòng nhấn nút "🔑 Cập nhật Token" để dán Token mới!`));
+        }
+        return next(new BadRequestError(`Facebook API Error: ${fbError}`));
       }
       next(e);
     }
