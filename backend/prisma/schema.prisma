@@ -1,0 +1,349 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                 String              @id @default(uuid())
+  name               String
+  email              String              @unique
+  username           String              @unique
+  phone              String?
+  passwordHash       String
+  status             String              @default("ACTIVE") // ACTIVE, LOCKED, INACTIVE
+  mustChangePassword Boolean             @default(false)
+  lastLoginAt        DateTime?
+  createdBy          String?
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  userRoles          UserRole[]
+  userPermissions    UserPermission[]
+  userFacebookPages  UserFacebookPage[]
+  campaigns          Campaign[]
+  facebookPages      FacebookPage[]
+  auditLogs          AuditLog[]
+  loginHistories     LoginHistory[]
+  refreshTokens      RefreshToken[]
+  editedRevisions    ContentRevision[]   @relation("UserEditedRevisions")
+  approvalHistories  ApprovalHistory[]   @relation("UserApprovalHistories")
+
+  @@map("users")
+}
+
+model Role {
+  id              String           @id @default(uuid())
+  name            String           @unique
+  description     String?
+  isSystemRole    Boolean          @default(false)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  userRoles       UserRole[]
+  rolePermissions RolePermission[]
+
+  @@map("roles")
+}
+
+model Permission {
+  id              String           @id @default(uuid())
+  code            String           @unique
+  name            String
+  description     String?
+  module          String
+  createdAt       DateTime         @default(now())
+  rolePermissions RolePermission[]
+  userPermissions UserPermission[]
+
+  @@map("permissions")
+}
+
+model UserRole {
+  id        String   @id @default(uuid())
+  userId    String
+  roleId    String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, roleId])
+  @@map("user_roles")
+}
+
+model RolePermission {
+  id           String     @id @default(uuid())
+  roleId       String
+  permissionId String
+  createdAt    DateTime   @default(now())
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+enum PermissionEffect {
+  ALLOW
+  DENY
+}
+
+model UserPermission {
+  id           String           @id @default(uuid())
+  userId       String
+  permissionId String
+  effect       PermissionEffect @default(ALLOW)
+  createdAt    DateTime         @default(now())
+  user         User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  permission   Permission       @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, permissionId])
+  @@map("user_permissions")
+}
+
+model FacebookPage {
+  id                     String             @id @default(uuid())
+  ownerId                String
+  pageName               String
+  facebookPageId         String             @unique
+  encryptedPageAccessToken String
+  tokenStatus            String             @default("VALID") // VALID, EXPIRED, MISSING_PERMISSIONS, LOCKED
+  isActive               Boolean            @default(true)
+  defaultPostCount       Int                @default(10)
+  defaultIntervalMinutes Int                @default(15)
+  createdAt              DateTime           @default(now())
+  updatedAt              DateTime           @updatedAt
+  owner                  User               @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  userFacebookPages      UserFacebookPage[]
+  campaignPages          CampaignPage[]
+
+  @@map("facebook_pages")
+}
+
+model UserFacebookPage {
+  id                String       @id @default(uuid())
+  userId            String
+  facebookPageId    String
+  canView           Boolean      @default(true)
+  canEditContent    Boolean      @default(false)
+  canApproveContent Boolean      @default(false)
+  canManageSchedule Boolean      @default(false)
+  canPublish        Boolean      @default(false)
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+  user              User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  facebookPage      FacebookPage @relation(fields: [facebookPageId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, facebookPageId])
+  @@map("user_facebook_pages")
+}
+
+model Campaign {
+  id                     String          @id @default(uuid())
+  userId                 String
+  name                   String
+  description            String?
+  originalContent        String
+  contentMode            String          @default("SHARED") // SHARED, INDIVIDUAL
+  mediaMode              String          @default("IMAGE") // IMAGE, VIDEO, MIXED
+  defaultPostCount       Int             @default(10)
+  defaultIntervalMinutes Int             @default(15)
+  startDate              DateTime
+  allowedStartTime       String          @default("08:00")
+  allowedEndTime         String          @default("22:00")
+  timezone               String          @default("Asia/Ho_Chi_Minh")
+  status                 String          @default("DRAFT") // DRAFT, GENERATING, PENDING_APPROVAL, APPROVED, SCHEDULED, RUNNING, PAUSED, COMPLETED, FAILED, CANCELLED
+  mandatoryKeywords      String[]        @default([])
+  bannedKeywords         String[]        @default([])
+  tone                   String?
+  lengthConfig           String?
+  allowEmoji             Boolean         @default(true)
+  allowHashtag           Boolean         @default(true)
+  ctaRequired            String?
+  productName            String?
+  brandName              String?
+  productPrice           String?
+  discountPrice          String?
+  sku                    String?
+  allowMediaReuse        Boolean         @default(false)
+  createdAt              DateTime        @default(now())
+  updatedAt              DateTime        @updatedAt
+  user                   User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  campaignPages          CampaignPage[]
+  generatedPosts         GeneratedPost[]
+  mediaFiles             MediaFile[]
+  jobLogs                JobLog[]
+
+  @@map("campaigns")
+}
+
+model CampaignPage {
+  id                 String          @id @default(uuid())
+  campaignId         String
+  facebookPageId     String
+  postCount          Int             @default(10)
+  intervalMinutes    Int             @default(15)
+  startAt            DateTime
+  allowedStartTime   String          @default("08:00")
+  allowedEndTime     String          @default("22:00")
+  allowedWeekdays    Int[]           @default([1, 2, 3, 4, 5, 6, 7])
+  timezone           String          @default("Asia/Ho_Chi_Minh")
+  status             String          @default("SCHEDULED")
+  campaign           Campaign        @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  facebookPage       FacebookPage    @relation(fields: [facebookPageId], references: [id], onDelete: Cascade)
+  generatedPosts     GeneratedPost[]
+
+  @@unique([campaignId, facebookPageId])
+  @@map("campaign_pages")
+}
+
+model GeneratedPost {
+  id                String            @id @default(uuid())
+  campaignId        String
+  campaignPageId    String
+  sequenceNumber    Int
+  content           String
+  mediaType         String            @default("IMAGE") // IMAGE, VIDEO
+  scheduledAt       DateTime
+  publishedAt       DateTime?
+  status            String            @default("PENDING") // PENDING, GENERATING, PENDING_APPROVAL, APPROVED, REJECTED, SCHEDULED, PUBLISHING, PUBLISHED, FAILED, RETRYING, CANCELLED
+  retryCount        Int               @default(0)
+  idempotencyKey    String            @unique
+  facebookPostId    String?
+  lastErrorCode     String?
+  lastErrorMessage  String?
+  approvedAt        DateTime?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  campaign          Campaign          @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  campaignPage      CampaignPage      @relation(fields: [campaignPageId], references: [id], onDelete: Cascade)
+  postMedias        PostMedia[]
+  contentRevisions  ContentRevision[]
+  approvalHistories ApprovalHistory[]
+  jobLogs           JobLog[]
+
+  @@map("generated_posts")
+}
+
+model MediaFile {
+  id          String      @id @default(uuid())
+  campaignId  String
+  fileName    String
+  storageUrl  String
+  mimeType    String
+  fileSize    Int
+  mediaType   String      @default("IMAGE") // IMAGE, VIDEO
+  checksum    String
+  status      String      @default("ACTIVE")
+  createdAt   DateTime    @default(now())
+  campaign    Campaign    @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  postMedias  PostMedia[]
+
+  @@map("media_files")
+}
+
+model PostMedia {
+  id              String        @id @default(uuid())
+  generatedPostId String
+  mediaFileId     String
+  sortOrder       Int           @default(0)
+  generatedPost   GeneratedPost @relation(fields: [generatedPostId], references: [id], onDelete: Cascade)
+  mediaFile       MediaFile     @relation(fields: [mediaFileId], references: [id], onDelete: Cascade)
+
+  @@map("post_medias")
+}
+
+model ContentRevision {
+  id              String        @id @default(uuid())
+  generatedPostId String
+  oldContent      String
+  newContent      String
+  editedByUserId  String
+  editReason      String?
+  createdAt       DateTime      @default(now())
+  generatedPost   GeneratedPost @relation(fields: [generatedPostId], references: [id], onDelete: Cascade)
+  editedByUser    User          @relation("UserEditedRevisions", fields: [editedByUserId], references: [id])
+
+  @@map("content_revisions")
+}
+
+model ApprovalHistory {
+  id              String        @id @default(uuid())
+  generatedPostId String
+  action          String        // SUBMITTED, APPROVED, REJECTED
+  note            String?
+  performedByUserId String
+  createdAt       DateTime      @default(now())
+  generatedPost   GeneratedPost @relation(fields: [generatedPostId], references: [id], onDelete: Cascade)
+  performedByUser User          @relation("UserApprovalHistories", fields: [performedByUserId], references: [id])
+
+  @@map("approval_histories")
+}
+
+model JobLog {
+  id              String         @id @default(uuid())
+  campaignId      String?
+  generatedPostId String?
+  queueName       String
+  jobId           String
+  eventType       String         // QUEUED, PROCESSING, COMPLETED, FAILED, RETRY
+  message         String
+  metadata        Json?
+  createdAt       DateTime       @default(now())
+  campaign        Campaign?      @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+  generatedPost   GeneratedPost? @relation(fields: [generatedPostId], references: [id], onDelete: SetNull)
+
+  @@map("job_logs")
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  userId     String?
+  action     String
+  entityType String
+  entityId   String?
+  oldValue   Json?
+  newValue   Json?
+  ipAddress  String?
+  createdAt  DateTime @default(now())
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@map("audit_logs")
+}
+
+model LoginHistory {
+  id            String   @id @default(uuid())
+  userId        String
+  ipAddress     String?
+  userAgent     String?
+  success       Boolean
+  failureReason String?
+  createdAt     DateTime @default(now())
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("login_histories")
+}
+
+model RefreshToken {
+  id        String    @id @default(uuid())
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("refresh_tokens")
+}
+
+model SystemSetting {
+  id             String   @id @default(uuid())
+  key            String   @unique
+  valueEncrypted String?
+  valueJson      Json?
+  updatedBy      String?
+  updatedAt      DateTime @updatedAt
+
+  @@map("system_settings")
+}

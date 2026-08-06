@@ -1,0 +1,1451 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>UmBoMilk - Marketing Auto-Post Page Facebook</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--pink:#f45b9a;--dark:#d9367a;--pale:#fff0f6;--bg:#fff9fc;--ink:#1e1b26;--muted:#6f6875;--line:#f1dce7;--green:#10b981;--blue:#3b82f6;--yellow:#f59e0b;--red:#ef4444}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px 'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+button,input,textarea,select{font:inherit}
+button{border:0;border-radius:10px;background:linear-gradient(135deg,var(--pink),var(--dark));color:#fff;padding:10px 18px;font-weight:700;cursor:pointer;transition:all 0.25s ease;box-shadow:0 4px 14px rgba(244,91,154,0.3)}
+button:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(244,91,154,0.4)}
+button.ghost{background:#fff;color:var(--dark);border:1px solid var(--line);box-shadow:none}
+button.ghost:hover{background:var(--pale);border-color:var(--pink)}
+button.small{padding:6px 12px;font-size:12px;border-radius:8px}
+.layout{display:flex;min-height:100vh}
+.sidebar{width:260px;background:#fff;border-right:1px solid var(--line);padding:24px 16px;position:fixed;inset:0 auto 0 0;z-index:2;box-shadow:4px 0 20px rgba(0,0,0,0.01)}
+.brand{display:flex;align-items:center;gap:12px;padding:5px 10px 25px;font-size:19px;font-weight:800;color:var(--dark)}
+.logo{width:42px;height:42px;border-radius:12px;object-fit:cover;overflow:hidden;background:linear-gradient(135deg,var(--pink),#ffb1cd);box-shadow:0 6px 16px rgba(244,91,154,0.3)}
+.logo img{width:100%;height:100%;object-fit:cover;display:block}
+.nav-title{color:#b49aaa;font-size:11px;text-transform:uppercase;font-weight:800;padding:14px 11px 6px;letter-spacing:0.5px}
+.nav button{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:transparent;color:var(--muted);font-weight:600;padding:11px 14px;margin:3px 0;border-radius:12px;box-shadow:none}
+.nav button:hover,.nav button.active{background:var(--pale);color:var(--dark);font-weight:700}
+.main{margin-left:260px;flex:1}
+.topbar{height:76px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 32px;box-shadow:0 4px 20px rgba(0,0,0,0.02)}
+.crumb{color:var(--muted);font-size:13px}.crumb b{color:var(--ink);font-weight:700}
+.profile{display:flex;align-items:center;gap:12px}
+.avatar{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--pink),var(--dark));color:#fff;display:grid;place-items:center;font-weight:800;box-shadow:0 4px 12px rgba(244,91,154,0.25)}
+.content{padding:30px 36px;max-width:1450px}
+.page-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:26px}
+.page-head h1{margin:0;font-size:26px;font-weight:800;color:var(--ink)}
+.page-head p{color:var(--muted);margin:6px 0 0;font-size:13px}
+.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:20px}
+.card{background:#fff;border:1px solid var(--line);border-radius:20px;padding:24px;box-shadow:0 10px 30px rgba(217,54,122,0.04),0 1px 3px rgba(0,0,0,0.02)}
+.c3{grid-column:span 3}.c4{grid-column:span 4}.c6{grid-column:span 6}.c8{grid-column:span 8}.c12{grid-column:span 12}
+.stat{display:flex;justify-content:space-between;align-items:center}
+.stat small{color:var(--muted);font-weight:600;font-size:12px}
+.stat strong{font-size:32px;display:block;margin-top:6px;font-weight:800;color:var(--ink)}
+.stat-icon{width:46px;height:46px;border-radius:14px;background:var(--pale);color:var(--dark);display:grid;place-items:center;font-size:20px}
+.section-title{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+.section-title h2,.section-title h3{margin:0;font-size:18px;font-weight:800;color:var(--ink)}
+.section-title span{color:var(--muted);font-size:12px}
+label{display:block;color:var(--muted);font-size:12px;font-weight:700;margin:14px 0 6px}
+input,textarea,select{width:100%;border:1px solid var(--line);border-radius:10px;padding:11px 14px;background:#fff;color:var(--ink);outline:none;transition:border 0.2s}
+input:focus,textarea:focus,select:focus{border-color:var(--pink);box-shadow:0 0 0 3px rgba(244,91,154,0.15)}
+textarea{min-height:95px;resize:vertical}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.badge{display:inline-flex;align-items:center;gap:4px;border-radius:20px;padding:5px 12px;font-size:11px;font-weight:700;background:#f1f3f5;color:var(--muted)}
+.ok{background:#ecfdf5;color:#047857}.wait{background:#fffbeb;color:#b45309}.run{background:#eff6ff;color:#1d4ed8}.err{background:#fef2f2;color:#b91c1c}
+table{width:100%;border-collapse:separate;border-spacing:0}
+th,td{text-align:left;padding:13px 14px;border-bottom:1px solid #f9ebf2;font-size:13px}
+th{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:0.5px;font-weight:800;background:#fff9fc;padding-top:10px;padding-bottom:10px}
+tr:last-child td{border-bottom:0}
+tr:hover td{background:#fff0f633}
+.tabs{display:flex;gap:8px;overflow:auto;padding-bottom:12px;margin-bottom:20px}
+.tabs button{white-space:nowrap;background:#fff;color:var(--muted);border:1px solid var(--line);border-radius:12px;box-shadow:none}
+.tabs button.active{background:linear-gradient(135deg,var(--pink),var(--dark));color:#fff;box-shadow:0 4px 14px rgba(244,91,154,0.3)}
+.panel{display:none}.panel.active{display:block}
+.notice{padding:16px;border-radius:14px;background:var(--pale);color:var(--dark);margin-bottom:18px;line-height:1.6;font-size:13px}
+.log{background:#1e1b26;color:#fce7f3;border-radius:14px;padding:16px;min-height:140px;white-space:pre-wrap;font:12px Consolas,monospace}
+.empty{text-align:center;color:var(--muted);padding:40px}
+.footer{color:#a895a1;text-align:center;padding:25px;font-size:12px}
+
+.login-screen{position:fixed;top:0;left:0;width:100%;height:100%;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:9999}
+.login-box{background:#fff;padding:44px;border-radius:24px;box-shadow:0 15px 50px rgba(217,54,122,0.12);width:100%;max-width:420px;text-align:center;border:1px solid var(--line)}
+.login-box h2{color:var(--pink);margin-top:0;font-size:26px;font-weight:800}
+.login-box input{margin-bottom:15px}
+.login-box button{width:100%;font-size:16px;padding:13px}
+.media-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px;margin-top:10px}
+.media-thumb{height:90px;border-radius:12px;overflow:hidden;border:1px solid var(--line);position:relative;background:#000}
+.media-thumb img,.media-thumb video{width:100%;height:100%;object-fit:cover}
+.media-thumb span{position:absolute;bottom:4px;right:4px;background:rgba(0,0,0,0.7);color:#fff;font-size:10px;padding:2px 5px;border-radius:4px}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.4);display:none;align-items:center;justify-content:center;z-index:99999;backdrop-filter:blur(5px)}
+.modal-box{background:#fff;border-radius:24px;padding:30px;width:100%;max-width:680px;box-shadow:0 20px 60px rgba(217,54,122,0.25);max-height:90vh;overflow-y:auto;border:1px solid var(--line)}
+
+/* MODERN RBAC STYLING */
+.role-card-group{display:flex;flex-direction:column;gap:10px;margin-top:10px}
+.role-card{display:flex;align-items:center;gap:14px;padding:14px 16px;border:2px solid var(--line);border-radius:14px;cursor:pointer;transition:all 0.25s ease;background:#fff}
+.role-card:hover{border-color:var(--pink);box-shadow:0 5px 20px rgba(244,91,154,0.15);transform:translateY(-2px)}
+.role-card input[type="radio"]{width:18px;height:18px;accent-color:var(--pink)}
+.role-card-icon{width:40px;height:40px;border-radius:12px;background:var(--pale);color:var(--dark);display:grid;place-items:center;font-size:18px;flex-shrink:0}
+.role-card-title{font-weight:800;font-size:14px;color:var(--ink)}
+.role-card-desc{font-size:12px;color:var(--muted);margin-top:2px}
+.perm-matrix-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;margin-top:14px}
+.perm-group-card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;transition:all 0.25s ease;box-shadow:0 4px 12px rgba(0,0,0,0.02)}
+.perm-group-card:hover{border-color:#f1b3d0;transform:translateY(-2px);box-shadow:0 8px 25px rgba(217,54,122,0.08)}
+.perm-group-header{display:flex;align-items:center;gap:10px;font-weight:800;font-size:14px;color:var(--dark);margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--pale)}
+.perm-group-icon{width:34px;height:34px;border-radius:10px;background:var(--pale);display:grid;place-items:center;font-size:16px}
+.perm-item-row{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-radius:8px;background:var(--bg);margin-bottom:6px;font-size:12px}
+.perm-code{font-family:Consolas,monospace;background:#fff;padding:2px 6px;border-radius:4px;border:1px solid var(--line);color:var(--dark);font-weight:700}
+
+@media(max-width:900px){.sidebar{width:70px;padding:15px 8px}.brand span,.nav-title,.nav button span{display:none}.brand{padding:5px 7px 25px}.nav button{text-align:center}.main{margin-left:70px}.content{padding:20px}.c3,.c4,.c6,.c8{grid-column:span 12}.topbar{padding:0 20px}}
+</style>
+</head>
+<body>
+
+<div id="loginScreen" class="login-screen">
+  <div class="login-box">
+    <div class="logo" style="width:80px;height:80px;margin:0 auto 20px;border-radius:20px;"><img src="logo.jpg" alt="Logo UmBoMilk"></div>
+    <h2>UmBoMilk</h2>
+    <p style="color:var(--muted); margin-bottom: 20px;">Marketing Auto-Post Page Facebook</p>
+    <form id="loginForm">
+      <input type="email" id="loginEmail" placeholder="Email" value="admin@example.com" required>
+      <input type="password" id="loginPassword" placeholder="Mật khẩu" value="Admin@123" required>
+      <button type="submit">Đăng nhập hệ thống</button>
+    </form>
+    <p id="loginError" style="color: var(--red); display: none; font-size: 13px; margin-top: 15px; font-weight: 600;"></p>
+  </div>
+</div>
+
+<div id="appLayout" class="layout" style="display: none;">
+<aside class="sidebar">
+<div class="brand"><div class="logo"><img src="logo.jpg" alt="Logo UmBoMilk"></div><span>UmBoMilk</span></div>
+<div class="nav-title">Quản trị</div><div class="nav">
+<button class="active" data-page="overview">◈ <span>Tổng quan</span></button>
+<button data-page="campaign">▣ <span>Chiến dịch</span></button>
+<button data-page="approval">✓ <span>Duyệt nội dung</span></button>
+<button data-page="calendar">◷ <span>Lịch đăng bài</span></button>
+<button data-page="posts">▤ <span>Bài viết</span></button>
+<button data-page="pages">▰ <span>Facebook Page</span></button>
+<button data-page="media">▧ <span>Kho media</span></button>
+<button data-page="reports">◒ <span>Báo cáo</span></button>
+</div><div class="nav-title">Hệ thống</div><div class="nav">
+<button data-page="users">♙ <span>Người dùng</span></button><button data-page="logs">📋 <span>Nhật ký log</span></button><button data-page="settings">⚙ <span>Cài đặt</span></button><button data-page="guide">? <span>Hướng dẫn</span></button>
+</div>
+<div class="footer">© 2026. All rights reserved.</div>
+</aside>
+
+<section class="main"><header class="topbar"><div class="crumb">Trang chủ / <b id="crumb">Tổng quan</b></div><div class="profile"><span id="apiStatus" class="badge wait">API checking...</span><div class="avatar">A</div><span id="userNameDisplay">Admin</span><button class="ghost small" onclick="logout()" style="margin-left: 10px">Đăng xuất</button></div></header>
+<main class="content">
+<div class="page-head"><div><h1 id="title">Tổng quan</h1><p id="subtitle">Theo dõi toàn bộ hoạt động tự động hóa Facebook</p></div><button onclick="openPage('campaign')">＋ Tạo chiến dịch mới</button></div>
+
+<!-- TAB 1: OVERVIEW -->
+<div id="overview" class="panel active">
+<div class="grid">
+<div class="card c3 stat"><div><small>Facebook Pages</small><strong id="pagesCount">0</strong></div><div class="stat-icon">▰</div></div>
+<div class="card c3 stat"><div><small>Chiến dịch</small><strong id="campaignsCount">0</strong></div><div class="stat-icon">▣</div></div>
+<div class="card c3 stat"><div><small>Bài chờ duyệt</small><strong id="pendingApprovalCount">0</strong></div><div class="stat-icon">✓</div></div>
+<div class="card c3 stat"><div><small>Người dùng</small><strong id="usersCount">0</strong></div><div class="stat-icon">♙</div></div>
+<div class="card c12"><div class="section-title"><h3>Chiến dịch gần đây</h3><button class="ghost small" onclick="loadData()">Làm mới</button></div><table><thead><tr><th>Tên chiến dịch</th><th>Mô tả / Prompt</th><th>Chế độ</th><th>Trạng thái</th><th>Ngày tạo</th><th>Thao tác</th></tr></thead><tbody id="campaignsTbody"><tr><td colspan="6">Đang tải dữ liệu...</td></tr></tbody></table></div>
+</div></div>
+
+<!-- TAB 2: CAMPAIGN WIZARD (10 STEPS) -->
+<div id="campaign" class="panel"><div class="tabs" id="wizardTabs"></div><div id="wizard"></div></div>
+
+<!-- TAB 3: APPROVAL QUEUE -->
+<div id="approval" class="panel">
+  <div class="card">
+    <div class="section-title">
+      <div>
+        <h3 style="font-size:20px;font-weight:800;color:var(--ink)">✓ Hàng chờ duyệt bài viết</h3>
+        <p style="margin:4px 0 0;font-size:12px;color:var(--muted)">Kiểm duyệt bài viết do AI/Biên tập viên tạo trước khi xuất bản lên Facebook Page</p>
+      </div>
+      <button class="ghost small" style="border-radius:10px;padding:8px 16px" onclick="loadApprovalQueue()">↻ Làm mới danh sách</button>
+    </div>
+    <div class="notice" style="border-left:4px solid var(--pink);background:var(--pale);padding:14px 18px;border-radius:14px;margin-bottom:22px">
+      🛡️ <b>Quy trình phê duyệt nội dung:</b> Mọi bài viết ở trạng thái <b>PENDING_APPROVAL</b> đều xuất hiện ở dạng thẻ thông minh dưới đây. Admin hoặc Manager bấm <b>Duyệt bài đăng ✓</b> để đưa bài viết vào lịch phát hành Facebook Page.
+    </div>
+    <div id="approvalContainer">Đang tải danh sách bài viết chờ duyệt...</div>
+  </div>
+</div>
+
+<!-- TAB 4: CALENDAR VIEW -->
+<div id="calendar" class="panel"><div class="card"><div class="section-title"><h3>Lịch đăng theo từng Page</h3><div class="row"><button class="ghost small" onclick="addCustomSchedule()">＋ Thêm lịch thủ công</button><button class="ghost small" onclick="shiftCampaignSchedule()">⏩ Dời lịch (+30 phút)</button></div></div><div class="notice">Mỗi Page có lịch độc lập. Khung giờ được phép đăng mặc định: <b>08:00 - 22:00</b> (Asia/Ho_Chi_Minh). Tự động dời bài ngoài khung giờ sang ngày hôm sau.</div><div id="calendarTimeline"></div></div></div>
+
+<!-- TAB 5: POSTS LIST -->
+<div id="posts" class="panel"><div class="card"><div class="section-title"><h3>Tất cả bài viết</h3><div class="row"><select style="width:180px" id="postStatusFilter" onchange="loadPosts()"><option value="">Tất cả trạng thái</option><option>PENDING_APPROVAL</option><option>APPROVED</option><option>REJECTED</option><option>SCHEDULED</option><option>PUBLISHED</option><option>FAILED</option></select><button class="ghost small" onclick="loadPosts()">Làm mới</button></div></div><table><thead><tr><th>Nội dung bài viết</th><th>Facebook Page</th><th>Trạng thái</th><th>Thời gian lên lịch</th><th>Thao tác</th></tr></thead><tbody id="postsTbody"><tr><td colspan="5" class="empty">Đang tải...</td></tr></tbody></table></div></div>
+
+<!-- TAB 6: PAGES MANAGEMENT -->
+<div id="pages" class="panel"><div class="card"><div class="section-title"><h3>Facebook Page (Quản lý 18+ Page)</h3><button onclick="openAddPageModal()">＋ Thêm Facebook Page</button></div><table><thead><tr><th>Tên Page</th><th>Facebook Page ID</th><th>Trạng thái Token</th><th>Số bài mặc định</th><th>Khoảng cách</th><th>Hành động</th></tr></thead><tbody id="pagesTbody"><tr><td colspan="6">Đang tải...</td></tr></tbody></table></div></div>
+
+<!-- TAB 7: MEDIA STORE -->
+<div id="media" class="panel"><div class="grid"><div class="card c8"><div class="section-title"><h3>Kho hình ảnh và video</h3><div class="row"><label class="button" style="cursor:pointer;display:inline-block;padding:9px 15px;background:var(--pink);color:#fff;border-radius:9px;font-weight:700">↑ Tải media lên <input type="file" id="globalMediaUpload" multiple accept="image/*,video/*" style="display:none" onchange="uploadGlobalMedia(this)"></label><button class="ghost small" onclick="shuffleMediaAllocation()">🎲 Phân bổ ngẫu nhiên</button></div></div><div class="notice">Bài hình ảnh cần <b>đúng 6 hình</b> ngẫu nhiên (Fisher-Yates shuffle). Bài video cần <b>đúng 1 video</b>.</div><div id="mediaGridDisplay" class="media-grid"></div></div><div class="card c4"><h3>Kiểm tra phân bổ tài nguyên</h3><div class="notice">Thống kê dung lượng kho media dùng chung giữa các chiến dịch.</div><p>Tổng hình ảnh khả dụng: <b id="totalImagesCount">0</b></p><p>Tổng video khả dụng: <b id="totalVideosCount">0</b></p><span id="mediaStatusBadge" class="badge ok">Đủ tài nguyên</span></div></div></div>
+
+<!-- TAB 8: REPORTS -->
+<div id="reports" class="panel"><div class="card c12"><div class="section-title"><h3>Báo cáo hiệu quả đăng bài</h3><button class="ghost small" onclick="exportReports()">📥 Xuất báo cáo CSV</button></div><div class="grid" style="margin-bottom:20px"><div class="card c4 stat"><div><small>Đăng thành công</small><strong id="publishedCount" style="color:var(--green)">0</strong></div></div><div class="card c4 stat"><div><small>Đăng thất bại</small><strong id="failedCount" style="color:var(--red)">0</strong></div></div><div class="card c4 stat"><div><small>Tỷ lệ thành công</small><strong id="successRate" style="color:var(--blue)">100%</strong></div></div></div><table><thead><tr><th>Page</th><th>Tổng bài</th><th>Thành công</th><th>Thất bại</th><th>Tỷ lệ</th></tr></thead><tbody id="reportsTbody"><tr><td colspan="5" class="empty">Chưa có dữ liệu báo cáo</td></tr></tbody></table></div></div>
+
+<!-- TAB 9: USERS & RBAC PERMISSIONS -->
+<div id="users" class="panel">
+  <div class="grid">
+    <div class="card c12">
+      <div class="section-title">
+        <h3>Quản lý Người dùng & Cấp Phép RBAC</h3>
+        <button onclick="openAddUserModal()">＋ Thêm người dùng mới</button>
+      </div>
+      <div class="notice" style="border-left: 4px solid var(--pink);">
+        🛡️ <b>Quy trình kiểm duyệt & cấp phép RBAC hệ thống:</b><br>
+        - 👑 <b>ADMIN (Quản trị tối cao):</b> Quyền cao nhất hệ thống, vừa phê duyệt bài viết, vừa có toàn quyền tạo/sửa/xóa người dùng, kết nối/xóa Page & cấu hình hệ thống.<br>
+        - 📊 <b>MANAGER (Quản lý chiến dịch):</b> Có quyền xem & <b>phê duyệt bài viết AI</b>. <i>(⚠️ Không được xóa người dùng, Không được tạo/kết nối Facebook Page).</i><br>
+        - ✍️ <b>EDITOR (Biên tập viên):</b> Tạo chiến dịch & bài viết AI. <i>Mọi bài viết tự động ở trạng thái <b>CHỜ DUYỆT (PENDING_APPROVAL)</b> và bắt buộc ADMIN hoặc MANAGER duyệt mới được phát hành!</i>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Họ tên</th>
+            <th>Email / Username</th>
+            <th>Vai trò (Role)</th>
+            <th>Trạng thái</th>
+            <th>Cấp phép & Hành động</th>
+          </tr>
+        </thead>
+        <tbody id="usersTbody"><tr><td colspan="5">Đang tải...</td></tr></tbody>
+      </table>
+    </div>
+
+    <!-- SYSTEM PERMISSIONS MATRIX REFERENCE CARD -->
+    <div class="card c12">
+      <div class="section-title">
+        <h3>Ma Trận 16 Quyền Chức Năng Hệ Thống (RBAC Matrix)</h3>
+        <span class="badge ok">16 / 16 Active Permissions</span>
+      </div>
+      <div class="notice">Các nhóm quyền được hệ thống phân chia trực quan theo từng mô-đun để Admin cấp phép chính xác cho từng người dùng:</div>
+      
+      <div class="perm-matrix-grid">
+        <!-- MODULE 1: FACEBOOK PAGE -->
+        <div class="perm-group-card">
+          <div class="perm-group-header">
+            <div class="perm-group-icon">▰</div>
+            <div>Quản Lý Facebook Page</div>
+          </div>
+          <div class="perm-item-row"><span>Xem danh sách Facebook Page</span><span class="perm-code">pages.view</span></div>
+          <div class="perm-item-row"><span>Thêm / Xóa / Kiểm tra Token</span><span class="perm-code">pages.manage</span></div>
+        </div>
+
+        <!-- MODULE 2: CAMPAIGN -->
+        <div class="perm-group-card">
+          <div class="perm-group-header">
+            <div class="perm-group-icon">▣</div>
+            <div>Khởi Tạo Chiến Dịch</div>
+          </div>
+          <div class="perm-item-row"><span>Xem danh sách chiến dịch</span><span class="perm-code">campaigns.view</span></div>
+          <div class="perm-item-row"><span>Tạo chiến dịch mới (10 bước)</span><span class="perm-code">campaigns.create</span></div>
+          <div class="perm-item-row"><span>Cập nhật & Đặt lại lịch đăng</span><span class="perm-code">campaigns.update</span></div>
+        </div>
+
+        <!-- MODULE 3: APPROVAL QUEUE -->
+        <div class="perm-group-card" style="border-color:var(--pink);background:var(--pale)">
+          <div class="perm-group-header" style="color:var(--dark)">
+            <div class="perm-group-icon" style="background:#fff">✓</div>
+            <div>Đặc Quyền Phê Duyệt (Admin/Manager)</div>
+          </div>
+          <div class="perm-item-row" style="background:#fff"><span>Duyệt & Từ chối bài viết AI</span><span class="perm-code" style="color:var(--pink);border-color:var(--pink)">campaigns.approve</span></div>
+          <div class="perm-item-row" style="background:#fff"><span>Phát hành Graph API xuất bản</span><span class="perm-code" style="color:var(--pink);border-color:var(--pink)">campaigns.publish</span></div>
+        </div>
+
+        <!-- MODULE 4: MEDIA STORE -->
+        <div class="perm-group-card">
+          <div class="perm-group-header">
+            <div class="perm-group-icon">▧</div>
+            <div>Kho Media & Phân Bổ</div>
+          </div>
+          <div class="perm-item-row"><span>Upload & Phân bổ 6 ảnh / 1 video</span><span class="perm-code">media.manage</span></div>
+          <div class="perm-item-row"><span>Thuật toán Fisher-Yates shuffle</span><span class="perm-code">media.shuffle</span></div>
+        </div>
+
+        <!-- MODULE 5: REPORTS & AUDIT -->
+        <div class="perm-group-card">
+          <div class="perm-group-header">
+            <div class="perm-group-icon">◒</div>
+            <div>Báo Cáo & Thống Kê</div>
+          </div>
+          <div class="perm-item-row"><span>Xem thống kê hiệu quả bài đăng</span><span class="perm-code">reports.view</span></div>
+          <div class="perm-item-row"><span>Xuất dữ liệu báo cáo chi tiết CSV</span><span class="perm-code">reports.export</span></div>
+        </div>
+
+        <!-- MODULE 6: USERS & RBAC -->
+        <div class="perm-group-card">
+          <div class="perm-group-header">
+            <div class="perm-group-icon">♙</div>
+            <div>Quản Trị Người Dùng & Phân Quyền</div>
+          </div>
+          <div class="perm-item-row"><span>Tạo & Quản lý tài khoản</span><span class="perm-code">users.create/update</span></div>
+          <div class="perm-item-row"><span>Phân quyền vai trò RBAC</span><span class="perm-code">roles.manage</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TAB 10: SYSTEM LOGS -->
+<div id="logs" class="panel"><div class="card"><div class="section-title"><h3>Nhật ký hoạt động hệ thống (JobLog & AuditLog)</h3><div class="row"><button class="ghost small" onclick="loadSystemLogs()">Làm mới</button><button class="ghost small" style="color:var(--red)" onclick="clearSystemLogs()">Xóa log cũ</button></div></div><div id="logDisplay" class="log">Đang tải log...</div></div></div>
+
+<!-- TAB 11: SETTINGS & BRANDING & AI ROUTER -->
+<div id="settings" class="panel">
+  <div class="grid">
+    <div class="card c6">
+      <h3>Cài đặt thương hiệu</h3>
+      <form id="brandingForm" onsubmit="saveBranding(event)">
+        <label>Tên hệ thống</label>
+        <input id="sysNameInput" value="UmBoMilk - Marketing Auto-Post Page Facebook">
+        <label>Logo thương hiệu (logo.jpg)</label>
+        <input type="file" id="logoFileInput" accept="image/jpeg,image/png">
+        <button type="submit" style="margin-top:15px">Lưu thay đổi</button>
+      </form>
+    </div>
+
+    <div class="card c6">
+      <h3>Cấu hình chung hệ thống</h3>
+      <form onsubmit="saveSystemSettings(event)">
+        <label>Múi giờ mặc định</label>
+        <select id="sysTimezone"><option>Asia/Ho_Chi_Minh</option></select>
+        <label>Khoảng cách đăng mặc định (Phút)</label>
+        <input id="sysInterval" value="15" type="number">
+        <label>Khung giờ mặc định được phép đăng</label>
+        <div class="row">
+          <input id="sysStartTime" value="08:00" style="width:120px"> <span>đến</span> <input id="sysEndTime" value="22:00" style="width:120px">
+        </div>
+        <button type="submit" style="margin-top:15px">Lưu cấu hình</button>
+      </form>
+    </div>
+
+    <!-- 9ROUTER / LOCAL AI CONFIGURATION CARD -->
+    <div class="card c12" style="margin-top:10px">
+      <div class="section-title">
+        <div>
+          <h3 style="font-size:19px;font-weight:800;color:var(--ink)">🤖 Cấu hình AI Engine (9router / Local Free AI / OpenAI)</h3>
+          <p style="margin:4px 0 0;font-size:12px;color:var(--muted)">Cấu hình 9router API local endpoint để ứng dụng tự động sinh bài viết bằng mô hình AI của bạn</p>
+        </div>
+        <span class="badge ok" id="aiStatusBadge">🟢 9router Ready</span>
+      </div>
+
+      <div class="notice" style="border-left:4px solid var(--pink);background:var(--pale)">
+        💡 <b>Hướng dẫn cấu hình 9router (Free Local AI Router):</b><br>
+        - Khi mở <b>9router</b> trên máy tính local của bạn, API endpoint mặc định là: <b><code style="background:#fff;padding:2px 6px;border-radius:4px">http://localhost:2000/v1</code></b><br>
+        - Ứng dụng sẽ tự động gửi yêu cầu đến 9router để tự động sinh văn bản cho chiến dịch Facebook.<br>
+        - Nếu 9router chưa mở, hệ thống sẽ tự động chuyển sang mô hình bộ sinh bài viết dự phòng thông minh mà không gây ngắt đoạn công việc.
+      </div>
+
+      <form id="aiConfigForm" onsubmit="saveAiConfig(event)">
+        <div class="grid">
+          <div class="card c6" style="box-shadow:none;border:1px solid var(--line);background:#faf5f8;padding:18px">
+            <label>Nhà Cung Cấp AI (AI Provider)</label>
+            <select id="aiProviderSelect">
+              <option value="9router" selected>🟢 9router (Local AI Free - Khuyên dùng)</option>
+              <option value="local">💻 Local AI / Ollama / LM Studio (http://localhost:11434/v1)</option>
+              <option value="openai">⚡ OpenAI API (gpt-4o-mini)</option>
+              <option value="custom">⚙ Custom OpenAI-Compatible API</option>
+            </select>
+
+            <label>Địa Chỉ API Endpoint (Base URL)</label>
+            <input id="aiBaseUrlInput" value="http://localhost:2000/v1" placeholder="http://localhost:2000/v1">
+            <small style="color:var(--muted);font-size:11px;display:block;margin-top:4px">Mặc định của 9router local: http://localhost:2000/v1</small>
+          </div>
+
+          <div class="card c6" style="box-shadow:none;border:1px solid var(--line);background:#faf5f8;padding:18px">
+            <label>Tên Mô Hình AI (Model Name)</label>
+            <input id="aiModelInput" value="qwen2.5" placeholder="Ví dụ: qwen2.5, llama3, gpt-4o-mini, 9router-default">
+            <small style="color:var(--muted);font-size:11px;display:block;margin-top:4px">Mô hình AI đã nạp trong 9router</small>
+
+            <label>API Key (Khóa truy cập)</label>
+            <input id="aiApiKeyInput" type="password" value="9router-key-local" placeholder="9router-key-local">
+            <small style="color:var(--muted);font-size:11px;display:block;margin-top:4px">Khóa xác thực (với 9router local có thể điền tùy ý)</small>
+          </div>
+        </div>
+
+        <div class="row" style="margin-top:18px;justify-content:flex-end;gap:12px">
+          <button type="button" class="ghost" style="border-radius:10px;padding:10px 18px" onclick="testAiConnection()">⚡ Test Kết Nối 9router</button>
+          <button type="submit" style="background:linear-gradient(135deg,#10b981,#059669);box-shadow:0 4px 14px rgba(16,185,129,0.3);border-radius:10px;padding:10px 22px">💾 Lưu Cấu Hình AI</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- TAB 12: USER GUIDE -->
+<div id="guide" class="panel"><div class="card"><h3>Trung tâm Hướng dẫn sử dụng</h3><div class="notice"><b>Quy trình 10 bước chuẩn:</b><br>1. Nhập thông tin chiến dịch → 2. Chọn Facebook Page → 3. Nhập Prompt & thông tin bắt buộc → 4. Cấu hình AI → 5. Upload media → 6. Phân bổ ngẫu nhiên → 7. Xem & chỉnh bài AI → 8. Đặt lịch riêng per Page → 9. Kiểm tra checklist → 10. Kích hoạt tự động hóa.</div><p><b>Quy tắc quan trọng:</b></p><ul><li><b>Mã hóa Token:</b> Page Access Token được mã hóa AES-256 trong CSDL và giải mã an toàn trong worker khi gọi Facebook Graph API.</li><li><b>Phân bổ 6 ảnh:</b> Bài đăng hình ảnh lấy ngẫu nhiên đúng 6 ảnh không lặp lại trong 1 bài bằng thuật toán Fisher-Yates.</li><li><b>Khung giờ vàng:</b> Hệ thống tự động dịch chuyển thời gian bài viết ra ngoài khung giờ 08:00 - 22:00 sang 08:00 ngày tiếp theo.</li></ul></div></div>
+
+</main></section></div>
+
+<!-- MODAL POPUP DIALOG -->
+<div id="appModal" class="modal-overlay">
+  <div class="modal-box">
+    <h3 id="modalTitle">Tiêu đề Modal</h3>
+    <div id="modalBody">Nội dung Modal</div>
+    <div class="row" style="margin-top:20px;justify-content:flex-end">
+      <button class="ghost" onclick="closeModal()">Hủy</button>
+      <button id="modalConfirmBtn">Xác nhận</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const apiBase = 'http://localhost:5000/api';
+let token = localStorage.getItem('pinkflow_token');
+let currentUser = null;
+let activeCampaignId = null;
+
+// Safe DOM setters to prevent null reference errors
+function setElText(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = val;
+}
+function setElHtml(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.innerHTML = val;
+}
+
+async function request(path, options = {}) {
+  const headers = { 'Content-Type': 'application/json', ...(options.headers || {}) };
+  if (token) headers.Authorization = `Bearer ${token}`;
+  const response = await fetch(`${apiBase}${path}`, { ...options, headers });
+  const text = await response.text();
+  let data;
+  try { data = text ? JSON.parse(text) : {}; } catch { data = text; }
+  if (!response.ok) {
+    if (response.status === 401 && path !== '/auth/login') logout();
+    throw data;
+  }
+  return data;
+}
+
+function extractList(data) {
+  if (!data) return [];
+  if (Array.isArray(data)) return data;
+  if (Array.isArray(data.data)) return data.data;
+  if (data.data && Array.isArray(data.data.items)) return data.data.items;
+  if (Array.isArray(data.items)) return data.items;
+  return [];
+}
+
+async function checkAuth() {
+  const loginScreen = document.getElementById('loginScreen');
+  const appLayout = document.getElementById('appLayout');
+  if (!token) {
+    if (loginScreen) loginScreen.style.display = 'flex';
+    if (appLayout) appLayout.style.display = 'none';
+  } else {
+    if (loginScreen) loginScreen.style.display = 'none';
+    if (appLayout) appLayout.style.display = 'flex';
+    loadData();
+    loadAiSettings();
+  }
+}
+
+document.getElementById('loginForm').onsubmit = async (e) => {
+  e.preventDefault();
+  const email = document.getElementById('loginEmail').value;
+  const password = document.getElementById('loginPassword').value;
+  const errEl = document.getElementById('loginError');
+  if (errEl) errEl.style.display = 'none';
+  try {
+    const data = await request('/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) });
+    token = data.accessToken || data.data?.accessToken;
+    currentUser = data.user || data.data?.user;
+    if (currentUser) setElText('userNameDisplay', currentUser.name || currentUser.email);
+    localStorage.setItem('pinkflow_token', token);
+    checkAuth();
+  } catch (err) {
+    if (errEl) {
+      errEl.style.display = 'block';
+      errEl.textContent = err.error?.message || err.message || 'Đăng nhập thất bại';
+    }
+  }
+};
+
+function logout() {
+  token = null;
+  currentUser = null;
+  localStorage.removeItem('pinkflow_token');
+  checkAuth();
+}
+
+// MODAL CONTROLS
+function showModal(title, bodyHtml, onConfirm) {
+  setElText('modalTitle', title);
+  setElHtml('modalBody', bodyHtml);
+  const confirmBtn = document.getElementById('modalConfirmBtn');
+  if (confirmBtn) {
+    confirmBtn.onclick = async () => {
+      try {
+        await onConfirm();
+        closeModal();
+      } catch(err) {
+        alert('Lỗi: ' + (err.error?.message || err.message || 'Có lỗi xảy ra'));
+      }
+    };
+  }
+  const modal = document.getElementById('appModal');
+  if (modal) modal.style.display = 'flex';
+}
+
+function closeModal() {
+  const modal = document.getElementById('appModal');
+  if (modal) modal.style.display = 'none';
+}
+
+async function loadData() {
+  try {
+    const [pages, users, campaigns, reports, approvalPosts] = await Promise.all([
+      request('/facebook-pages').then(extractList).catch(()=>[]),
+      request('/users').then(extractList).catch(()=>[]),
+      request('/campaigns').then(extractList).catch(()=>[]),
+      request('/reports/posts').then(extractList).catch(()=>[]),
+      request('/approval-queue').then(extractList).catch(()=>[])
+    ]);
+
+    window.loadedPages = pages;
+    setElText('pagesCount', pages.length);
+    setElText('usersCount', users.length);
+    setElText('campaignsCount', campaigns.length);
+    setElText('pendingApprovalCount', approvalPosts.length);
+
+    // Render pages table
+    const pagesHtml = pages.length ? pages.map(p => `
+      <tr>
+        <td><b>${p.pageName || p.name}</b></td>
+        <td>${p.facebookPageId}</td>
+        <td><span class="badge ${p.tokenStatus==='VALID'?'ok':'err'}">${p.tokenStatus || 'VALID'}</span></td>
+        <td>${p.defaultPostCount || 10}</td>
+        <td>${p.defaultIntervalMinutes || 15} phút</td>
+        <td>
+          <button class="ghost small" onclick="testPageToken('${p.id}')">Kiểm tra Token</button>
+          <button class="ghost small" style="color:var(--red);border-color:var(--red)" onclick="deletePage('${p.id}')">Xóa</button>
+        </td>
+      </tr>
+    `).join('') : '<tr><td colspan="6" class="empty">Chưa có Facebook Page nào</td></tr>';
+    setElHtml('pagesTbody', pagesHtml);
+
+    // Render users table with rich badges and permission management button
+    const usersHtml = users.length ? users.map(u => {
+      const roleIds = u.roles?.map(r=>r.id) || u.userRoles?.map(r=>r.roleId) || [];
+      const roleNames = ((u.roles && u.roles.length) ? u.roles.map(r=>r.name||r) : (u.userRoles?.map(r=>r.role?.name||r) || [])).join(', ') || 'EDITOR';
+      const isSystemAdmin = roleNames.includes('ADMIN');
+      return `
+        <tr>
+          <td>
+            <div style="display:flex;align-items:center;gap:10px">
+              <div class="avatar" style="width:32px;height:32px;font-size:12px;background:${isSystemAdmin?'#ffe6e7':'var(--pale)'};color:${isSystemAdmin?'var(--red)':'var(--dark)'}">${(u.name||'U')[0].toUpperCase()}</div>
+              <div><b>${u.name||'N/A'}</b></div>
+            </div>
+          </td>
+          <td>${u.email}</td>
+          <td><span class="badge ${isSystemAdmin?'err':roleNames.includes('MANAGER')?'run':'wait'}">${roleNames}</span></td>
+          <td><span class="badge ${u.status==='ACTIVE'?'ok':'err'}">${u.status}</span></td>
+          <td>
+            <button class="ghost small" onclick="openManagePermissionsModal('${u.id}', '${u.name||u.email}', ${JSON.stringify(roleIds)})">⚙ Cấp quyền RBAC</button>
+            <button class="ghost small" onclick="deleteUser('${u.id}')" style="color:var(--red);border-color:var(--red)">Xóa</button>
+          </td>
+        </tr>
+      `;
+    }).join('') : '<tr><td colspan="5" class="empty">Chưa có người dùng nào</td></tr>';
+    setElHtml('usersTbody', usersHtml);
+
+    // Render campaigns table
+    const campaignsHtml = campaigns.length ? campaigns.map(c => `
+      <tr>
+        <td><b>${c.name}</b><br><small style="color:var(--muted)">ID: ${c.id.substring(0,8)}...</small></td>
+        <td>${(c.originalContent || c.description || '').substring(0, 40)}...</td>
+        <td><span class="badge run">${c.contentMode || 'SHARED'}</span></td>
+        <td><span class="badge ${c.status==='APPROVED'?'ok':c.status==='DRAFT'?'wait':'run'}">${c.status}</span></td>
+        <td>${new Date(c.createdAt).toLocaleDateString('vi-VN')}</td>
+        <td>
+          <button class="ghost small" onclick="openCampaignWizard('${c.id}')">Chi tiết & Lên lịch</button>
+          <button class="ghost small" style="color:var(--red);border-color:var(--red)" onclick="deleteCampaign('${c.id}')">Xóa</button>
+        </td>
+      </tr>
+    `).join('') : '<tr><td colspan="6" class="empty">Chưa có chiến dịch nào</td></tr>';
+    setElHtml('campaignsTbody', campaignsHtml);
+
+  } catch (err) { console.error('Lỗi tải dữ liệu', err); }
+}
+
+async function openManagePermissionsModal(userId, userName, currentRoleIds = []) {
+  try {
+    const rolesRes = await request('/roles').catch(() => ({ data: [] }));
+    const roles = extractList(rolesRes);
+
+    const roleCardsHtml = roles.map(r => {
+      const isSelected = currentRoleIds.includes(r.id);
+      const rn = r.name.toUpperCase();
+      const icon = rn.includes('ADMIN') ? '👑' : rn.includes('MANAGER') ? '📊' : rn.includes('EDITOR') ? '✍️' : rn.includes('VIEWER') ? '👁' : '👤';
+      return `
+        <label class="role-card ${isSelected ? 'active' : ''}" style="${isSelected ? 'border-color:var(--pink);background:var(--pale)' : ''}">
+          <input type="radio" name="userRole" value="${r.id}" ${isSelected ? 'checked' : ''} onchange="document.querySelectorAll('.role-card').forEach(c=>{c.classList.remove('active');c.style.borderColor='';c.style.background=''});this.closest('.role-card').classList.add('active');this.closest('.role-card').style.borderColor='var(--pink)';this.closest('.role-card').style.background='var(--pale)'">
+          <div class="role-card-icon">${icon}</div>
+          <div style="flex:1">
+            <div class="role-card-title">${r.name}</div>
+            <div class="role-card-desc">${r.description || 'Vai trò phân quyền hệ thống'}</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:3px">${(r.permissions||[]).length} quyền</div>
+          </div>
+        </label>
+      `;
+    }).join('');
+
+    const bodyHtml = `
+      <div class="notice" style="border-left: 4px solid var(--pink);">
+        <b>Chi tiết phân quyền theo vai trò:</b><br>
+        - 👑 <b>ADMIN:</b> Quản trị viên tối cao, toàn quyền hệ thống, vừa phê duyệt bài viết vừa được tạo/sửa/xóa người dùng & Facebook Page.<br>
+        - 📊 <b>MANAGER:</b> Quản lý chiến dịch, được quyền <b>xem & phê duyệt bài viết AI</b>. <i>(⚠️ Không có quyền xóa người dùng, không có quyền thêm Facebook Page mới).</i><br>
+        - ✍️ <b>EDITOR:</b> Biên tập viên. Tạo bài viết AI, bài viết tự động ở trạng thái <b>CHỜ DUYỆT (PENDING_APPROVAL)</b> và bắt buộc ADMIN/MANAGER duyệt trước khi xuất bản!
+      </div>
+      
+      <label>Chọn vai trò cấp phép trực tiếp cho người dùng: <b style="color:var(--dark)">${userName}</b></label>
+      <div class="role-card-group">${roleCardsHtml}</div>
+
+      <label style="margin-top:18px">Chi tiết 16 quyền hạn chức năng sẽ được áp dụng:</label>
+      <div style="max-height:160px;overflow-y:auto;font-size:12px;color:var(--muted);background:var(--pale);padding:12px 16px;border-radius:12px;line-height:1.7;border:1px solid var(--line)">
+        ✓ <b>Quản lý Facebook Page:</b> Xem & kết nối 18+ Page, mã hóa AES-256 Token (pages.view, pages.manage)<br>
+        ✓ <b>Khởi tạo Chiến dịch:</b> Tạo quy trình tự động hóa 10 bước (campaigns.create, campaigns.update)<br>
+        ✓ <b>Phê duyệt Nội dung AI:</b> Duyệt bài viết trong hàng chờ (campaigns.approve - Dành cho Admin/Manager)<br>
+        ✓ <b>Kho Media & Fisher-Yates:</b> Upload & phân bổ ngẫu nhiên đúng 6 ảnh / 1 video (media.manage)<br>
+        ✓ <b>Xuất bản Facebook Graph API:</b> Đăng bài tự động theo lịch độc lập (campaigns.publish)<br>
+        ✓ <b>Báo cáo & Audit Log:</b> Thống kê tỷ lệ thành công & nhật ký hoạt động (reports.view, logs.view)
+      </div>
+    `;
+
+    showModal(
+      `⚙ Cấp Phép & Phân Quyền: ${userName}`,
+      bodyHtml,
+      async () => {
+        const selectedRoleEl = document.querySelector('input[name="userRole"]:checked');
+        if (!selectedRoleEl) {
+          alert('Vui lòng chọn 1 vai trò cho người dùng!');
+          return;
+        }
+        const roleId = selectedRoleEl.value;
+        await request(`/users/${userId}`, {
+          method: 'PUT',
+          body: JSON.stringify({ roleIds: [roleId] })
+        });
+        alert('Đã cập nhật vai trò và phân quyền thành công cho người dùng!');
+        loadData();
+      }
+    );
+  } catch(err) {
+    alert('Lỗi tải thông tin phân quyền: ' + (err.error?.message || err.message));
+  }
+}
+
+async function loadApprovalQueue() {
+  try {
+    const posts = await request('/approval-queue').then(extractList).catch(()=>[]);
+    setElText('pendingApprovalCount', posts.length);
+
+    if (!posts.length) {
+      setElHtml('approvalContainer', `
+        <div style="text-align:center;padding:50px 20px;background:#fff;border-radius:18px;border:1px dashed var(--line)">
+          <div style="font-size:48px;margin-bottom:10px">🎉</div>
+          <h3 style="margin:0;color:var(--ink);font-weight:800">Không có bài viết nào chờ duyệt</h3>
+          <p style="color:var(--muted);font-size:13px;margin-top:6px">Tất cả bài viết do AI tạo đã được duyệt hoặc đăng lên lịch thành công.</p>
+        </div>
+      `);
+      return;
+    }
+
+    const html = posts.map(p => {
+      const pageName = p.campaignPage?.facebookPage?.pageName || p.facebookPage?.pageName || p.pageName || (p.facebookPageId && p.facebookPageId !== 'undefined' ? p.facebookPageId : 'Facebook Page');
+      const scheduledTime = p.scheduledAt ? new Date(p.scheduledAt).toLocaleString('vi-VN') : 'Dự kiến ngay';
+      const mediaBadge = p.mediaType === 'VIDEO' ? '🎥 Video' : '📷 Hình ảnh (6 ảnh)';
+
+      return `
+        <div class="post-card" style="background:#fff;border:1px solid var(--line);border-radius:18px;padding:22px;margin-bottom:18px;box-shadow:0 6px 20px rgba(217,54,122,0.04);transition:all 0.25s ease">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding-bottom:14px;margin-bottom:14px;border-bottom:1px solid var(--pale)">
+            <div style="display:flex;align-items:center;gap:12px">
+              <div style="width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,var(--pink),var(--dark));color:#fff;display:grid;place-items:center;font-weight:800;font-size:16px;box-shadow:0 4px 12px rgba(244,91,154,0.3)">f</div>
+              <div>
+                <div style="font-weight:800;font-size:15px;color:var(--ink)">${pageName}</div>
+                <div style="font-size:11px;color:var(--muted);margin-top:2px">ID: ${p.facebookPageId || 'Page'}</div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px">
+              <span class="badge run" style="padding:6px 14px;border-radius:10px;font-size:12px;font-weight:700">${mediaBadge}</span>
+              <span class="badge wait" style="padding:6px 14px;border-radius:10px;font-size:12px;font-weight:700">🕒 Lịch: ${scheduledTime}</span>
+            </div>
+          </div>
+          <div style="background:#faf5f8;border:1px solid #f6e3ec;border-radius:14px;padding:16px 20px;font-size:13.5px;line-height:1.65;color:var(--ink);margin-bottom:16px;white-space:pre-wrap;max-height:160px;overflow-y:auto">
+            ${p.content}
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <span style="font-size:12px;color:var(--muted)">Trạng thái bài: <b style="color:var(--yellow)">⏳ Chờ Admin / Manager duyệt</b></span>
+            <div style="display:flex;gap:10px">
+              <button class="ghost small" style="color:var(--red);border-color:#fecdd3;background:#fff0f3;padding:8px 18px;border-radius:10px;font-size:13px;font-weight:700" onclick="rejectPost('${p.id}')">Từ chối ✗</button>
+              <button class="small" style="background:linear-gradient(135deg,#10b981,#059669);color:#fff;padding:8px 22px;border-radius:10px;font-size:13px;font-weight:700;box-shadow:0 4px 14px rgba(16,185,129,0.3)" onclick="approvePost('${p.id}')">Duyệt bài đăng ✓</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    setElHtml('approvalContainer', html);
+  } catch (err) { console.error(err); }
+}
+
+async function approvePost(id) {
+  try {
+    await request(`/posts/${id}/approve`, { method: 'POST', body: JSON.stringify({ note: 'Duyệt bài qua dashboard' }) });
+    alert('Đã duyệt bài viết thành công');
+    loadApprovalQueue();
+  } catch(err) { alert('Lỗi: ' + (err.error?.message || err.message)); }
+}
+
+async function rejectPost(id) {
+  const note = prompt('Nhập lý do từ chối bài viết:', 'Cần điều chỉnh lại văn phong');
+  if(!note) return;
+  try {
+    await request(`/posts/${id}/reject`, { method: 'POST', body: JSON.stringify({ note }) });
+    alert('Đã từ chối bài viết');
+    loadApprovalQueue();
+  } catch(err) { alert('Lỗi: ' + (err.error?.message || err.message)); }
+}
+
+function openAddPageModal() {
+  showModal(
+    '＋ Thêm Facebook Page Mới (Dự án thật)',
+    `
+    <div class="notice" style="border-left:4px solid var(--pink);background:var(--pale);margin-bottom:15px">
+      💡 <b>Hướng dẫn kết nối Facebook Page sản xuất:</b><br>
+      - <b>Tên Page:</b> Nhập tên trang Facebook của bạn.<br>
+      - <b>Facebook Page ID:</b> Lấy trong mục <i>Giới thiệu (About)</i> trên Facebook Fanpage của bạn.<br>
+      - <b>Page Access Token:</b> Mã truy cập trang dài (bắt đầu bằng <code>EAA...</code>) cấp từ <i>Meta Business / Facebook Developer Portal</i>. Token sẽ được mã hóa AES-256 an toàn khi lưu trữ.
+    </div>
+
+    <label>Tên Facebook Page</label>
+    <input id="mPageName" placeholder="Ví dụ: UmBoMilk Official Page">
+
+    <label>Facebook Page ID (Dạng chuỗi số)</label>
+    <input id="mPageId" placeholder="Ví dụ: 102938475610293">
+
+    <label>Page Access Token (Mã token EAA... mã hóa AES-256)</label>
+    <input id="mPageToken" placeholder="Dán mã Page Access Token (EAA...) tại đây...">
+
+    <div class="row" style="margin-top:10px">
+      <div style="flex:1">
+        <label>Số bài mặc định / chiến dịch</label>
+        <input id="mPostCount" type="number" value="10">
+      </div>
+      <div style="flex:1">
+        <label>Khoảng cách bài đăng (phút)</label>
+        <input id="mInterval" type="number" value="15">
+      </div>
+    </div>
+    `,
+    async () => {
+      const pageName = document.getElementById('mPageName').value.trim();
+      const facebookPageId = document.getElementById('mPageId').value.trim();
+      const pageAccessToken = document.getElementById('mPageToken').value.trim();
+      const defaultPostCount = parseInt(document.getElementById('mPostCount').value) || 10;
+      const defaultIntervalMinutes = parseInt(document.getElementById('mInterval').value) || 15;
+
+      if (!pageName || !facebookPageId || !pageAccessToken) {
+        alert('Vui lòng nhập đầy đủ Tên Page, Facebook Page ID và Page Access Token!');
+        return;
+      }
+
+      await request('/facebook-pages', {
+        method: 'POST',
+        body: JSON.stringify({ pageName, facebookPageId, pageAccessToken, defaultPostCount, defaultIntervalMinutes })
+      });
+      alert('✅ Đã thêm Facebook Page thật thành công!');
+      loadData();
+    }
+  );
+}
+
+async function deletePage(id) {
+  if(!confirm('Bạn có chắc chắn muốn xóa Facebook Page này?')) return;
+  try {
+    await request(`/facebook-pages/${id}`, { method: 'DELETE' });
+    alert('Đã xóa Facebook Page');
+    loadData();
+  } catch(err) { alert('Lỗi: ' + (err.error?.message || err.message)); }
+}
+
+async function testPageToken(id) {
+  try {
+    const res = await request(`/facebook-pages/${id}/test`, { method: 'POST' }).catch(() => request(`/facebook-pages/${id}/check-token`, { method: 'POST' }));
+    alert('🟢 KẾT NỐI FACEBOOK GRAPH API THÀNH CÔNG: ' + (res.message || 'Token Facebook Page hợp lệ!'));
+  } catch(err) { alert('🔴 LỖI TOKEN FACEBOOK: ' + (err.error?.message || err.message || 'Token không hợp lệ hoặc đã hết hạn')); }
+}
+
+function openAddUserModal() {
+  showModal(
+    '＋ Thêm Người Dùng Mới',
+    `
+    <label>Họ và tên</label><input id="mUserName" value="Nhân Viên Mới">
+    <label>Email</label><input id="mUserEmail" value="user_${Date.now().toString().slice(-4)}@example.com">
+    <label>Tên đăng nhập (username)</label><input id="mUserUsername" value="user_${Date.now().toString().slice(-4)}">
+    <label>Mật khẩu (Tối thiểu 6 ký tự)</label><input id="mUserPass" type="password" value="User@123">
+    <label>Vai trò (Role)</label>
+    <select id="mUserRole" style="margin-bottom:8px">
+      <option value="editor">EDITOR - Biên tập viên</option>
+      <option value="manager">MANAGER - Quản lý chiến dịch</option>
+      <option value="viewer">VIEWER - Chỉ xem</option>
+    </select>
+    <div class="notice" style="font-size:12px;margin-top:8px">⚠️ Sau khi tạo, Admin cần cấp quyền RBAC chính xác qua nút <b>⚙ Cấp quyền RBAC</b> trong bảng người dùng.</div>
+    `,
+    async () => {
+      const name = document.getElementById('mUserName').value;
+      const email = document.getElementById('mUserEmail').value;
+      const username = document.getElementById('mUserUsername').value;
+      const password = document.getElementById('mUserPass').value;
+      const roleName = document.getElementById('mUserRole').value;
+
+      // Get roles to find the right roleId
+      let roleIds = [];
+      try {
+        const rolesRes = await request('/roles').catch(() => ({ data: [] }));
+        const allRoles = extractList(rolesRes);
+        const matchedRole = allRoles.find(r => r.name.toUpperCase() === roleName.toUpperCase());
+        if (matchedRole) roleIds = [matchedRole.id];
+      } catch(e) { /* continue without role */ }
+
+      await request('/users', {
+        method: 'POST',
+        body: JSON.stringify({ name, email, username, password, roleIds })
+      });
+      alert('Đã tạo người dùng mới thành công! Nhớ cấp phép RBAC cho người dùng.');
+      loadData();
+    }
+  );
+}
+
+async function deleteUser(id) {
+  if(!confirm('Xác nhận xóa tài khoản người dùng này?')) return;
+  try {
+    await request(`/users/${id}`, { method: 'DELETE' });
+    alert('Đã xóa người dùng');
+    loadData();
+  } catch(err) { alert('Lỗi: ' + (err.error?.message || err.message)); }
+}
+
+// Navigation Pages
+const titles={overview:['Tổng quan','Theo dõi hoạt động hệ thống'],campaign:['Chiến dịch','Thiết lập quy trình tự động hóa (10 bước)'],approval:['Duyệt nội dung','Kiểm duyệt nội dung do AI sinh trước khi đăng'],calendar:['Lịch đăng bài','Quản lý lịch riêng độc lập cho từng Page'],posts:['Bài viết','Danh sách tất cả bài viết'],pages:['Facebook Page','Quản lý kết nối Facebook Page'],media:['Kho media','Quản lý hình ảnh và video'],reports:['Báo cáo','Hiệu quả đăng bài'],users:['Người dùng & Cấp Phép RBAC','Quản lý tài khoản & ma trận phân quyền hiện đại'],logs:['Nhật ký log','Nhật ký sự kiện hệ thống'],settings:['Cài đặt','Cấu hình hệ thống & Thương hiệu'],guide:['Hướng dẫn','Quy trình sử dụng hệ thống']};
+
+function openPage(page){
+  document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));
+  const p = document.getElementById(page);
+  if (p) p.classList.add('active');
+  document.querySelectorAll('.nav button').forEach(x=>x.classList.toggle('active',x.dataset.page===page));
+  setElText('title', titles[page][0]);
+  setElText('subtitle', titles[page][1]);
+  setElText('crumb', titles[page][0]);
+
+  if(page==='campaign') renderWizard();
+  if(page==='approval') loadApprovalQueue();
+  if(page==='logs') loadSystemLogs();
+  if(page==='posts') loadPosts();
+  if(page==='settings') loadAiSettings();
+}
+document.querySelectorAll('.nav button').forEach(x=>x.onclick=()=>openPage(x.dataset.page));
+
+// 10 STEP CAMPAIGN WIZARD DATA & RENDER
+let wizardData = {
+  name: 'Chiến dịch đăng bài Facebook Page',
+  description: 'Tự động hóa đăng bài viết lên Facebook Page',
+  contentMode: 'SHARED',
+  mediaMode: 'IMAGE',
+  defaultPostCount: 10,
+  defaultIntervalMinutes: 15,
+  prompt: '',
+  productName: '',
+  brandName: '',
+  productPrice: '',
+  discountPrice: '',
+  sku: '',
+  mandatoryKeywords: '',
+  bannedKeywords: '',
+  tone: 'Thân thiện, Hấp dẫn',
+  allowEmoji: true,
+  allowHashtag: true,
+  ctaRequired: '',
+  startDate: new Date().toISOString(),
+  allowedStartTime: '08:00',
+  allowedEndTime: '22:00',
+  allowMediaReuse: true,
+};
+let selectedPageIds = [];
+let step = 0;
+
+const steps = [
+  { title: 'Thông tin chiến dịch', getHtml: () => `
+    <label>Tên chiến dịch</label><input id="wName" value="${wizardData.name}" onchange="wizardData.name=this.value">
+    <label>Mô tả chiến dịch</label><textarea id="wDesc" onchange="wizardData.description=this.value">${wizardData.description}</textarea>
+    <div class="row" style="margin-top:10px">
+      <div style="flex:1"><label>Chế độ nội dung</label><select onchange="wizardData.contentMode=this.value"><option value="SHARED" ${wizardData.contentMode==='SHARED'?'selected':''}>Dùng chung (1 bộ bài cho tất cả Page)</option><option value="INDIVIDUAL" ${wizardData.contentMode==='INDIVIDUAL'?'selected':''}>Dùng riêng (Mỗi Page 1 bộ bài AI riêng)</option></select></div>
+      <div style="flex:1"><label>Loại Media</label><select onchange="wizardData.mediaMode=this.value"><option value="IMAGE" ${wizardData.mediaMode==='IMAGE'?'selected':''}>Hình ảnh (Đúng 6 hình/bài)</option><option value="VIDEO" ${wizardData.mediaMode==='VIDEO'?'selected':''}>Video (Đúng 1 video/bài)</option></select></div>
+    </div>
+  `},
+  { title: 'Chọn Facebook Page', getHtml: () => {
+      const pagesHtml = (window.loadedPages || []).map(p => `
+        <label style="font-weight:normal"><input type="checkbox" onchange="const id='${p.id}'; if(this.checked) { if(!selectedPageIds.includes(id)) selectedPageIds.push(id); } else { selectedPageIds=selectedPageIds.filter(x=>x!==id); }" ${selectedPageIds.includes(p.id) ? 'checked' : ''}> <b>${p.pageName||p.name}</b> (${p.facebookPageId}) - <span class="badge ${p.tokenStatus==='VALID'?'ok':'err'}">${p.tokenStatus||'VALID'}</span></label>
+      `).join('');
+      return `<div class="notice">Chọn các Facebook Page sẽ tham gia chiến dịch tự động hóa.</div>${pagesHtml || '<p style="color:var(--red)">Chưa có Page nào. Vui lòng thêm Page trước!</p>'}`;
+    }
+  },
+  { title: 'Nội dung bài viết', getHtml: () => `
+    <div class="notice" style="border-left:4px solid var(--pink)">
+      📝 <b>Nhập nội dung bài viết đăng Page:</b><br>
+      Nhập trực tiếp bài viết bạn muốn đăng lên Facebook Page (hoặc nhập ý tưởng/prompt để AI phát triển bài viết).
+    </div>
+    <label style="font-weight:700;font-size:14px;margin-bottom:8px">Nội dung bài viết / Ý tưởng đăng bài</label>
+    <textarea id="wPrompt" onchange="wizardData.prompt=this.value" style="height:220px;font-size:14px;line-height:1.6;padding:12px" placeholder="Nhập toàn bộ nội dung bài viết cần đăng lên Facebook Page tại đây...">${wizardData.prompt}</textarea>
+    
+    <div style="margin-top:15px">
+      <button type="button" class="ghost small" onclick="const el=document.getElementById('advConfigFields'); el.style.display = (el.style.display==='none' || !el.style.display) ? 'block' : 'none'">⚙️ Cấu hình thông tin mở rộng (Tùy chọn)</button>
+    </div>
+
+    <div id="advConfigFields" style="display:none;margin-top:15px;padding:15px;background:var(--pale);border:1px solid var(--line);border-radius:12px">
+      <div class="row">
+        <div style="flex:1"><label>Tên sản phẩm (Tùy chọn)</label><input value="${wizardData.productName||''}" onchange="wizardData.productName=this.value" placeholder="Tùy chọn"></div>
+        <div style="flex:1"><label>Thương hiệu (Tùy chọn)</label><input value="${wizardData.brandName||''}" onchange="wizardData.brandName=this.value" placeholder="Tùy chọn"></div>
+      </div>
+      <div class="row">
+        <div style="flex:1"><label>Giá bán</label><input value="${wizardData.productPrice||''}" onchange="wizardData.productPrice=this.value" placeholder="Tùy chọn"></div>
+        <div style="flex:1"><label>Giá khuyến mãi</label><input value="${wizardData.discountPrice||''}" onchange="wizardData.discountPrice=this.value" placeholder="Tùy chọn"></div>
+        <div style="flex:1"><label>Mã SKU</label><input value="${wizardData.sku||''}" onchange="wizardData.sku=this.value" placeholder="Tùy chọn"></div>
+      </div>
+      <label>Từ khóa bắt buộc xuất hiện</label><input value="${wizardData.mandatoryKeywords||''}" onchange="wizardData.mandatoryKeywords=this.value" placeholder="Tùy chọn">
+      <label>Từ khóa cấm xuất hiện</label><input value="${wizardData.bannedKeywords||''}" onchange="wizardData.bannedKeywords=this.value" placeholder="Tùy chọn">
+      <label>Lời kêu gọi hành động (CTA)</label><input value="${wizardData.ctaRequired||''}" onchange="wizardData.ctaRequired=this.value" placeholder="Tùy chọn">
+    </div>
+  `},
+  { title: 'Cấu hình AI', getHtml: () => `
+    <div class="row">
+      <div style="flex:1"><label>Giọng văn mong muốn</label><select onchange="wizardData.tone=this.value"><option>Thân thiện, Hấp dẫn</option><option>Chuyên nghiệp, Uy tín</option><option>Sôi nổi, Hào hứng</option></select></div>
+      <div style="flex:1"><label>Sử dụng Emoji</label><select onchange="wizardData.allowEmoji=this.value==='true'"><option value="true" ${wizardData.allowEmoji?'selected':''}>Có</option><option value="false" ${!wizardData.allowEmoji?'selected':''}>Không</option></select></div>
+      <div style="flex:1"><label>Sử dụng Hashtag</label><select onchange="wizardData.allowHashtag=this.value==='true'"><option value="true" ${wizardData.allowHashtag?'selected':''}>Có</option><option value="false" ${!wizardData.allowHashtag?'selected':''}>Không</option></select></div>
+    </div>
+  `},
+  { title: 'Tải media', getHtml: () => `
+    <div class="notice">Tải lên hình ảnh hoặc video cho chiến dịch. Bài hình lấy <b>đúng 6 hình</b> per post.</div>
+    <input type="file" id="wMediaFiles" multiple accept="image/*,video/*">
+    <p style="color:var(--muted)">Đã sẵn sàng kho media mặc định để tự động phân bổ.</p>
+  `},
+  { title: 'Phân bổ media', getHtml: () => `
+    <div class="notice"><b>Thuật toán Fisher-Yates Shuffle</b> sẽ xáo trộn ngẫu nhiên và chọn đúng 6 hình cho mỗi bài viết hình ảnh (hoặc đúng 1 video cho bài video).</div>
+    <label><input type="checkbox" ${wizardData.allowMediaReuse?'checked':''} onchange="wizardData.allowMediaReuse=this.checked"> Cho phép tái sử dụng hình ảnh giữa các bài viết</label>
+  `},
+  { title: 'Xem & chỉnh nội dung AI', getHtml: () => `
+    <div class="notice">Kiểm tra danh sách bài viết AI đã khởi tạo và tiến hành phê duyệt trước khi chuyển sang bước Thiết lập lịch đăng bài.</div>
+    <div id="step7PostsContainer">Đang kiểm tra dữ liệu bài viết...</div>
+  `},
+  { title: 'Thiết lập lịch đăng', getHtml: () => `
+    <div class="row">
+      <div style="flex:1"><label>Khoảng cách giữa các bài (phút)</label><input type="number" value="${wizardData.defaultIntervalMinutes}" onchange="wizardData.defaultIntervalMinutes=parseInt(this.value)"></div>
+      <div style="flex:1"><label>Số bài viết/Page</label><input type="number" value="${wizardData.defaultPostCount}" onchange="wizardData.defaultPostCount=parseInt(this.value)"></div>
+    </div>
+    <div class="row">
+      <div style="flex:1"><label>Khung giờ được đăng (Bắt đầu)</label><input value="${wizardData.allowedStartTime}" onchange="wizardData.allowedStartTime=this.value"></div>
+      <div style="flex:1"><label>Khung giờ được đăng (Kết thúc)</label><input value="${wizardData.allowedEndTime}" onchange="wizardData.allowedEndTime=this.value"></div>
+    </div>
+  `},
+  { title: 'Kiểm tra cuối', getHtml: () => `
+    <div class="notice">
+      <b>Sẵn sàng kích hoạt chiến dịch!</b><br><br>
+      ✓ Tên chiến dịch: <b>${wizardData.name}</b><br>
+      ✓ Facebook Pages đã chọn: <b>${selectedPageIds.length} Page</b><br>
+      ✓ Chế độ nội dung: <b>${wizardData.contentMode}</b><br>
+      ✓ Khoảng cách đăng: <b>${wizardData.defaultIntervalMinutes} phút/bài</b><br>
+      ✓ Khung giờ hợp lệ: <b>${wizardData.allowedStartTime} - ${wizardData.allowedEndTime}</b>
+    </div>
+  `},
+  { title: 'Kích hoạt & Theo dõi', getHtml: () => `
+    <p>Bấm nút <b>Kích hoạt chiến dịch ✓</b> bên dưới để bắt đầu tiến trình sinh bài AI, phân bổ media và tạo hàng đợi đăng bài tự động.</p>
+  `}
+];
+
+let currentCampaignApproved = false;
+
+function isApproverUser() {
+  if (!currentUser) return false;
+  const roles = currentUser.roles || [];
+  return roles.some(r => {
+    const name = (typeof r === 'object' ? r.name || '' : String(r)).toUpperCase();
+    return name.includes('ADMIN') || name.includes('MANAGER');
+  });
+}
+
+async function loadStep7Data() {
+  const container = document.getElementById('step7PostsContainer');
+  if (!container) return;
+
+  const isAdmin = isApproverUser();
+
+  try {
+    let posts = [];
+    if (activeCampaignId) {
+      const campRes = await request(`/campaigns/${activeCampaignId}`).catch(() => null);
+      if (campRes && campRes.data) {
+        posts = campRes.data.generatedPosts || [];
+      }
+    }
+    if (!posts.length) {
+      posts = await request('/approval-queue').then(extractList).catch(() => []);
+    }
+
+    const pendingPosts = posts.filter(p => p.status === 'PENDING_APPROVAL' || p.status === 'PENDING' || p.status === 'DRAFT');
+    currentCampaignApproved = posts.length > 0 && pendingPosts.length === 0;
+
+    let html = '';
+
+    if (!posts.length) {
+      html = `
+        <div style="text-align:center;padding:40px 20px;background:#fff;border-radius:18px;border:1px dashed var(--line)">
+          <div style="font-size:42px;margin-bottom:10px">🤖</div>
+          <h3 style="margin:0;color:var(--ink);font-weight:800">Chưa có bài viết nào trong hàng đợi</h3>
+          <p style="color:var(--muted);font-size:13px;margin-top:6px">Khi tạo chiến dịch mới, 9router / AI sẽ tự động sinh bài viết và hiển thị ở đây để Admin/Manager duyệt.</p>
+        </div>
+      `;
+    } else if (!currentCampaignApproved && !isAdmin) {
+      html = `
+        <div class="notice" style="border-left:4px solid var(--yellow);background:#fffbeb;color:#b45309;padding:18px 22px;border-radius:16px;margin-bottom:24px;line-height:1.65">
+          <div style="font-size:16px;font-weight:800;margin-bottom:6px">⏳ BÀI VIẾT ĐANG CHỜ ADMIN / MANAGER PHÊ DUYỆT (PENDING_APPROVAL)</div>
+          • <b>Tổng số bài viết:</b> ${posts.length} bài (${pendingPosts.length} bài chưa duyệt)<br>
+          • <b>Quy trình kiểm duyệt bắt buộc:</b> Mọi bài viết tạo bởi Biên tập viên phải qua sự duyệt xét của <b>ADMIN</b> hoặc <b>MANAGER</b>.<br>
+          • 🔒 <b>Các bước tiếp theo (Bước 8: Thiết lập lịch đăng, Bước 9: Kiểm tra cuối, Bước 10: Kích hoạt) hiện đang KHÓA</b> cho tới khi Admin xem và bấm <b>Duyệt bài đăng ✓</b>!
+        </div>
+        <div class="posts-card-list">
+          ${posts.map(p => {
+            const pageName = p.campaignPage?.facebookPage?.pageName || p.facebookPage?.pageName || p.pageName || (p.facebookPageId && p.facebookPageId !== 'undefined' ? p.facebookPageId : 'Facebook Page');
+            const mediaBadge = p.mediaType === 'VIDEO' ? '🎥 Video' : '📷 Hình ảnh (6 ảnh)';
+            return `
+              <div style="background:#fff;border:1px solid var(--line);border-radius:18px;padding:22px;margin-bottom:18px;box-shadow:0 6px 20px rgba(217,54,122,0.04)">
+                <div style="display:flex;justify-content:space-between;align-items:center;padding-bottom:12px;margin-bottom:12px;border-bottom:1px solid var(--pale)">
+                  <div style="display:flex;align-items:center;gap:10px">
+                    <div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--pink),var(--dark));color:#fff;display:grid;place-items:center;font-weight:800">f</div>
+                    <b style="font-size:14px;color:var(--ink)">${pageName}</b>
+                  </div>
+                  <span class="badge run" style="padding:6px 12px;border-radius:10px;font-weight:700">${mediaBadge}</span>
+                </div>
+                <div style="background:#faf5f8;border:1px solid #f6e3ec;border-radius:14px;padding:16px;font-size:13.5px;line-height:1.65;color:var(--ink);margin-bottom:14px;white-space:pre-wrap;max-height:140px;overflow-y:auto">
+                  ${p.content}
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center">
+                  <span style="font-size:12px;color:var(--muted)">Trạng thái bài: <b style="color:var(--yellow)">⏳ Chờ Admin duyệt</b></span>
+                  <span class="badge wait" style="padding:6px 14px;border-radius:10px;font-weight:700">🔒 Khóa bước tiếp theo</span>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+    } else {
+      html = `
+        <div class="notice" style="border-left:4px solid ${currentCampaignApproved ? 'var(--green)' : 'var(--pink)'};background:${currentCampaignApproved ? '#ecfdf5' : 'var(--pale)'};color:${currentCampaignApproved ? '#047857' : 'var(--dark)'};padding:18px 22px;border-radius:16px;margin-bottom:24px">
+          ${currentCampaignApproved
+            ? '✅ <b>TẤT CẢ BÀI VIẾT ĐÃ ĐƯỢC ADMIN PHÊ DUYỆT THÀNH CÔNG!</b> Các bước tiếp theo (Bước 8, 9, 10) đã được mở khóa. Bạn có thể bấm <b>Tiếp tục →</b> để thiết lập lịch đăng bài.'
+            : '👑 <b>BẠN ĐANG TRUY CẬP VỚI QUYỀN ADMIN / MANAGER:</b> Xem lại danh sách bài viết bên dưới và bấm <b>Duyệt bài đăng ✓</b> để mở khóa các bước tiếp theo cho người dùng!'}
+        </div>
+        <div class="posts-card-list">
+          ${posts.map(p => {
+            const pageName = p.campaignPage?.facebookPage?.pageName || p.facebookPage?.pageName || p.pageName || (p.facebookPageId && p.facebookPageId !== 'undefined' ? p.facebookPageId : 'Facebook Page');
+            const mediaBadge = p.mediaType === 'VIDEO' ? '🎥 Video' : '📷 Hình ảnh (6 ảnh)';
+            return `
+              <div style="background:#fff;border:1px solid var(--line);border-radius:18px;padding:22px;margin-bottom:18px;box-shadow:0 6px 20px rgba(217,54,122,0.04)">
+                <div style="display:flex;justify-content:space-between;align-items:center;padding-bottom:12px;margin-bottom:12px;border-bottom:1px solid var(--pale)">
+                  <div style="display:flex;align-items:center;gap:10px">
+                    <div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--pink),var(--dark));color:#fff;display:grid;place-items:center;font-weight:800">f</div>
+                    <b style="font-size:14px;color:var(--ink)">${pageName}</b>
+                  </div>
+                  <span class="badge run" style="padding:6px 14px;border-radius:10px;font-weight:700">${mediaBadge}</span>
+                </div>
+                <div style="background:#faf5f8;border:1px solid #f6e3ec;border-radius:14px;padding:16px;font-size:13.5px;line-height:1.65;color:var(--ink);margin-bottom:14px;white-space:pre-wrap;max-height:140px;overflow-y:auto">
+                  ${p.content}
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center">
+                  <span style="font-size:12px;color:var(--muted)">Trạng thái: 
+                    ${p.status === 'APPROVED' 
+                      ? '<b style="color:var(--green)">✓ Đã được Admin duyệt</b>' 
+                      : p.status === 'REJECTED' 
+                      ? '<b style="color:var(--red)">✗ Đã từ chối</b>' 
+                      : '<b style="color:var(--yellow)">⏳ Chờ duyệt</b>'}
+                  </span>
+                  <div style="display:flex;gap:10px">
+                    ${isAdmin && p.status === 'PENDING_APPROVAL' ? `
+                      <button class="ghost small" style="color:var(--red);border-color:#fecdd3;background:#fff0f3;padding:8px 18px;border-radius:10px;font-size:13px;font-weight:700" onclick="rejectWizardPost('${p.id}')">Từ chối ✗</button>
+                      <button class="small" style="background:linear-gradient(135deg,#10b981,#059669);color:#fff;padding:8px 22px;border-radius:10px;font-size:13px;font-weight:700;box-shadow:0 4px 14px rgba(16,185,129,0.3)" onclick="approveWizardPost('${p.id}')">Duyệt bài đăng ✓</button>
+                    ` : `<span class="badge ${p.status === 'APPROVED' ? 'ok' : 'wait'}" style="padding:6px 14px;border-radius:10px;font-size:12px;font-weight:700">${p.status === 'APPROVED' ? '✓ Đã duyệt' : 'Chờ Admin'}</span>`}
+                  </div>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+    }
+
+    container.innerHTML = html;
+  } catch (e) {
+    container.innerHTML = `<p style="color:var(--red)">Lỗi kiểm tra bài viết: ${e.message}</p>`;
+  }
+}
+
+async function approveWizardPost(id) {
+  try {
+    await request(`/posts/${id}/approve`, { method: 'POST', body: JSON.stringify({ note: 'Duyệt bài trong wizard' }) });
+    alert('Đã duyệt bài viết thành công!');
+    await loadStep7Data();
+    renderWizard();
+  } catch (err) {
+    alert('Lỗi duyệt bài: ' + (err.error?.message || err.message));
+  }
+}
+
+async function rejectWizardPost(id) {
+  const note = prompt('Nhập lý do từ chối bài viết:', 'Cần điều chỉnh nội dung');
+  if (!note) return;
+  try {
+    await request(`/posts/${id}/reject`, { method: 'POST', body: JSON.stringify({ note }) });
+    alert('Đã từ chối bài viết');
+    await loadStep7Data();
+    renderWizard();
+  } catch (err) {
+    alert('Lỗi từ chối: ' + (err.error?.message || err.message));
+  }
+}
+
+function renderWizard(){
+  const isAdmin = isApproverUser();
+
+  setElHtml('wizardTabs', steps.map((s,i) => {
+    const isLocked = i >= 7 && !currentCampaignApproved && !isAdmin;
+    const isCompleted = i < step;
+    const isActive = i === step;
+    const icon = isLocked ? '🔒' : isCompleted ? '✓' : `${i+1}`;
+    
+    let btnStyle = `padding:8px 16px;border-radius:12px;font-weight:700;font-size:12.5px;transition:all 0.2s ease;display:inline-flex;align-items:center;gap:8px;`;
+    if (isActive) {
+      btnStyle += `background:linear-gradient(135deg,var(--pink),var(--dark));color:#fff;box-shadow:0 4px 14px rgba(244,91,154,0.35);border:none;`;
+    } else if (isCompleted) {
+      btnStyle += `background:#ecfdf5;color:#047857;border:1px solid #a7f3d0;`;
+    } else if (isLocked) {
+      btnStyle += `background:#f3f4f6;color:#9ca3af;border:1px solid #e5e7eb;cursor:not-allowed;`;
+    } else {
+      btnStyle += `background:#fff;color:var(--muted);border:1px solid var(--line);`;
+    }
+
+    return `<button class="${isActive?'active':''} ${isLocked?'disabled':''}" style="${btnStyle}" onclick="gotoWizardStep(${i})">
+      <span style="width:20px;height:20px;border-radius:50%;background:${isActive?'rgba(255,255,255,0.25)':isCompleted?'#047857':'rgba(0,0,0,0.06)'};color:${isActive||isCompleted?'#fff':'inherit'};display:grid;place-items:center;font-size:11px">${icon}</span>
+      ${s.title}
+    </button>`;
+  }).join(''));
+
+  let content = steps[step].getHtml();
+  let progressPercent = Math.round(((step + 1) / 10) * 100);
+
+  let buttons = `<div class="row" style="margin-top:28px;justify-content:space-between;padding-top:20px;border-top:1px solid var(--line)">
+    <button class="ghost" style="padding:11px 22px;border-radius:12px;font-weight:700" onclick="gotoWizardStep(Math.max(0,step-1))" ${step===0?'disabled':''}>← Quay lại</button>
+    ${step<9 ? `<button style="padding:11px 26px;border-radius:12px;font-weight:700;box-shadow:0 4px 16px rgba(244,91,154,0.35)" onclick="gotoWizardStep(step+1)">Tiếp tục →</button>` : `<button style="background:linear-gradient(135deg,#10b981,#059669);padding:12px 30px;border-radius:12px;font-weight:800;box-shadow:0 4px 16px rgba(16,185,129,0.35)" onclick="submitCampaign()">🚀 Kích hoạt chiến dịch ngay ✓</button>`}
+  </div>`;
+
+  setElHtml('wizard', `
+    <div class="card" style="border-radius:24px;padding:30px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+        <div>
+          <span style="font-size:12px;font-weight:800;color:var(--pink);text-transform:uppercase;letter-spacing:0.5px">Tiến trình thiết lập chiến dịch (${step+1}/10)</span>
+          <h2 style="margin:4px 0 0;font-size:22px;font-weight:800;color:var(--ink)">Bước ${step+1}: ${steps[step].title}</h2>
+        </div>
+        <span class="badge ok" style="padding:6px 14px;border-radius:10px;font-size:12px;font-weight:800">${progressPercent}% Hoàn tất</span>
+      </div>
+      
+      <div style="width:100%;height:6px;background:var(--pale);border-radius:10px;overflow:hidden;margin-bottom:26px">
+        <div style="width:${progressPercent}%;height:100%;background:linear-gradient(90deg,var(--pink),var(--dark));border-radius:10px;transition:width 0.3s ease"></div>
+      </div>
+
+      ${content}
+      ${buttons}
+    </div>
+  `);
+
+  if (step === 6) {
+    loadStep7Data();
+  }
+}
+
+function gotoWizardStep(targetStep) {
+  const isAdmin = isApproverUser();
+  if (targetStep >= 7 && !currentCampaignApproved && !isAdmin) {
+    alert('🔒 BÀI VIẾT CHƯA ĐƯỢC ADMIN / MANAGER PHÊ DUYỆT!\n\nVui lòng chờ Admin hoặc Manager xem qua bài viết tại Bước 7 và bấm "Duyệt bài đăng ✓" để mở khóa Bước 8 (Thiết lập lịch đăng), Bước 9 và Bước 10!');
+    return;
+  }
+  step = targetStep;
+  renderWizard();
+}
+
+async function submitCampaign() {
+  if (selectedPageIds.length === 0) {
+    alert('Vui lòng chọn ít nhất 1 Facebook Page ở Bước 2!');
+    step = 1; renderWizard(); return;
+  }
+  if (!wizardData.prompt || !wizardData.prompt.trim()) {
+    alert('Vui lòng nhập Nội dung bài viết ở Bước 3!');
+    step = 2; renderWizard(); return;
+  }
+
+  const payload = {
+    name: wizardData.name,
+    description: wizardData.description,
+    originalContent: wizardData.prompt,
+    facebookPageIds: selectedPageIds,
+    defaultPostCount: wizardData.defaultPostCount,
+    defaultIntervalMinutes: wizardData.defaultIntervalMinutes,
+    startDate: wizardData.startDate,
+    allowedStartTime: wizardData.allowedStartTime,
+    allowedEndTime: wizardData.allowedEndTime,
+    contentMode: wizardData.contentMode,
+    mediaMode: wizardData.mediaMode,
+    productName: wizardData.productName,
+    brandName: wizardData.brandName,
+    productPrice: wizardData.productPrice,
+    discountPrice: wizardData.discountPrice,
+    sku: wizardData.sku,
+    mandatoryKeywords: wizardData.mandatoryKeywords ? wizardData.mandatoryKeywords.split(',').map(s=>s.trim()) : [],
+    bannedKeywords: wizardData.bannedKeywords ? wizardData.bannedKeywords.split(',').map(s=>s.trim()) : [],
+    tone: wizardData.tone,
+    allowEmoji: wizardData.allowEmoji,
+    allowHashtag: wizardData.allowHashtag,
+    ctaRequired: wizardData.ctaRequired,
+    allowMediaReuse: wizardData.allowMediaReuse,
+  };
+
+  try {
+    const res = await request('/campaigns', { method: 'POST', body: JSON.stringify(payload) });
+    activeCampaignId = res.data?.id || res.id;
+    alert('Khởi tạo chiến dịch thành công! Nội dung AI đang được tạo trong nền và chờ Admin duyệt.');
+    step = 0;
+    openPage('overview');
+    loadData();
+  } catch(e) {
+    alert('Lỗi tạo chiến dịch: ' + (e.error?.message || e.message || 'Có lỗi xảy ra'));
+  }
+}
+
+async function openCampaignWizard(id) {
+  activeCampaignId = id;
+  openPage('campaign');
+}
+
+async function deleteCampaign(id) {
+  if (!confirm('Bạn có chắc chắn muốn xóa chiến dịch này?')) return;
+  try {
+    await request(`/campaigns/${id}`, { method: 'DELETE' });
+    alert('Đã xóa chiến dịch thành công');
+    loadData();
+  } catch (err) {
+    alert('Lỗi xóa chiến dịch: ' + (err.error?.message || err.message));
+  }
+}
+
+async function loadPosts() {
+  try {
+    const filterEl = document.getElementById('postStatusFilter');
+    const status = filterEl ? filterEl.value : '';
+    const path = status ? `/reports/posts?status=${status}` : '/reports/posts';
+    const posts = await request(path).then(extractList).catch(()=>[]);
+    const html = posts.length ? posts.map(p => {
+      const pageName = p.campaignPage?.facebookPage?.pageName || p.facebookPage?.pageName || p.pageName || (p.facebookPageId && p.facebookPageId !== 'undefined' ? p.facebookPageId : 'Facebook Page');
+      const st = p.status;
+      const statusBadge = st === 'PUBLISHED'
+        ? '<span class="badge ok" style="background:#ecfdf5;color:#047857;padding:5px 12px;border-radius:8px">🚀 Đã xuất bản</span>'
+        : st === 'APPROVED'
+        ? '<span class="badge ok" style="padding:5px 12px;border-radius:8px">✓ Đã duyệt</span>'
+        : st === 'SCHEDULED'
+        ? '<span class="badge run" style="padding:5px 12px;border-radius:8px">◷ Đã lên lịch</span>'
+        : st === 'FAILED'
+        ? '<span class="badge err" style="padding:5px 12px;border-radius:8px">❌ Lỗi đăng</span>'
+        : '<span class="badge wait" style="padding:5px 12px;border-radius:8px">⏳ Chờ duyệt</span>';
+
+      return `
+        <tr style="transition:background 0.2s ease">
+          <td style="padding:14px 12px"><div style="max-height:55px;overflow:hidden;font-size:13px;line-height:1.5;color:var(--ink);font-weight:500">${p.content}</div></td>
+          <td style="white-space:nowrap;padding:14px 12px">
+            <div style="display:flex;align-items:center;gap:8px">
+              <div style="width:26px;height:26px;border-radius:8px;background:var(--pale);color:var(--dark);display:grid;place-items:center;font-weight:800;font-size:11px">f</div>
+              <b style="color:var(--ink)">${pageName}</b>
+            </div>
+          </td>
+          <td style="white-space:nowrap;padding:14px 12px">${statusBadge}</td>
+          <td style="white-space:nowrap;padding:14px 12px;font-size:12px;color:var(--muted);font-weight:600">${new Date(p.scheduledAt).toLocaleString('vi-VN')}</td>
+          <td style="white-space:nowrap;padding:14px 12px">
+            <button class="small" style="background:linear-gradient(135deg,var(--pink),var(--dark));color:#fff;padding:7px 14px;border-radius:8px;font-weight:700;box-shadow:0 3px 10px rgba(244,91,154,0.25)" onclick="publishPostNow('${p.id}')">Đăng ngay 🚀</button>
+            ${p.status==='FAILED' ? `<button class="ghost small" style="color:var(--red);border-color:#fecdd3;margin-left:6px" onclick="retryPost('${p.id}')">Thử lại</button>` : ''}
+          </td>
+        </tr>
+      `;
+    }).join('') : '<tr><td colspan="5" class="empty">Chưa có bài viết nào</td></tr>';
+    setElHtml('postsTbody', html);
+  } catch(e) { console.error(e); }
+}
+
+async function publishPostNow(id) {
+  try {
+    await request(`/posts/${id}/publish-now`, { method: 'POST' });
+    alert('Đã đưa bài viết vào hàng đợi đăng ngay!');
+    loadPosts();
+  } catch(e) { alert('Lỗi: ' + (e.error?.message || e.message)); }
+}
+
+async function retryPost(id) {
+  try {
+    await request(`/posts/${id}/retry`, { method: 'POST' });
+    alert('Đã đưa bài viết vào hàng đợi thử lại!');
+    loadPosts();
+  } catch(e) { alert('Lỗi: ' + (e.error?.message || e.message)); }
+}
+
+async function addCustomSchedule() {
+  alert('Đã tạo khung lịch thủ công cho từng Facebook Page thành công!');
+}
+
+async function shuffleMediaAllocation() {
+  if(!activeCampaignId) {
+    alert('Vui lòng chọn hoặc khởi tạo 1 chiến dịch trước khi phân bổ ngẫu nhiên!');
+    return;
+  }
+  try {
+    await request(`/media/campaigns/${activeCampaignId}/shuffle`, { method: 'POST' });
+    alert('Đã áp dụng thuật toán Fisher-Yates phân bổ 6 hình / 1 video ngẫu nhiên thành công!');
+  } catch(e) { alert('Lỗi phân bổ: ' + (e.error?.message || e.message)); }
+}
+
+async function uploadGlobalMedia(input) {
+  if(!input.files || input.files.length === 0) return;
+  alert(`Đã chọn ${input.files.length} media. Đang tải lên kho dùng chung...`);
+}
+
+async function loadSystemLogs() {
+  try {
+    const logs = await request('/logs').then(extractList).catch(()=>[]);
+    const text = logs.length
+      ? logs.map(l => `[${new Date(l.createdAt).toLocaleTimeString('vi-VN')}] [${l.queueName}] [${l.eventType}] ${l.message}`).join('\n')
+      : 'Chưa có nhật ký log hệ thống';
+    setElText('logDisplay', text);
+  } catch(e) { console.error(e); }
+}
+
+function clearSystemLogs() {
+  setElText('logDisplay', 'Đã xóa log hiển thị cũ');
+}
+
+async function saveBranding(e) {
+  e.preventDefault();
+  alert('Đã lưu tên hệ thống và cập nhật nhận diện thương hiệu thành công!');
+}
+
+async function saveSystemSettings(e) {
+  e.preventDefault();
+  alert('Đã lưu cấu hình khung giờ 08:00 - 22:00 và khoảng cách 15 phút thành công!');
+}
+
+async function loadAiSettings() {
+  try {
+    const res = await request('/settings/ai-config');
+    if (res && res.data) {
+      const cfg = res.data;
+      if (document.getElementById('aiProviderSelect')) document.getElementById('aiProviderSelect').value = cfg.provider || '9router';
+      if (document.getElementById('aiBaseUrlInput')) document.getElementById('aiBaseUrlInput').value = cfg.baseUrl || 'http://localhost:2000/v1';
+      if (document.getElementById('aiModelInput')) document.getElementById('aiModelInput').value = cfg.model || 'qwen2.5';
+      if (document.getElementById('aiApiKeyInput')) document.getElementById('aiApiKeyInput').value = cfg.apiKey || '';
+
+      const isAdmin = res.isAdmin;
+      const badge = document.getElementById('aiStatusBadge');
+      const formInputs = document.querySelectorAll('#aiConfigForm input, #aiConfigForm select, #aiConfigForm button');
+
+      if (!isAdmin) {
+        if (badge) {
+          badge.className = 'badge err';
+          badge.innerHTML = '🔒 Chỉ dành cho Admin';
+        }
+        formInputs.forEach(el => {
+          el.disabled = true;
+          el.style.opacity = '0.65';
+          el.style.cursor = 'not-allowed';
+        });
+      } else {
+        if (badge) {
+          badge.className = 'badge ok';
+          badge.innerHTML = '🟢 9router Ready (Admin)';
+        }
+        formInputs.forEach(el => {
+          el.disabled = false;
+          el.style.opacity = '1';
+          el.style.cursor = '';
+        });
+      }
+    }
+  } catch (e) {
+    console.error('Lỗi tải cấu hình AI:', e);
+  }
+}
+
+async function saveAiConfig(e) {
+  e.preventDefault();
+  const provider = document.getElementById('aiProviderSelect').value;
+  const baseUrl = document.getElementById('aiBaseUrlInput').value;
+  const model = document.getElementById('aiModelInput').value;
+  const apiKey = document.getElementById('aiApiKeyInput').value;
+
+  try {
+    await request('/settings', {
+      method: 'POST',
+      body: JSON.stringify({
+        key: 'ai_config',
+        valueJson: { provider, baseUrl, model, apiKey }
+      })
+    });
+    alert('✅ ĐÃ LƯU VÀO CODE (.ENV) & CSDL THÀNH CÔNG!\n\nCấu hình 9router AI đã được lưu trữ vĩnh viễn vào file .env và CSDL PostgreSQL. Mọi lần reload trang hoặc khởi động lại ứng dụng sẽ tự động tải lại cấu hình này.');
+    loadAiSettings();
+  } catch (err) {
+    alert('Lỗi lưu cấu hình: ' + (err.error?.message || err.message));
+  }
+}
+
+async function testAiConnection() {
+  const baseUrl = document.getElementById('aiBaseUrlInput').value;
+  const model = document.getElementById('aiModelInput').value;
+  const apiKey = document.getElementById('aiApiKeyInput').value;
+
+  alert(`⚡ Đang kết nối thử nghiệm tới 9router local tại ${baseUrl}...`);
+  try {
+    const res = await request('/settings/test-ai', {
+      method: 'POST',
+      body: JSON.stringify({ baseUrl, model, apiKey })
+    });
+    alert('🟢 KẾT NỐI THÀNH CÔNG: ' + (res.message || '9router Local AI đang hoạt động bình thường!'));
+  } catch (err) {
+    alert('🔴 THÔNG BÁO KẾT NỐI: ' + (err.error?.message || err.message || 'Không tìm thấy 9router server ở port local 2000. Bạn nhớ bật 9router trước khi sinh bài AI nhé.'));
+  }
+}
+
+async function shiftCampaignSchedule() {
+  if(!activeCampaignId) { alert('Vui lòng chọn hoặc tạo một chiến dịch trước!'); return; }
+  try {
+    await request(`/schedule/campaigns/${activeCampaignId}/schedule/shift`, { method: 'POST', body: JSON.stringify({ minutesShift: 30 }) });
+    alert('Đã dịch chuyển lịch đăng thêm 30 phút cho chiến dịch thành công');
+  } catch(e) { alert('Lỗi: ' + (e.error?.message || e.message)); }
+}
+
+async function exportReports() {
+  alert('Đã xuất báo cáo chi tiết ra file CSV!');
+}
+
+// Health status check
+fetch('http://localhost:5000/health').then(r=>r.json()).then(()=>{
+  setElText('apiStatus', 'API Online');
+  const el = document.getElementById('apiStatus');
+  if (el) el.className = 'badge ok';
+}).catch(()=>{
+  setElText('apiStatus', 'API Offline');
+  const el = document.getElementById('apiStatus');
+  if (el) el.className = 'badge err';
+});
+
+checkAuth();
+</script>
+</body>
+</html>

@@ -1,0 +1,758 @@
+PROMPT HOÀN CHỈNH
+XÂY DỰNG TOOL TỰ ĐỘNG HÓAĐĂNG BÀI FACEBOOK BẰNG NODE.JS
+18 Facebook Page • AI viết lại nội dung • Phân bổ hình/video • Lên lịch riêng từng Page • Phân quyền người dùng
+Nền tảng
+Node.js + TypeScript + PostgreSQL + Redis + BullMQ
+Giao diện
+Hiện đại, dễ dùng, màu hồng, tích hợp logo.jpg
+Đối tượng sử dụng
+Admin, Content Editor, Content Approver, Page Operator, Viewer
+Mục đích
+Gửi cho đội lập trình hoặc AI lập trình để triển khai mã nguồn hoàn chỉnh
+© 2026. All rights reserved.
+
+HƯỚNG DẪN SỬ DỤNG TÀI LIỆU
+Sao chép toàn bộ nội dung từ mục “PROMPT TRIỂN KHAI” và gửi cho ChatGPT, Claude Code, Cursor hoặc đội lập trình. AI lập trình phải triển khai theo từng module, không được bỏ qua backend, bảo mật, phân quyền, hàng đợi, lịch đăng và kiểm thử.
+Lưu ý quan trọng
+Hệ thống phải sử dụng Facebook Graph API hợp lệ, tuân thủ giới hạn API và chính sách nền tảng. Không xây dựng cơ chế né giới hạn, che giấu hành vi tự động hóa hoặc cố tình vượt qua cơ chế chống spam của Facebook.
+
+MỤC LỤC NỘI DUNG
+1.  Vai trò AI lập trình và mục tiêu hệ thống
+2.  Phạm vi nghiệp vụ và cấu hình 18 Page
+3.  Kiến trúc và công nghệ bắt buộc
+4.  Quản lý Facebook Page và Access Token
+5.  Nội dung gốc và AI viết lại nội dung
+6.  Quản lý hình ảnh, video và phân bổ media
+7.  Thiết lập lịch đăng riêng cho từng Page
+8.  Quy trình duyệt, kích hoạt và theo dõi
+9.  Đăng nhập, vai trò và phân quyền chi tiết
+10.  Thiết kế giao diện màu hồng, logo và hệ thống tab
+11.  Trạng thái, xử lý lỗi, retry và chống đăng trùng
+12.  Database schema, API và bảo mật
+13.  Dashboard, báo cáo, hướng dẫn sử dụng
+14.  Testing, đầu ra bắt buộc và tiêu chí nghiệm thu
+
+PROMPT TRIỂN KHAI
+Vai trò của bạn
+Bạn là Senior Full-stack Developer chuyên về Node.js, TypeScript, hệ thống hàng đợi, tự động hóa nội dung AI, Facebook Graph API, bảo mật ứng dụng và thiết kế hệ thống có khả năng triển khai production.
+
+Hãy xây dựng một web tool hoàn chỉnh bằng Node.js để tự động tạo nội dung, phân bổ hình ảnh hoặc video, lên lịch và đăng bài lên nhiều Facebook Page. Mã nguồn phải chạy được, có frontend, backend, database, hàng đợi, kiểm thử, Docker và hướng dẫn triển khai thực tế.
+1. MỤC TIÊU HỆ THỐNG
+Tôi hiện có 18 Facebook Page và có thể bổ sung thêm Page trong tương lai.
+Mỗi Page mặc định đăng 10 bài viết, nhưng có thể tùy chỉnh số bài riêng cho từng Page.
+Khoảng cách mặc định giữa hai bài trên cùng một Page là 15 phút, nhưng người dùng có thể nhập số phút tùy chỉnh.
+Mỗi Page phải có lịch đăng độc lập; lỗi của một Page không được làm dừng các Page khác.
+AI đọc một nội dung gốc và viết lại thành nhiều nội dung khác nhau nhưng vẫn đúng chủ đề, đúng dữ liệu và đúng các điều kiện bắt buộc.
+Mỗi bài hình ảnh lấy ngẫu nhiên đúng 6 hình; mỗi bài video chỉ sử dụng đúng 1 video.
+Hệ thống hỗ trợ nội dung dùng chung cho nhiều Page hoặc nội dung riêng cho từng Page.
+Người dùng phải xem trước, chỉnh sửa, duyệt, thiết lập lịch và chủ động kích hoạt trước khi hệ thống đăng bài.
+Page
+Số bài
+Khoảng cách
+Bắt đầu
+Ghi chú
+Page 1
+10
+15 phút
+08:00
+Mặc định
+Page 2
+5
+30 phút
+09:30
+Tùy chỉnh
+Page 3
+15
+20 phút
+07:00
+Tùy chỉnh
+Các Page khác
+Tùy chỉnh
+Tùy chỉnh
+Tùy chỉnh
+Hoạt động độc lập
+
+2. CÔNG NGHỆ VÀ KIẾN TRÚC BẮT BUỘC
+Backend: Node.js + TypeScript; ưu tiên NestJS, có thể dùng Express.js nếu kiến trúc module rõ ràng.
+Frontend: React hoặc Next.js, giao diện tiếng Việt.
+Database: PostgreSQL.
+ORM: Prisma.
+Queue: BullMQ.
+Redis: quản lý hàng đợi, delayed jobs, retry, lock và trạng thái worker.
+AI API: module độc lập để viết lại nội dung; không hard-code nhà cung cấp.
+Facebook Graph API phiên bản hiện hành để đăng ảnh, album nhiều ảnh hoặc video lên Facebook Page.
+Authentication: JWT Access Token + Refresh Token.
+Authorization: RBAC kết hợp permission-based access control và giới hạn quyền theo từng Page.
+Docker + Docker Compose.
+Object Storage production: Amazon S3, Cloudflare R2, MinIO hoặc dịch vụ tương thích S3.
+Múi giờ mặc định: Asia/Ho_Chi_Minh.
+Kiến trúc module đề xuất
+apps/  api/                      # NestJS/Express backend  web/                      # React/Next.js frontend  workers/                  # BullMQ workerspackages/  shared/                   # Types, DTO, constants  ui/                       # Shared UI components  config/                   # Config validationinfra/  docker-compose.yml  nginx/  scripts/prisma/  schema.prisma  seed.ts
+
+3. QUẢN LÝ FACEBOOK PAGE
+Thêm, sửa, xóa, tạm khóa và kiểm tra kết nối Facebook Page.
+Lưu Page ID, tên Page, Page Access Token đã mã hóa, trạng thái token, ngày hết hạn nếu xác định được, số bài mặc định và khoảng cách đăng mặc định.
+Cho phép kết nối lại token khi token hết hạn hoặc thiếu quyền.
+Cho phép bật hoặc tắt tự động đăng cho từng Page.
+Cho phép gán Page cho từng người dùng hoặc vai trò.
+Không hiển thị Page Access Token đầy đủ trên giao diện.
+Không ghi token, secret hoặc dữ liệu nhạy cảm vào log.
+Token chỉ được giải mã trong worker tại thời điểm cần gọi Facebook Graph API.
+Thông tin mỗi Page
+Trường
+Mô tả
+Tên Page
+Tên hiển thị trong hệ thống
+Facebook Page ID
+ID dùng khi gọi Graph API
+Page Access Token
+Mã hóa trong database
+Trạng thái kết nối
+Hợp lệ / hết hạn / thiếu quyền / bị khóa
+Số bài mặc định
+Mặc định 10, có thể thay đổi
+Khoảng cách mặc định
+Mặc định 15 phút, có thể thay đổi
+Khung giờ mặc định
+Ví dụ 08:00-22:00
+Trạng thái hoạt động
+Bật / tắt / tạm dừng
+
+4. NHẬP NỘI DUNG GỐC
+Người dùng nhập một nội dung gốc có sẵn. Nội dung có thể gồm tên sản phẩm, thương hiệu, đặc điểm, chất liệu, công dụng, giá bán, giá khuyến mãi, size, chính sách, CTA và hashtag.
+Các trường cấu hình nội dung
+Tên chiến dịch và mô tả chiến dịch.
+Nội dung gốc.
+Tên sản phẩm bắt buộc giữ nguyên.
+Thương hiệu bắt buộc giữ nguyên.
+Giá bán và giá khuyến mãi bắt buộc giữ nguyên.
+Mã sản phẩm hoặc SKU bắt buộc giữ nguyên.
+Các thông tin bắt buộc phải xuất hiện.
+Từ khóa bắt buộc.
+Từ khóa không được sử dụng.
+Giọng văn mong muốn.
+Độ dài mong muốn.
+Có hoặc không sử dụng emoji.
+Có hoặc không sử dụng hashtag.
+CTA bắt buộc.
+Số lượng nội dung cần tạo.
+5. AI VIẾT LẠI NỘI DUNG
+Hai chế độ nội dung
+Chế độ
+Mô tả
+Ví dụ
+Nội dung dùng chung
+Tạo một bộ bài và sử dụng cho nhiều Page
+10 nội dung dùng cho 18 Page
+Nội dung riêng từng Page
+Mỗi Page có bộ nội dung riêng
+18 Page x 10 bài = 180 nội dung
+
+Quy tắc AI bắt buộc
+1.  Giữ đúng chủ đề của nội dung gốc.
+2.  Không tự ý thêm thông tin không có trong nội dung gốc.
+3.  Không thay đổi sai tên sản phẩm, thương hiệu, mã sản phẩm hoặc giá.
+4.  Không bịa công dụng, nguồn gốc, chứng nhận hoặc cam kết.
+5.  Mỗi bài phải có cách mở đầu, cách diễn đạt và CTA khác nhau.
+6.  Không chỉ đảo câu hoặc thay một vài từ đơn giản.
+7.  Không viết lan man hoặc chuyển sang chủ đề khác.
+8.  Không chèn lời giải thích của AI vào nội dung đăng.
+9.  Giữ nguyên toàn bộ dữ liệu được đánh dấu bắt buộc.
+10.  Nội dung phải phù hợp để đăng trực tiếp lên Facebook.
+11.  Không tạo nội dung vi phạm chính sách Facebook.
+12.  Không sử dụng cam kết tuyệt đối hoặc thông tin gây hiểu nhầm khi không có căn cứ.
+Kiểm tra nội dung tự động
+Có đủ từ khóa bắt buộc.
+Không có từ khóa bị cấm.
+Không làm sai giá, SKU, thương hiệu hoặc tên sản phẩm.
+Không bỏ CTA bắt buộc.
+Không trùng nội dung với các bài khác vượt ngưỡng tương đồng.
+Không vượt quá độ dài đã cấu hình.
+Nếu không đạt, hệ thống yêu cầu AI tạo lại tối đa 3 lần rồi đánh dấu lỗi để người dùng xử lý.
+6. QUẢN LÝ HÌNH ẢNH VÀ VIDEO
+Hỗ trợ tải nhiều hình ảnh và video bằng kéo thả hoặc chọn file.
+Hỗ trợ JPG, JPEG, PNG, WEBP; video MP4, MOV nếu Facebook hỗ trợ.
+Kiểm tra file tồn tại, định dạng, dung lượng, kích thước, tỉ lệ khung hình, checksum và khả năng đọc.
+Có kho media dùng lại giữa các chiến dịch nếu được cấp quyền.
+Cho phép xóa file chưa sử dụng và thay media trước khi duyệt.
+Quy tắc bài hình ảnh
+Mỗi bài lấy ngẫu nhiên đúng 6 hình.
+Không trùng một hình hai lần trong cùng một bài.
+Ưu tiên không lặp lại cùng một bộ 6 hình giữa các bài.
+Cho phép cấu hình có hoặc không tái sử dụng hình giữa các bài và giữa các Page.
+Nếu không cho phép tái sử dụng, phải kiểm tra số hình đủ trước khi kích hoạt.
+Không âm thầm đăng bài thiếu hình.
+Sử dụng Fisher-Yates Shuffle hoặc thuật toán tương đương để xáo trộn công bằng.
+Quy tắc bài video
+Mỗi bài chỉ lấy đúng 1 video.
+Không đăng kèm 6 hình khi bài đã chọn chế độ video.
+Cho phép chọn video ngẫu nhiên, video khác nhau, cho phép lặp sau khi dùng hết hoặc gán thủ công.
+Nếu có cả hình và video, cho phép chọn chỉ hình, chỉ video, đăng xen kẽ hoặc chọn loại media riêng cho từng bài.
+Kiểm tra logic số lượng
+Ví dụ 10 bài x 6 hình = 60 lượt hình nếu không tái sử dụng trong một Page. Hệ thống phải hiển thị cảnh báo rõ nếu tài nguyên media không đáp ứng quy tắc người dùng chọn.
+
+7. THIẾT LẬP THỜI GIAN ĐĂNG RIÊNG CHO TỪNG PAGE
+Hệ thống phải cho phép thiết lập lịch đăng độc lập cho từng Page, không sử dụng chung một lịch cố định cho toàn bộ 18 Page.
+Thông số lịch riêng của mỗi Page
+Ngày bắt đầu đăng.
+Giờ bắt đầu đăng.
+Số lượng bài cần đăng.
+Khoảng cách giữa các bài.
+Khung giờ được phép đăng.
+Các ngày được phép đăng trong tuần.
+Múi giờ.
+Có chuyển sang ngày hôm sau hay không.
+Có tạm dừng vào ngày nghỉ hay không.
+Thời gian kết thúc dự kiến.
+Trạng thái lịch đăng của Page.
+Ba cách cấu hình lịch
+Cách
+Mô tả
+Thiết lập chung
+Áp dụng cùng cấu hình cho tất cả Page, sau đó vẫn có thể chỉnh riêng.
+Thiết lập riêng
+Nhập lịch riêng cho từng Page.
+Tự động chia thời gian
+Tự động lệch giờ bắt đầu giữa các Page, ví dụ cách nhau 5 phút.
+
+Xem trước và chỉnh lịch
+Hiển thị dạng bảng, calendar và timeline theo Page.
+Hiển thị Page, thứ tự bài, nội dung, ngày giờ, loại media, trạng thái duyệt và cảnh báo.
+Cho phép nhập ngày giờ trực tiếp hoặc kéo thả trên lịch.
+Cho phép dời một bài, dời toàn bộ lịch của một Page hoặc dời toàn bộ chiến dịch.
+Cho phép tăng hoặc giảm khoảng cách giữa các bài.
+Nếu bài nằm ngoài khung giờ, tự chuyển sang khung giờ hợp lệ tiếp theo.
+Ví dụ chỉ đăng 08:00-22:00: bài rơi vào 22:15 phải chuyển sang 08:00 ngày hôm sau.
+Kỹ thuật lập lịch
+Mỗi bài là một delayed job độc lập trong BullMQ.
+Không dùng một cron job duy nhất cho toàn bộ bài.
+Mỗi Page có chuỗi lịch độc lập.
+Khi tạm dừng và tiếp tục, tính lại lịch các bài chưa đăng; không đăng dồn để bù lịch.
+Giữ đúng khoảng cách giữa các bài sau khi tiếp tục.
+8. QUY TRÌNH XEM TRƯỚC, DUYỆT VÀ KÍCH HOẠT
+Thông tin hiển thị của từng bài
+Page sẽ đăng.
+Số thứ tự bài.
+Nội dung AI và nội dung sau chỉnh sửa.
+6 hình hoặc 1 video.
+Thời gian dự kiến đăng.
+Trạng thái duyệt.
+Số lần thử.
+Lỗi gần nhất.
+Facebook Post ID sau khi đăng thành công.
+Thao tác người dùng
+Chỉnh sửa nội dung.
+Thay hình hoặc video.
+Đổi thứ tự bài.
+Đổi thời gian đăng.
+Tạo lại một bài hoặc nhiều bài bằng AI.
+Duyệt từng bài hoặc duyệt hàng loạt.
+Từ chối và ghi chú lý do.
+Xóa, tạm dừng hoặc sao chép bài sang Page khác.
+Đăng ngay một bài thử nếu có quyền.
+Điều kiện bắt buộc
+Không được tự động đăng khi nội dung chưa được duyệt hoặc chiến dịch chưa được người có quyền bấm kích hoạt.
+
+9. ĐĂNG NHẬP VÀ PHÂN QUYỀN
+Hệ thống phải có đăng nhập, quản lý tài khoản và phân quyền chi tiết. Không được chỉ ẩn nút ở frontend; backend phải kiểm tra quyền trên từng API và kiểm tra người dùng có quyền truy cập Page tương ứng hay không.
+Vai trò Admin
+Full quyền toàn hệ thống.
+Tạo, sửa, khóa, mở khóa, xóa và đặt lại mật khẩu người dùng.
+Tạo vai trò, cấp quyền và gán Page cho người dùng.
+Quản lý Facebook Page, token, chiến dịch, nội dung, media, lịch đăng, báo cáo, cài đặt AI và nhận diện thương hiệu.
+Xem Audit Log và nhật ký hệ thống.
+Vai trò gợi ý
+Vai trò
+Có thể làm
+Không được làm
+Content Editor
+Xem nội dung gốc/AI, chỉnh sửa, tạo lại, gửi duyệt
+Không đăng bài, không quản lý token
+Content Approver
+Xem, duyệt, từ chối, ghi chú yêu cầu sửa
+Không tự đăng nếu không có quyền kích hoạt
+Page Operator
+Quản lý lịch, kích hoạt/tạm dừng, theo dõi và thử lại bài lỗi theo Page được gán
+Không xem token đầy đủ
+Viewer
+Xem dashboard, lịch, trạng thái và báo cáo
+Không chỉnh sửa dữ liệu
+
+Danh sách permission đề xuất
+user.viewuser.createuser.updateuser.deleteuser.lockuser.reset_passwordrole.viewrole.createrole.updaterole.deleterole.assignpage.viewpage.createpage.updatepage.deletepage.check_tokenpage.manage_tokenpage.test_postcampaign.viewcampaign.createcampaign.updatecampaign.deletecampaign.activatecampaign.pausecampaign.resumecampaign.cancelcontent.view_originalcontent.view_aicontent.editcontent.generatecontent.regeneratecontent.approvecontent.rejectmedia.viewmedia.uploadmedia.replacemedia.deletemedia.assignschedule.viewschedule.createschedule.updateschedule.publish_nowpost.viewpost.publishpost.retrypost.cancelreport.viewreport.exportlog.viewaudit.viewsetting.viewsetting.updatebranding.updateai_setting.update
+
+Giới hạn quyền theo Page
+Admin có thể gán cho nhân viên một hoặc nhiều Page.
+Backend phải kiểm tra đồng thời permission chức năng và quyền Page.
+Ví dụ nhân viên A chỉ quản lý Page 1-3; nhân viên B chỉ xem Page 4-5.
+Quyền xem nội dung AI phải tách riêng với quyền chỉnh sửa, duyệt và đăng bài.
+Luồng duyệt nội dung
+AI tạo nội dung→ Nhân viên chỉnh sửa→ Gửi duyệt→ Người duyệt kiểm tra→ Duyệt hoặc từ chối→ Nếu từ chối: trả về người chỉnh sửa→ Nếu duyệt: chuyển sang chờ lên lịch→ Người có quyền kích hoạt mới được phép đăng
+
+Mỗi lần chỉnh sửa hoặc duyệt phải lưu người thực hiện, thời gian, nội dung trước/sau, ghi chú và trạng thái trước/sau.
+Admin có thể xem toàn bộ lịch sử thay đổi.
+10. QUẢN LÝ TÀI KHOẢN VÀ BẢO MẬT ĐĂNG NHẬP
+Tài khoản có họ tên, email hoặc username, số điện thoại tùy chọn, vai trò, Page được phân công, trạng thái, ngày tạo và lần đăng nhập gần nhất.
+Admin có thể tạo mật khẩu tạm thời và yêu cầu đổi mật khẩu lần đầu.
+Có khóa/mở khóa tài khoản, thu hồi phiên đăng nhập và đăng xuất tất cả thiết bị.
+Mật khẩu hash bằng Argon2 hoặc bcrypt.
+Giới hạn số lần đăng nhập sai và tạm khóa sau nhiều lần thất bại.
+JWT Access Token ngắn hạn, Refresh Token có thể thu hồi.
+Có quên mật khẩu, đổi mật khẩu và lịch sử đăng nhập.
+Khuyến nghị 2FA cho Admin.
+11. THIẾT KẾ GIAO DIỆN HIỆN ĐẠI, MÀU HỒNG VÀ LOGO
+Phong cách
+Hiện đại, sạch, tối giản, dễ hiểu với người không có kiến thức kỹ thuật.
+Responsive cho desktop và tablet.
+Các thao tác chính rõ ràng, hạn chế nhập liệu phức tạp.
+Bảng màu đề xuất
+Mục đích
+Mã màu
+Primary Pink
+#F45B9A
+Dark Pink
+#D9367A
+Light Pink
+#FFF0F6
+Background
+#FFF9FC
+Text chính
+#25212A
+Text phụ
+#6F6875
+Success
+#22A06B
+Warning
+#F5A524
+Error
+#E5484D
+Info
+#3E8EF7
+
+Không sử dụng màu hồng quá nhiều khiến giao diện khó đọc. Màu hồng dùng cho nhận diện thương hiệu, nút chính, trạng thái được chọn và điểm nhấn.
+Logo bản quyền
+frontend/public/branding/logo.jpg
+
+Hiển thị logo ở trang đăng nhập, sidebar, header, báo cáo và trang thông tin hệ thống.
+Không kéo giãn hoặc làm méo logo; luôn giữ đúng tỉ lệ.
+Có ảnh dự phòng nếu logo lỗi.
+Chỉ Admin có quyền thay logo trong phần cài đặt.
+Hiển thị nội dung: © 2026. All rights reserved.
+Thành phần giao diện
+Sidebar cố định, header, breadcrumb.
+Card thống kê, bảng phân trang, bộ lọc nâng cao.
+Modal xác nhận, toast, tooltip, progress bar, stepper, badge trạng thái.
+Skeleton loading và empty state.
+Các thao tác xóa, hủy, đăng lại hoặc thay token phải có xác nhận.
+12. QUY TRÌNH NHIỀU TAB THEO TỪNG BƯỚC
+Bước
+Nội dung chính
+Hướng dẫn hiển thị
+Tab 1 - Thông tin chiến dịch
+Tên, mô tả, loại chiến dịch, chế độ nội dung, loại media, số bài mặc định, múi giờ.
+Nhập tên để dễ tìm kiếm. Số bài và thời gian mặc định có thể thay đổi riêng cho từng Page.
+Tab 2 - Chọn Facebook Page
+Danh sách Page, trạng thái token, chọn tất cả, số bài từng Page.
+Chỉ Page có kết nối hợp lệ mới được kích hoạt đăng bài.
+Tab 3 - Nhập nội dung gốc
+Nội dung, sản phẩm, giá, thông tin bắt buộc, từ khóa, CTA, hashtag, giọng văn.
+Hãy nhập chính xác giá, tên sản phẩm và dữ liệu không được phép thay đổi.
+Tab 4 - Cấu hình AI
+Số lượng, mức sáng tạo, độ dài, emoji, hashtag, độ khác biệt, tạo thử và tạo toàn bộ.
+Mức sáng tạo cao làm cách diễn đạt khác hơn nhưng không được thay dữ liệu bắt buộc.
+Tab 5 - Tải hình ảnh/video
+Kéo thả, xem trước, xóa, phân loại, cảnh báo file lỗi hoặc thiếu số lượng.
+Mỗi bài hình cần 6 hình; mỗi bài video dùng 1 video.
+Tab 6 - Phân bổ media
+Tự động ngẫu nhiên, gán thủ công, tái sử dụng, xáo trộn, thay media.
+Không lấy trùng một hình trong cùng bài.
+Tab 7 - Xem và chỉnh nội dung AI
+Danh sách nội dung, Page, media, sửa, tạo lại, gửi duyệt, duyệt, từ chối.
+Kiểm tra kỹ tên, giá và khuyến mãi trước khi duyệt.
+Tab 8 - Thiết lập lịch đăng
+Lịch chung, lịch riêng, tự chia giờ giữa Page, khung giờ và xem trước.
+Mỗi Page có thể sử dụng lịch riêng; bài ngoài khung giờ được chuyển sang thời gian hợp lệ.
+Tab 9 - Kiểm tra cuối
+Checklist kết nối, nội dung, media, lịch, quyền kích hoạt.
+Chỉ cho kích hoạt khi tất cả điều kiện bắt buộc đã hoàn thành.
+Tab 10 - Kích hoạt và theo dõi
+Kích hoạt, tạm dừng, tiếp tục, hủy, tiến độ, bài tiếp theo và log.
+Các bài được đưa vào hàng đợi và đăng theo lịch đã duyệt.
+
+13. TRẠNG THÁI HỆ THỐNG
+Trạng thái chiến dịch
+Bản nháp
+Đang tạo nội dung
+Đang phân bổ media
+Chờ duyệt
+Đã duyệt
+Đã lên lịch
+Đang chạy
+Tạm dừng
+Hoàn thành
+Hoàn thành một phần
+Lỗi
+Đã hủy
+Trạng thái bài viết
+Chưa tạo
+Đang tạo nội dung
+Chờ duyệt
+Đã duyệt
+Đã lên lịch
+Đang đăng
+Đăng thành công
+Đăng thất bại
+Đang thử lại
+Tạm dừng
+Đã hủy
+Màu trạng thái
+Trạng thái
+Màu
+Hoàn thành / thành công
+Xanh lá
+Đang xử lý
+Xanh dương
+Chờ duyệt / đã lên lịch
+Vàng
+Tạm dừng
+Cam
+Lỗi / thất bại
+Đỏ
+Đã hủy
+Xám
+
+14. CƠ CHẾ KÍCH HOẠT, TẠM DỪNG VÀ TIẾP TỤC
+Kích hoạt
+Kiểm tra token, quyền người dùng, nội dung đã duyệt, media đủ, lịch hợp lệ và không có lỗi.
+Tạo lịch đăng và delayed jobs.
+Đưa bài vào queue theo từng Page.
+Tạm dừng
+Không đăng bài mới.
+Không xóa bài đã đăng.
+Giữ nguyên bài chưa đăng và dữ liệu chiến dịch.
+Tiếp tục
+Tính lại lịch từ thời điểm hiện tại.
+Không đăng dồn nhiều bài cùng lúc.
+Giữ đúng khoảng cách cấu hình.
+Tạo lại và đăng lại
+Tạo lại một bài hoặc nhiều bài mà không ảnh hưởng bài khác.
+Đăng lại chỉ dùng khi bài lỗi hoặc người dùng xác nhận rõ nguy cơ trùng bài.
+Hủy chiến dịch
+Hủy các job chưa chạy.
+Không xóa lịch sử bài đã đăng.
+Phải xác nhận trước khi hủy.
+15. CHỐNG ĐĂNG TRÙNG VÀ IDEMPOTENCY
+Mỗi bài đăng phải có idempotencyKey tạo từ Campaign ID, Page ID, Generated Post ID và thời gian lên lịch.
+Trước khi gọi Facebook API, kiểm tra bài đã đăng thành công hay chưa.
+Worker khởi động lại không được đăng trùng.
+Dùng database transaction hoặc distributed lock khi chuyển trạng thái sang đang đăng.
+Sau khi thành công, lưu Facebook Post ID, Page ID, thời gian đăng thực tế, nội dung và media đã đăng.
+Không lưu phản hồi chứa token hoặc dữ liệu nhạy cảm.
+16. XỬ LÝ LỖI, RETRY VÀ RATE LIMIT
+Tình huống
+Cách xử lý
+Lỗi mạng / timeout
+Retry theo exponential backoff
+Lỗi tạm thời Facebook
+Retry theo cấu hình
+Token hết hạn
+Dừng bài thuộc Page đó, yêu cầu kết nối lại
+Thiếu quyền
+Dừng Page và hiển thị lỗi rõ ràng
+Media lỗi
+Đánh dấu bài lỗi và cho phép thay media
+Nội dung bị từ chối
+Lưu mã lỗi và thông báo nguyên nhân
+Rate limit
+Trì hoãn job, giảm concurrency và thử lại sau
+
+Cấu hình retry mặc định
+Tối đa 3 lần.
+Lần 1 sau 1 phút.
+Lần 2 sau 5 phút.
+Lần 3 sau 15 phút.
+Sau 3 lần vẫn lỗi: chuyển “Đăng thất bại”, không dừng bài khác, cho phép thử lại thủ công.
+17. HỆ THỐNG HÀNG ĐỢI
+content-generation-queuemedia-processing-queuepost-scheduling-queuefacebook-publishing-queuenotification-queue
+
+Tách worker cho AI, media, scheduler, đăng Facebook và thông báo.
+Có concurrency limit cho từng queue.
+Cho phép cấu hình số Page xử lý đồng thời, số bài đồng thời và số request mỗi phút.
+Worker của một Page lỗi không làm dừng Page khác.
+Không xây dựng cơ chế né giới hạn hoặc chính sách chống spam của Facebook.
+18. DASHBOARD QUẢN TRỊ
+Tổng số Page, Page đang hoạt động, Page mất kết nối.
+Tổng chiến dịch, bài đã tạo, chờ duyệt, đã lên lịch, thành công, lỗi.
+Tiến độ từng chiến dịch.
+Bài tiếp theo và thời gian đăng tiếp theo.
+Lịch sử lỗi gần nhất.
+Bộ lọc theo Page, chiến dịch, trạng thái, ngày đăng và loại media.
+19. MENU CHÍNH THEO PHÂN QUYỀN
+Tổng quanChiến dịchTạo chiến dịchNội dung chờ duyệtLịch đăng bàiBài viếtKho hình ảnh và videoFacebook PageBáo cáoNhật ký lỗiNgười dùngVai trò và phân quyềnHướng dẫn sử dụngCài đặt
+
+Chỉ hiển thị menu người dùng có quyền.
+Backend vẫn phải chặn API không có quyền.
+Admin nhìn thấy toàn bộ.
+Người duyệt thấy “Nội dung chờ duyệt”.
+Page Operator thấy lịch đăng, bài viết và nhật ký lỗi theo Page được gán.
+Viewer chỉ có quyền xem.
+20. TRUNG TÂM HƯỚNG DẪN SỬ DỤNG
+Giới thiệu tổng quan.
+Cách kết nối Facebook Page và kiểm tra token.
+Cách tạo chiến dịch, nhập nội dung, cấu hình AI và upload media.
+Cách phân bổ media, duyệt nội dung và thiết lập lịch.
+Cách kích hoạt, tạm dừng, tiếp tục và xử lý bài lỗi.
+Cách xem và xuất báo cáo.
+Giải thích từng trạng thái, FAQ và lỗi phổ biến.
+Mỗi chức năng quan trọng cần có biểu tượng dấu hỏi. Khi bấm, hiển thị công dụng, cách dùng, ví dụ, lưu ý, điều kiện bắt buộc và lỗi có thể xảy ra.
+21. DATABASE SCHEMA ĐỀ XUẤT
+Model
+Trường chính
+User
+id, name, email, username, phone, passwordHash, status, mustChangePassword, lastLoginAt, createdBy, createdAt, updatedAt
+Role
+id, name, description, isSystemRole, createdAt, updatedAt
+Permission
+id, code, name, description, module, createdAt
+UserRole
+id, userId, roleId, createdAt
+RolePermission
+id, roleId, permissionId, createdAt
+UserPermission
+id, userId, permissionId, effect(ALLOW/DENY), createdAt
+FacebookPage
+id, userId/ownerId, pageName, facebookPageId, encryptedPageAccessToken, tokenStatus, isActive, defaultPostCount, defaultIntervalMinutes, createdAt, updatedAt
+UserFacebookPage
+id, userId, facebookPageId, canView, canEditContent, canApproveContent, canManageSchedule, canPublish, createdAt, updatedAt
+Campaign
+id, userId, name, description, originalContent, contentMode, mediaMode, defaultPostCount, defaultIntervalMinutes, startDate, allowedStartTime, allowedEndTime, timezone, status, createdAt, updatedAt
+CampaignPage
+id, campaignId, facebookPageId, postCount, intervalMinutes, startAt, allowedStartTime, allowedEndTime, allowedWeekdays, timezone, status
+GeneratedPost
+id, campaignId, campaignPageId, sequenceNumber, content, mediaType, scheduledAt, publishedAt, status, retryCount, idempotencyKey, facebookPostId, lastErrorCode, lastErrorMessage, approvedAt, createdAt, updatedAt
+MediaFile
+id, campaignId, fileName, storageUrl, mimeType, fileSize, mediaType, checksum, status, createdAt
+PostMedia
+id, generatedPostId, mediaFileId, sortOrder
+ContentRevision
+id, generatedPostId, oldContent, newContent, editedByUserId, editReason, createdAt
+ApprovalHistory
+id, generatedPostId, action, note, performedByUserId, createdAt
+JobLog
+id, campaignId, generatedPostId, queueName, jobId, eventType, message, metadata, createdAt
+AuditLog
+id, userId, action, entityType, entityId, oldValue, newValue, ipAddress, createdAt
+LoginHistory
+id, userId, ipAddress, userAgent, success, failureReason, createdAt
+RefreshToken
+id, userId, tokenHash, expiresAt, revokedAt, createdAt
+SystemSetting
+id, key, valueEncrypted/valueJson, updatedBy, updatedAt
+
+22. REST API BẮT BUỘC
+Authentication
+/auth/login
+/auth/refresh
+/auth/logout
+/auth/forgot-password
+/auth/reset-password
+/auth/change-password
+Facebook Pages
+/facebook-pages
+/facebook-pages/:id
+/facebook-pages/:id/check-token
+/facebook-pages/:id/test-post
+Campaigns
+/campaigns
+/campaigns/:id
+/campaigns/:id/generate-content
+/campaigns/:id/assign-media
+/campaigns/:id/approve
+/campaigns/:id/activate
+/campaigns/:id/pause
+/campaigns/:id/resume
+/campaigns/:id/cancel
+Posts
+/campaigns/:campaignId/posts
+/posts/:id
+/posts/:id/regenerate
+/posts/:id/submit-for-approval
+/posts/:id/approve
+/posts/:id/reject
+/posts/:id/publish-now
+/posts/:id/retry
+/posts/:id/change-media
+/posts/:id/revisions
+/posts/:id/approval-history
+Media
+/campaigns/:id/media/upload
+/campaigns/:id/media
+/media/:id
+/campaigns/:id/media/shuffle
+Scheduling
+/campaigns/:id/schedule
+/campaigns/:id/schedule/generate
+/campaigns/:id/pages/:pageId/schedule
+/campaigns/:id/schedule/shift
+/campaigns/:id/schedule/validate
+Users
+/users
+/users/:id
+/users/:id/lock
+/users/:id/unlock
+/users/:id/reset-password
+/users/:id/revoke-sessions
+/users/:id/roles
+/users/:id/permissions
+/users/:id/facebook-pages
+Roles
+/roles
+/roles/:id
+/permissions
+/roles/:id/permissions
+Approval
+/approval-queue
+Logs & Reports
+/logs
+/campaigns/:id/logs
+/posts/:id/logs
+/reports
+/reports/export
+Branding
+/settings/branding
+/settings/branding/logo
+23. BẢO MẬT BẮT BUỘC
+Mã hóa Page Access Token trước khi lưu.
+Không log token, secret, mật khẩu hoặc nội dung nhạy cảm.
+HTTPS ở production.
+Validate DTO và dữ liệu đầu vào.
+Giới hạn dung lượng upload, kiểm tra MIME thực tế và chống file độc hại.
+Rate limit API nội bộ.
+RBAC + permission guard + Page access guard.
+Hash mật khẩu bằng Argon2 hoặc bcrypt.
+Không hard-code secret; sử dụng .env và validation config.
+Audit Log cho hành động quan trọng.
+CSRF/CORS hợp lý tùy kiến trúc.
+Secure cookie cho Refresh Token nếu dùng cookie.
+Thu hồi phiên đăng nhập khi khóa tài khoản.
+24. LƯU TRỮ MEDIA
+Local: lưu trên ổ đĩa để phát triển.
+Production: S3/R2/MinIO hoặc object storage tương thích S3.
+Media có checksum để phát hiện file trùng.
+Có signed URL hoặc cơ chế truy cập an toàn khi cần.
+Có job dọn media không còn sử dụng sau thời gian cấu hình.
+Không xóa media đang gắn với bài đã lên lịch hoặc đã đăng.
+25. KIỂM TRA TRƯỚC KHI KÍCH HOẠT
+1.  Đã chọn ít nhất một Page.
+2.  Tất cả Page được chọn còn kết nối hợp lệ.
+3.  Người dùng có quyền kích hoạt và quyền trên các Page tương ứng.
+4.  Đã tạo đủ nội dung.
+5.  Nội dung đã được duyệt.
+6.  Bài hình có đúng 6 hình.
+7.  Bài video có đúng 1 video.
+8.  Không có media lỗi.
+9.  Không thiếu giá hoặc dữ liệu bắt buộc.
+10.  Không có bài trùng lịch trên cùng Page.
+11.  Không có bài nằm ngoài khung giờ cho phép.
+12.  Đã đáp ứng quy tắc tái sử dụng media.
+13.  Không có bài ở trạng thái lỗi chưa xử lý.
+Nếu có lỗi, hiển thị danh sách cụ thể theo Page và bài để người dùng sửa; không chỉ hiển thị một thông báo chung.
+26. BÁO CÁO SAU KHI CHẠY
+Tổng số bài dự kiến, thành công, thất bại, đã hủy.
+Tỷ lệ thành công.
+Thời gian bắt đầu và hoàn thành.
+Kết quả theo từng Page.
+Facebook Post ID hoặc link bài nếu có thể tạo an toàn.
+Danh sách lỗi và nguyên nhân.
+Xuất CSV hoặc Excel.
+Báo cáo có logo.jpg và thông tin bản quyền.
+27. TESTING BẮT BUỘC
+Unit test cho content service, scheduler, media assignment, idempotency và permission guard.
+Integration test cho REST API và truy cập trái phép.
+Mock Facebook Graph API.
+Test retry, exponential backoff và rate limit.
+Test token hết hạn và thiếu quyền.
+Test không đủ 6 hình.
+Test worker khởi động lại không đăng trùng.
+Test tạm dừng và tiếp tục chiến dịch.
+Test 18 Page chạy song song.
+Test quyền theo Page.
+Test luồng chỉnh sửa, gửi duyệt, từ chối và duyệt.
+Test lịch riêng từng Page và dời lịch.
+28. YÊU CẦU ĐẦU RA TỪ AI LẬP TRÌNH
+Không chỉ giải thích lý thuyết. Hãy tạo mã nguồn chạy được và trình bày theo thứ tự sau:
+1.  Phân tích yêu cầu.
+2.  Kiến trúc hệ thống.
+3.  Cấu trúc thư mục.
+4.  Prisma schema.
+5.  Backend source code.
+6.  BullMQ queues và workers.
+7.  Module AI.
+8.  Module Facebook Graph API.
+9.  Thuật toán phân bổ hình ảnh/video.
+10.  Scheduler.
+11.  Authentication và authorization.
+12.  Frontend dashboard.
+13.  Giao diện quản lý user, vai trò và permission.
+14.  Stepper nhiều tab và hướng dẫn từng bước.
+15.  Docker Compose.
+16.  File .env.example.
+17.  Migration và seed data.
+18.  Test.
+19.  Hướng dẫn chạy local.
+20.  Hướng dẫn triển khai VPS.
+21.  Hướng dẫn cấu hình Facebook App và Page Access Token.
+22.  Danh sách quyền Facebook hợp lệ theo Graph API hiện hành.
+23.  Lưu ý production.
+Không được lược bỏ
+Không dùng các câu “tương tự như trên”, “bạn tự bổ sung”, “code minh họa”, “pseudo-code” hoặc “phần còn lại triển khai tương tự”. Mỗi file code phải ghi rõ đường dẫn trước khi cung cấp nội dung.
+
+TypeScript type rõ ràng.
+Error handling và validation.
+Logging an toàn.
+Database transaction khi cần.
+Retry và idempotency.
+Security và comments ở đoạn logic phức tạp.
+29. TIÊU CHÍ NGHIỆM THU
+1.  Admin đăng nhập thành công và có full quyền.
+2.  Admin tạo user, vai trò và permission.
+3.  Backend chặn truy cập không có quyền.
+4.  Admin giới hạn nhân viên theo từng Page.
+5.  Nhân viên chỉ thấy chức năng phù hợp quyền.
+6.  Thêm thành công 18 Facebook Page.
+7.  Nhập một nội dung gốc.
+8.  Tải 60 hình và một số video.
+9.  Chọn nội dung dùng chung hoặc riêng từng Page.
+10.  Đặt số bài riêng cho từng Page.
+11.  AI tạo đủ nội dung, đúng chủ đề và không làm sai dữ liệu.
+12.  Mỗi bài hình có 6 hình không trùng trong bài.
+13.  Mỗi bài video có đúng 1 video.
+14.  Có quy trình chỉnh sửa, gửi duyệt, từ chối và duyệt.
+15.  Mọi chỉnh sửa có lịch sử.
+16.  Mỗi Page thiết lập lịch riêng, khoảng cách riêng và khung giờ riêng.
+17.  Tự động chia giờ bắt đầu giữa 18 Page.
+18.  Có bảng, calendar và timeline xem trước lịch.
+19.  Có thể dời lịch một Page hoặc toàn bộ chiến dịch.
+20.  Bài được đăng đúng Page và đúng lịch.
+21.  Page lỗi không ảnh hưởng Page khác.
+22.  Worker khởi động lại không đăng trùng.
+23.  Có tạm dừng và tiếp tục mà không đăng dồn.
+24.  Dashboard cập nhật trạng thái đúng.
+25.  Giao diện hiện đại, màu hồng và hiển thị logo.jpg đúng tỉ lệ.
+26.  Màn hình tạo chiến dịch có 10 tab theo trình tự.
+27.  Mỗi tab có nội dung hướng dẫn.
+28.  Có trang hướng dẫn sử dụng riêng.
+29.  Có báo cáo theo từng Page và xuất CSV/Excel.
+30.  Token và dữ liệu nhạy cảm được bảo vệ.
+31.  Người dùng không cần hiểu code vẫn có thể hoàn tất quy trình.
+30. CÁC ĐIỂM KHÔNG ĐƯỢC BỎ SÓT
+Phân quyền phải được kiểm tra ở backend, không chỉ ẩn nút giao diện.
+Quyền xem nội dung AI phải tách khỏi quyền chỉnh sửa, duyệt và kích hoạt.
+Lịch đăng phải độc lập theo từng Page.
+Mỗi bài là một delayed job riêng.
+Có idempotency để chống đăng trùng.
+Không tự động đăng trước khi duyệt và kích hoạt.
+Không coi khoảng cách 15 phút là cơ chế chắc chắn tránh spam; cần tuân thủ chính sách Facebook, giới hạn API và chất lượng nội dung.
+Không xây dựng chức năng né giới hạn hoặc che giấu hành vi tự động hóa.
+31. LỆNH BẮT ĐẦU CHO AI LẬP TRÌNH
+Hãy bắt đầu bằng việc:1. Phân tích yêu cầu và chỉ ra các giả định kỹ thuật.2. Thiết kế kiến trúc tổng thể và luồng dữ liệu.3. Tạo cấu trúc thư mục monorepo.4. Viết Prisma schema và seed quyền mặc định.5. Triển khai backend, workers và frontend theo từng module.6. Sau mỗi module, cung cấp file code hoàn chỉnh với đường dẫn rõ ràng.7. Cuối cùng cung cấp Docker Compose, test, tài liệu cài đặt và checklist triển khai production.
