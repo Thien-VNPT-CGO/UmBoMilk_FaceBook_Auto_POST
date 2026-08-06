@@ -1072,10 +1072,99 @@ const steps = [
     <input type="file" id="wMediaFiles" multiple accept="image/*,video/*">
     <p style="color:var(--muted)">Đã sẵn sàng kho media mặc định để tự động phân bổ.</p>
   `},
-  { title: 'Phân bổ media', getHtml: () => `
-    <div class="notice"><b>Thuật toán Fisher-Yates Shuffle</b> sẽ xáo trộn ngẫu nhiên và chọn đúng 6 hình cho mỗi bài viết hình ảnh (hoặc đúng 1 video cho bài video).</div>
-    <label><input type="checkbox" ${wizardData.allowMediaReuse?'checked':''} onchange="wizardData.allowMediaReuse=this.checked"> Cho phép tái sử dụng hình ảnh giữa các bài viết</label>
-  `},
+  { title: 'Phân bổ media', getHtml: () => {
+      const mediaList = window.loadedMedia || [];
+      const imageCount = mediaList.filter(m => m.mimeType?.startsWith('image') || m.type==='IMAGE').length;
+      const videoCount = mediaList.filter(m => m.mimeType?.startsWith('video') || m.type==='VIDEO').length;
+
+      return `
+        <!-- ALGORITHM EXPLANATION BANNER -->
+        <div style="background:linear-gradient(135deg,#20141f,#3b1a2f);color:#fff;border-radius:20px;padding:24px 28px;margin-bottom:24px;box-shadow:0 10px 30px rgba(32,20,31,0.25);position:relative;overflow:hidden">
+          <div style="position:absolute;right:-20px;bottom:-20px;font-size:120px;opacity:0.06;pointer-events:none">🎲</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px">
+            <div>
+              <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(244,91,154,0.2);color:var(--pink);padding:6px 14px;border-radius:30px;font-weight:800;font-size:12px;letter-spacing:0.5px;margin-bottom:10px">
+                ⚡ FISHER-YATES SHUFFLE ALGORITHM
+              </div>
+              <h3 style="margin:0;font-weight:800;font-size:20px;color:#fff">Thuật Toán Phân Bổ Media Ngẫu Nhiên Tự Động</h3>
+              <p style="margin:6px 0 0;color:rgba(255,255,255,0.7);font-size:13.5px;max-width:620px;line-height:1.5">
+                Hệ thống áp dụng thuật toán xáo trộn Fisher-Yates để chọn <b>đúng 6 hình ảnh</b> cho mỗi bài viết dạng ảnh (hoặc <b>đúng 1 video</b> cho bài video), đảm bảo các bài đăng không bị lặp lại thứ tự media.
+              </p>
+            </div>
+            <div style="display:flex;gap:12px">
+              <div style="background:rgba(255,255,255,0.1);backdrop-filter:blur(10px);padding:14px 20px;border-radius:14px;border:1px solid rgba(255,255,255,0.15);text-align:center">
+                <div style="font-size:11px;color:rgba(255,255,255,0.7);text-transform:uppercase;font-weight:700">Mỗi Bài Viết Ảnh</div>
+                <div style="font-size:22px;font-weight:900;color:var(--pink);margin-top:2px">6 Hình</div>
+              </div>
+              <div style="background:rgba(255,255,255,0.1);backdrop-filter:blur(10px);padding:14px 20px;border-radius:14px;border:1px solid rgba(255,255,255,0.15);text-align:center">
+                <div style="font-size:11px;color:rgba(255,255,255,0.7);text-transform:uppercase;font-weight:700">Mỗi Bài Video</div>
+                <div style="font-size:22px;font-weight:900;color:#38ef7d;margin-top:2px">1 Video</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RESOURCE CAPACITY CARDS & MEDIA REUSE SETTING -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:18px;margin-bottom:24px">
+          
+          <!-- CARD 1: IMAGE POOL STATUS -->
+          <div style="background:#fff;border:1px solid var(--line);border-radius:18px;padding:20px;box-shadow:0 4px 14px rgba(0,0,0,0.03)">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+              <div style="display:flex;align-items:center;gap:10px">
+                <div style="width:36px;height:36px;border-radius:10px;background:#fff0f6;color:var(--pink);display:grid;place-items:center;font-weight:800;font-size:16px">📸</div>
+                <span style="font-weight:800;font-size:14.5px;color:var(--ink)">Kho Ảnh Khả Dụng</span>
+              </div>
+              <span class="badge ${imageCount>=6 ? 'ok':'err'}" style="padding:4px 12px;border-radius:8px;font-size:11px;font-weight:800">
+                ${imageCount>=6 ? '🟢 ĐỦ RESOURCE' : '⚠️ THIẾU ẢNH'}
+              </span>
+            </div>
+            <div style="font-size:26px;font-weight:900;color:var(--ink);margin-bottom:4px">${imageCount} <span style="font-size:13px;font-weight:600;color:var(--muted)">tệp ảnh trong hệ thống</span></div>
+            <div style="font-size:12px;color:var(--muted)">Đủ tạo ra <b>${Math.floor(imageCount/6)}</b> bài viết ảnh độc lập không trùng lặp.</div>
+          </div>
+
+          <!-- CARD 2: VIDEO POOL STATUS -->
+          <div style="background:#fff;border:1px solid var(--line);border-radius:18px;padding:20px;box-shadow:0 4px 14px rgba(0,0,0,0.03)">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+              <div style="display:flex;align-items:center;gap:10px">
+                <div style="width:36px;height:36px;border-radius:10px;background:#eef6ff;color:var(--blue);display:grid;place-items:center;font-weight:800;font-size:16px">🎥</div>
+                <span style="font-weight:800;font-size:14.5px;color:var(--ink)">Kho Video Khả Dụng</span>
+              </div>
+              <span class="badge ${videoCount>=1 ? 'ok':'err'}" style="padding:4px 12px;border-radius:8px;font-size:11px;font-weight:800">
+                ${videoCount>=1 ? '🟢 ĐỦ RESOURCE' : '⚠️ CHƯA CÓ VIDEO'}
+              </span>
+            </div>
+            <div style="font-size:26px;font-weight:900;color:var(--ink);margin-bottom:4px">${videoCount} <span style="font-size:13px;font-weight:600;color:var(--muted)">tệp video trong hệ thống</span></div>
+            <div style="font-size:12px;color:var(--muted)">Đủ tạo ra <b>${videoCount}</b> bài đăng video độc lập.</div>
+          </div>
+
+          <!-- CARD 3: REUSE SETTING CARD -->
+          <div style="background:${wizardData.allowMediaReuse ? '#fff0f6' : '#fff'};border:${wizardData.allowMediaReuse ? '2px solid var(--pink)' : '1px solid var(--line)'};border-radius:18px;padding:20px;box-shadow:0 4px 14px rgba(0,0,0,0.03);cursor:pointer;transition:all 0.2s ease" onclick="toggleWizardMediaReuse()">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+              <div style="display:flex;align-items:center;gap:10px">
+                <div style="width:36px;height:36px;border-radius:10px;background:${wizardData.allowMediaReuse ? 'linear-gradient(135deg,var(--pink),var(--dark))' : 'var(--pale)'};color:${wizardData.allowMediaReuse ? '#fff' : 'var(--dark)'};display:grid;place-items:center;font-weight:800;font-size:16px">♻️</div>
+                <span style="font-weight:800;font-size:14.5px;color:var(--ink)">Tái Sử Dụng Media</span>
+              </div>
+              <input type="checkbox" id="wMediaReuseCb" ${wizardData.allowMediaReuse ? 'checked' : ''} onclick="event.stopPropagation(); toggleWizardMediaReuse()" style="width:20px;height:20px;accent-color:var(--pink);cursor:pointer">
+            </div>
+            <div style="font-weight:800;font-size:14px;color:var(--ink);margin-bottom:4px">Cho phép quay vòng Media</div>
+            <div style="font-size:12px;color:var(--muted)">Nếu bật, hình ảnh/video sẽ được xoay vòng ngẫu nhiên khi số lượng bài viết nhiều hơn số tệp media trong kho.</div>
+          </div>
+
+        </div>
+
+        <div style="background:var(--pale);border:1px solid #f6e3ec;border-radius:16px;padding:16px 20px;display:flex;align-items:center;justify-content:space-between">
+          <div style="display:flex;align-items:center;gap:12px">
+            <span style="font-size:22px">🎲</span>
+            <div>
+              <div style="font-weight:800;font-size:14px;color:var(--ink)">Chế độ xáo trộn ngẫu nhiên (Fisher-Yates Shuffle) đã sẵn sàng</div>
+              <div style="font-size:12px;color:var(--muted)">Mỗi bài viết tạo ra ở bước tiếp theo sẽ tự động được gán bộ media 6 ảnh ngẫu nhiên.</div>
+            </div>
+          </div>
+          <button type="button" class="ghost small" style="border-radius:10px;padding:8px 16px;font-weight:700;color:var(--pink);border-color:var(--pink)" onclick="openPage('media')">🖼️ Xem Kho Media</button>
+        </div>
+      `;
+    }
+  },
   { title: 'Xem & chỉnh nội dung AI', getHtml: () => `
     <div class="notice">Kiểm tra danh sách bài viết AI đã khởi tạo và tiến hành phê duyệt trước khi chuyển sang bước Thiết lập lịch đăng bài.</div>
     <div id="step7PostsContainer">Đang kiểm tra dữ liệu bài viết...</div>
@@ -1106,6 +1195,13 @@ const steps = [
 ];
 
 let currentCampaignApproved = false;
+
+function toggleWizardMediaReuse() {
+  wizardData.allowMediaReuse = !wizardData.allowMediaReuse;
+  const cb = document.getElementById('wMediaReuseCb');
+  if (cb) cb.checked = wizardData.allowMediaReuse;
+  renderWizard();
+}
 
 function toggleWizardPageSelect(pageId) {
   const index = selectedPageIds.indexOf(pageId);
