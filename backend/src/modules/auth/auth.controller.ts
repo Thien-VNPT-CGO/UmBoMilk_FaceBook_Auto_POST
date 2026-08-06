@@ -8,7 +8,7 @@ const authService = new AuthService();
 
 const loginSchema = z.object({
   usernameOrEmail: z.string().optional(),
-  email: z.string().email().optional(),
+  email: z.string().optional(),
   password: z.string().min(1, 'Mật khẩu không được để trống'),
 }).refine(data => data.usernameOrEmail || data.email, {
   message: 'Cần cung cấp username hoặc email'

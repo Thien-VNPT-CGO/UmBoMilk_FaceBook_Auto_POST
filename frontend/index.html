@@ -481,16 +481,19 @@ async function checkAuth() {
 
 document.getElementById('loginForm').onsubmit = async (e) => {
   e.preventDefault();
-  const email = document.getElementById('loginEmail').value;
+  const inputVal = (document.getElementById('loginEmail').value || '').trim();
   const password = document.getElementById('loginPassword').value;
   const errEl = document.getElementById('loginError');
   if (errEl) errEl.style.display = 'none';
   try {
-    const data = await request('/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) });
+    const data = await request('/auth/login', { 
+      method: 'POST', 
+      body: JSON.stringify({ usernameOrEmail: inputVal, email: inputVal, password }) 
+    });
     token = data.accessToken || data.data?.accessToken;
     currentUser = data.user || data.data?.user;
     if (currentUser) setElText('userNameDisplay', currentUser.name || currentUser.email);
-    localStorage.setItem('pinkflow_token', token);
+    if (token) localStorage.setItem('pinkflow_token', token);
     checkAuth();
   } catch (err) {
     if (errEl) {
