@@ -20,16 +20,9 @@ const createSchema = z.object({
   defaultIntervalMinutes: z.number().int().min(1).max(720).default(15),
 });
 
-router.get('/', requirePermission('page.view'), async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+router.get('/', requirePermission('page.view'), async (_req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
-    const isAdmin = req.user?.roleId
-      ? !!(await prisma.role.findFirst({ where: { id: req.user.roleId, name: { in: ['Admin', 'ADMIN'] } } }))
-      : false;
-
     const pages = await prisma.facebookPage.findMany({
-      where: isAdmin
-        ? undefined
-        : { userFacebookPages: { some: { userId: req.user!.id, canView: true } } },
       include: { owner: { select: { id: true, name: true } } },
       orderBy: { createdAt: 'desc' },
     });

@@ -38,10 +38,9 @@ const createSchema = z.object({
   facebookPageIds: z.array(z.string().uuid()).min(1),
 });
 
-router.get('/', requirePermission('campaigns.view'), async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+router.get('/', requirePermission('campaigns.view'), async (_req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
     const campaigns = await prisma.campaign.findMany({
-      where: { userId: req.user!.id },
       include: { campaignPages: { include: { facebookPage: true } } },
       orderBy: { createdAt: 'desc' },
     });
