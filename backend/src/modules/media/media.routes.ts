@@ -3,6 +3,7 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import crypto from 'crypto';
+import axios from 'axios';
 import { requireAuth } from '../../common/guards/auth.guard';
 import { requirePermission } from '../../common/guards/rbac.guard';
 import { prisma } from '../../common/database/prisma';
@@ -168,6 +169,221 @@ router.delete('/:id', requireAuth, async (req, res, next) => {
   }
 });
 
+// GET /api/media/drive-links - Fetch saved Google Drive links
+router.get('/drive-links', requireAuth, async (_req, res, next) => {
+  try {
+    const imgSetting = await prisma.systemSetting.findUnique({ where: { key: 'gdrive_image_url' } });
+    const vidSetting = await prisma.systemSetting.findUnique({ where: { key: 'gdrive_video_url' } });
+    res.json({
+      success: true,
+      data: {
+        imageLink: imgSetting?.valueEncrypted || '',
+        videoLink: vidSetting?.valueEncrypted || '',
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /api/media/drive-links - Save Google Drive links
+router.post('/drive-links', requireAuth, async (req, res, next) => {
+  try {
+    const { imageLink, videoLink } = req.body;
+    await prisma.systemSetting.upsert({
+      where: { key: 'gdrive_image_url' },
+      update: { valueEncrypted: imageLink || '' },
+      create: { key: 'gdrive_image_url', valueEncrypted: imageLink || '' },
+    });
+    await prisma.systemSetting.upsert({
+      where: { key: 'gdrive_video_url' },
+      update: { valueEncrypted: videoLink || '' },
+      create: { key: 'gdrive_video_url', valueEncrypted: videoLink || '' },
+    });
+    res.json({ success: true, message: '✅ Đã lưu liên kết Google Drive thành công!' });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Helper function to extract file IDs from Google Drive URLs
+function extractDriveFileIds(inputUrl: string): string[] {
+  if (!inputUrl) return [];
+  const ids: string[] = [];
+  const items = inputUrl.split(/[\s,\n]+/);
+  for (const item of items) {
+    const trimmed = item.trim();
+    if (!trimmed) continue;
+
+    const match1 = trimmed.match(/\/d\/([a-zA-Z0-9_-]{25,})/);
+    if (match1) {
+      ids.push(match1[1]);
+      continue;
+    }
+    const match2 = trimmed.match(/[?&]id=([a-zA-Z0-9_-]{25,})/);
+    if (match2) {
+      ids.push(match2[1]);
+      continue;
+    }
+    if (/^[a-zA-Z0-9_-]{25,}$/.test(trimmed)) {
+      ids.push(trimmed);
+      continue;
+    }
+  }
+  return [...new Set(ids)];
+}
+
+async function extractFileIdsFromFolderUrl(folderUrl: string): Promise<string[]> {
+  try {
+    const match = folderUrl.match(/\/folders\/([a-zA-Z0-9_-]+)/);
+    if (!match) return [];
+    const folderId = match[1];
+
+    const res = await axios.get(`https://drive.google.com/drive/folders/${folderId}`, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+      },
+      timeout: 10000
+    });
+    const html = res.data;
+    const matches = html.match(/\\\\"[a-zA-Z0-9_-]{25,}\\\\"|"[a-zA-Z0-9_-]{28,35}"/g) || [];
+    const foundIds: string[] = [];
+    for (const m of matches) {
+      const clean = m.replace(/[\"\\]/g, '');
+      if (clean !== folderId && clean.length >= 25 && clean.length <= 40) {
+        foundIds.push(clean);
+      }
+    }
+    return [...new Set(foundIds)];
+  } catch (err) {
+    console.error('[Drive Import] Error parsing folder:', err);
+    return [];
+  }
+}
+
+async function downloadAndSaveDriveFile(fileIdOrUrl: string, expectedType: 'IMAGE' | 'VIDEO'): Promise<any> {
+  const isDirectUrl = fileIdOrUrl.startsWith('http://') || fileIdOrUrl.startsWith('https://');
+  let downloadUrl = isDirectUrl
+    ? fileIdOrUrl
+    : `https://lh3.googleusercontent.com/d/${fileIdOrUrl}`;
+
+  if (isDirectUrl && fileIdOrUrl.includes('drive.google.com')) {
+    const extracted = extractDriveFileIds(fileIdOrUrl);
+    if (extracted.length > 0) {
+      downloadUrl = `https://lh3.googleusercontent.com/d/${extracted[0]}`;
+    }
+  }
+
+  const ext = expectedType === 'VIDEO' ? 'mp4' : 'jpg';
+  const filename = `drive-${Date.now()}-${crypto.randomBytes(4).toString('hex')}.${ext}`;
+  const filePath = path.join(uploadDir, filename);
+
+  const response = await axios.get(downloadUrl, {
+    responseType: 'arraybuffer',
+    timeout: 40000,
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+    }
+  });
+
+  const buffer = Buffer.from(response.data);
+  fs.writeFileSync(filePath, buffer);
+
+  const rawContentType = String(response.headers['content-type'] || '');
+  const contentType = rawContentType || (expectedType === 'VIDEO' ? 'video/mp4' : 'image/jpeg');
+  const mediaType = contentType.startsWith('video/') ? 'VIDEO' : expectedType;
+  const checksum = crypto.createHash('md5').update(buffer).digest('hex');
+
+  const media = await prisma.mediaFile.create({
+    data: {
+      fileName: `gdrive_${expectedType.toLowerCase()}_${filename}`,
+      storageUrl: `/uploads/${filename}`,
+      mimeType: contentType,
+      fileSize: buffer.length,
+      mediaType,
+      checksum,
+    },
+  });
+
+  return media;
+}
+
+// POST /api/media/import-drive - Sync/Import media files from Google Drive URLs
+router.post('/import-drive', requireAuth, async (req, res, next) => {
+  try {
+    let { imageLink, videoLink } = req.body;
+
+    if (!imageLink && !videoLink) {
+      const imgSetting = await prisma.systemSetting.findUnique({ where: { key: 'gdrive_image_url' } });
+      const vidSetting = await prisma.systemSetting.findUnique({ where: { key: 'gdrive_video_url' } });
+      imageLink = imgSetting?.valueEncrypted || '';
+      videoLink = vidSetting?.valueEncrypted || '';
+    }
+
+    if (!imageLink && !videoLink) {
+      throw new BadRequestError('Vui lòng nhập ít nhất 1 liên kết Google Drive cho Hình ảnh hoặc Video');
+    }
+
+    const importedMedia = [];
+    const errors = [];
+
+    // Process Image Link
+    if (imageLink) {
+      let imgIds = extractDriveFileIds(imageLink);
+      if (imgIds.length === 0 && imageLink.includes('/folders/')) {
+        imgIds = await extractFileIdsFromFolderUrl(imageLink);
+      }
+      if (imgIds.length === 0 && imageLink.startsWith('http')) {
+        imgIds = [imageLink];
+      }
+
+      for (const idOrUrl of imgIds) {
+        try {
+          const media = await downloadAndSaveDriveFile(idOrUrl, 'IMAGE');
+          importedMedia.push(media);
+        } catch (err: any) {
+          console.error(`[Drive Import] Lỗi tải hình ảnh (${idOrUrl}):`, err.message);
+          errors.push(`Ảnh (${idOrUrl}): ${err.message}`);
+        }
+      }
+    }
+
+    // Process Video Link
+    if (videoLink) {
+      let vidIds = extractDriveFileIds(videoLink);
+      if (vidIds.length === 0 && videoLink.includes('/folders/')) {
+        vidIds = await extractFileIdsFromFolderUrl(videoLink);
+      }
+      if (vidIds.length === 0 && videoLink.startsWith('http')) {
+        vidIds = [videoLink];
+      }
+
+      for (const idOrUrl of vidIds) {
+        try {
+          const media = await downloadAndSaveDriveFile(idOrUrl, 'VIDEO');
+          importedMedia.push(media);
+        } catch (err: any) {
+          console.error(`[Drive Import] Lỗi tải video (${idOrUrl}):`, err.message);
+          errors.push(`Video (${idOrUrl}): ${err.message}`);
+        }
+      }
+    }
+
+    if (importedMedia.length === 0 && errors.length > 0) {
+      throw new BadRequestError(`Không thể tải media từ Google Drive: ${errors.join('; ')}`);
+    }
+
+    res.json({
+      success: true,
+      message: `🎉 Đã đồng bộ thành công ${importedMedia.length} tệp từ Google Drive vào kho media!`,
+      data: importedMedia,
+      errors: errors.length > 0 ? errors : undefined,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // POST /api/media/campaigns/:campaignId/shuffle - Trigger auto media allocation for campaign
 router.post(
   '/campaigns/:campaignId/shuffle',
@@ -184,3 +400,4 @@ router.post(
 );
 
 export default router;
+

@@ -1091,6 +1091,24 @@
               <p>Tổng hình ảnh khả dụng: <b id="totalImagesCount">0</b></p>
               <p>Tổng video khả dụng: <b id="totalVideosCount">0</b></p><span id="mediaStatusBadge" class="badge ok">Đủ
                 tài nguyên</span>
+
+              <div style="margin-top:20px;padding-top:16px;border-top:1px dashed var(--line)">
+                <h4 style="font-size:14px;color:var(--ink);margin-bottom:8px;display:flex;align-items:center;gap:6px">
+                  🌐 Liên Kết Google Drive Kho Media
+                </h4>
+                <div style="background:#f8fafc;padding:14px;border-radius:10px;border:1px solid var(--line)">
+                  <label style="font-size:12px;font-weight:700;display:block;margin-bottom:4px;color:var(--ink)">🖼️ Link Google Drive chứa HÌNH ẢNH:</label>
+                  <input id="gdriveImageLink" type="url" placeholder="https://drive.google.com/drive/folders/... (Folder/Link Ảnh)" style="width:100%;font-size:12px;padding:8px;border-radius:6px;border:1px solid #cbd5e1;margin-bottom:12px">
+
+                  <label style="font-size:12px;font-weight:700;display:block;margin-bottom:4px;color:var(--ink)">🎥 Link Google Drive chứa VIDEO:</label>
+                  <input id="gdriveVideoLink" type="url" placeholder="https://drive.google.com/drive/folders/... (Folder/Link Video)" style="width:100%;font-size:12px;padding:8px;border-radius:6px;border:1px solid #cbd5e1;margin-bottom:14px">
+
+                  <div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap">
+                    <button type="button" class="ghost small" onclick="saveDriveLinks()" style="border-radius:8px">💾 Lưu Link</button>
+                    <button type="button" class="small" onclick="importFromGoogleDrive()" style="background:linear-gradient(135deg,#0284c7,#0369a1);color:#fff;border-radius:8px;border:none;padding:7px 12px;font-weight:700">📥 Đồng bộ từ Drive</button>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -2157,6 +2175,63 @@
         }).join('');
       } catch (err) {
         grid.innerHTML = `<p style="color:var(--red);grid-column:1/-1">🔴 Lỗi tải kho media: ${err.message}</p>`;
+      } finally {
+        loadDriveLinks();
+      }
+    }
+
+    async function loadDriveLinks() {
+      try {
+        const res = await request('/media/drive-links').catch(() => ({ data: {} }));
+        if (res && res.data) {
+          const imgInp = document.getElementById('gdriveImageLink');
+          const vidInp = document.getElementById('gdriveVideoLink');
+          if (imgInp && res.data.imageLink) imgInp.value = res.data.imageLink;
+          if (vidInp && res.data.videoLink) vidInp.value = res.data.videoLink;
+        }
+      } catch (err) {
+        console.error('Lỗi nạp link Drive:', err);
+      }
+    }
+
+    async function saveDriveLinks() {
+      const imageLink = document.getElementById('gdriveImageLink')?.value || '';
+      const videoLink = document.getElementById('gdriveVideoLink')?.value || '';
+      try {
+        const res = await request('/media/drive-links', {
+          method: 'POST',
+          body: JSON.stringify({ imageLink, videoLink })
+        });
+        alert(res.message || '✅ Đã lưu liên kết Google Drive thành công!');
+      } catch (err) {
+        alert('🔴 Lỗi lưu link Google Drive: ' + err.message);
+      }
+    }
+
+    async function importFromGoogleDrive() {
+      const imageLink = document.getElementById('gdriveImageLink')?.value || '';
+      const videoLink = document.getElementById('gdriveVideoLink')?.value || '';
+
+      if (!imageLink && !videoLink) {
+        alert('⚠️ Vui lòng nhập link Google Drive cho Hình ảnh hoặc Video trước khi đồng bộ!');
+        return;
+      }
+
+      const grid = document.getElementById('mediaGridDisplay');
+      if (grid) {
+        grid.innerHTML = '<p style="color:var(--pink);grid-column:1/-1;padding:30px;text-align:center;font-weight:700">⏳ Đang tự động quét và đồng bộ hình ảnh/video từ Google Drive về kho...</p>';
+      }
+
+      try {
+        const res = await request('/media/import-drive', {
+          method: 'POST',
+          body: JSON.stringify({ imageLink, videoLink })
+        });
+        alert(res.message || '🎉 Đã đồng bộ media từ Google Drive thành công!');
+        loadMedia();
+      } catch (err) {
+        alert('🔴 Lỗi đồng bộ Google Drive: ' + err.message);
+        loadMedia();
       }
     }
 
