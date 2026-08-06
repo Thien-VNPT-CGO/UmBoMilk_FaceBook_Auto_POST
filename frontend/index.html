@@ -1155,307 +1155,75 @@ async function loadMedia() {
               <video src="${url}" style="width:100%;height:100%;object-fit:cover" controls></video>
             ` : `
               <img src="${url}" style="width:100%;height:100%;object-fit:cover" alt="${m.fileName}">
-            `}
-            <span class="badge ${isVideo ? 'run' : 'ok'}" style="position:absolute;top:8px;right:8px;font-size:10px;font-weight:800;padding:2px 8px;border-radius:6px">${isVideo ? 'VIDEO' : 'IMAGE'}</span>
-          </div>
-          <div style="padding:10px 12px">
-            <div style="font-weight:700;font-size:12.5px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${m.fileName}">${m.fileName}</div>
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
-              <span style="font-size:11px;color:var(--muted)">${sizeMb} MB</span>
-              <button type="button" class="ghost small" style="color:var(--red);border-color:var(--red);padding:2px 8px;font-size:11px" onclick="deleteMediaFile('${m.id}')">🗑️ Xóa</button>
-            </div>
-          </div>
-        </div>
-      `;
-    }).join('');
-  } catch (err) {
-    grid.innerHTML = `<p style="color:var(--red);grid-column:1/-1">🔴 Lỗi tải kho media: ${err.message}</p>`;
-  }
-}
-
-async function uploadGlobalMedia(input) {
-  const files = input.files;
-  if (!files || !files.length) return;
-
-  const formData = new FormData();
-  for (let i = 0; i < files.length; i++) {
-    formData.append('files', files[i]);
-  }
-
-  const grid = document.getElementById('mediaGridDisplay');
-  if (grid) {
-    grid.innerHTML = '<p style="color:var(--pink);grid-column:1/-1;padding:20px">⏳ Đang tải tệp media lên kho dùng chung...</p>';
-  }
-
-  try {
-    const authToken = token || localStorage.getItem('pinkflow_token');
-    const response = await fetch('/api/media/upload', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${authToken}`
-      },
-      body: formData
-    });
-
-    const res = await response.json();
-    if (!response.ok) throw new Error(res.error?.message || res.message || 'Lỗi tải media');
-
-    alert(res.message || '✅ Đã tải media thành công!');
-    input.value = '';
-    loadMedia();
-  } catch (err) {
-    alert('🔴 Lỗi tải media: ' + err.message);
-    loadMedia();
-  }
-}
-
-async function deleteMediaFile(id) {
-  if (!confirm('Xác nhận xóa tệp media này khỏi kho?')) return;
-  try {
-    const res = await request(`/media/${id}`, { method: 'DELETE' });
-    alert(res.message || 'Đã xóa tệp media');
-    loadMedia();
-  } catch (err) {
-    alert('Lỗi: ' + (err.error?.message || err.message));
-  }
-}
-
-async function shuffleMediaAllocation() {
-  try {
-    const res = await request('/media/shuffle', { method: 'POST' });
-    alert('🎲 ' + (res.message || 'Đã phân bổ ngẫu nhiên media thành công!'));
-    loadMedia();
-  } catch (err) {
-    alert('Lỗi: ' + (err.error?.message || err.message));
-  }
-}
-
-// 10 STEP CAMPAIGN WIZARD DATA & RENDER
-let wizardData = {
-  name: 'Chiến dịch đăng bài Facebook Page',
-  description: 'Tự động hóa đăng bài viết lên Facebook Page',
-  contentMode: 'SHARED',
-  mediaMode: 'IMAGE',
-  defaultPostCount: 10,
-  defaultIntervalMinutes: 15,
-  prompt: '',
-  productName: '',
-  brandName: '',
-  productPrice: '',
-  discountPrice: '',
-  sku: '',
-  mandatoryKeywords: '',
-  bannedKeywords: '',
-  tone: 'Thân thiện, Hấp dẫn',
-  allowEmoji: true,
-  allowHashtag: true,
-  ctaRequired: '',
-  startDate: new Date().toISOString(),
-  allowedStartTime: '08:00',
-  allowedEndTime: '22:00',
-  allowMediaReuse: true,
-};
-let selectedPageIds = [];
-let step = 0;
-
 const steps = [
-  { title: 'Thông tin chiến dịch', getHtml: () => `
-    <label>Tên chiến dịch</label><input id="wName" value="${wizardData.name}" onchange="wizardData.name=this.value">
-    <label>Mô tả chiến dịch</label><textarea id="wDesc" onchange="wizardData.description=this.value">${wizardData.description}</textarea>
-    <div class="row" style="margin-top:10px">
-      <div style="flex:1"><label>Chế độ nội dung</label><select onchange="wizardData.contentMode=this.value"><option value="SHARED" ${wizardData.contentMode==='SHARED'?'selected':''}>Dùng chung (1 bộ bài cho tất cả Page)</option><option value="INDIVIDUAL" ${wizardData.contentMode==='INDIVIDUAL'?'selected':''}>Dùng riêng (Mỗi Page 1 bộ bài AI riêng)</option></select></div>
-      <div style="flex:1"><label>Loại Media</label><select onchange="wizardData.mediaMode=this.value"><option value="IMAGE" ${wizardData.mediaMode==='IMAGE'?'selected':''}>Hình ảnh (Đúng 6 hình/bài)</option><option value="VIDEO" ${wizardData.mediaMode==='VIDEO'?'selected':''}>Video (Đúng 1 video/bài)</option></select></div>
-    </div>
-  `},
-  { title: 'Chọn Facebook Page', getHtml: () => {
+  { 
+    title: '1. Nội Dung & Chọn Page', 
+    getHtml: () => {
       const pages = window.loadedPages || [];
-      if (!pages.length) {
-        return `
-          <div style="text-align:center;padding:45px 20px;background:#fff;border-radius:18px;border:1px dashed var(--line)">
-            <div style="font-size:42px;margin-bottom:10px">▰</div>
-            <h3 style="margin:0;color:var(--ink);font-weight:800">Chưa có Facebook Page nào trong hệ thống</h3>
-            <p style="color:var(--muted);font-size:13px;margin:8px 0 16px">Vui lòng sang tab <b>Facebook Page</b> để thêm hoặc tự động quét danh sách Fanpage của bạn trước khi tạo chiến dịch.</p>
-            <button onclick="openPage('pages')" style="padding:10px 20px;border-radius:10px">＋ Đến Quản Lý Facebook Page</button>
-          </div>
-        `;
-      }
-
       const selectedCount = selectedPageIds.length;
 
-      const pageCardsHtml = pages.map(p => {
+      const pageCardsHtml = !pages.length ? `
+        <div style="text-align:center;padding:30px 20px;background:#fff;border-radius:18px;border:1px dashed var(--line)">
+          <h4 style="margin:0;color:var(--ink)">Chưa có Facebook Page nào trong hệ thống</h4>
+          <p style="color:var(--muted);font-size:12.5px;margin:6px 0 12px">Vui lòng sang tab <b>Facebook Page</b> để quét hoặc thêm Page.</p>
+          <button onclick="openPage('pages')" class="small">＋ Đến Quản Lý Facebook Page</button>
+        </div>
+      ` : pages.map(p => {
         const isSelected = selectedPageIds.includes(p.id);
         const isValid = p.tokenStatus === 'VALID';
         return `
-          <div class="page-select-card" id="pageCard_${p.id}" onclick="toggleWizardPageSelect('${p.id}')" style="background:${isSelected ? '#fff0f6' : '#fff'};border:${isSelected ? '2px solid var(--pink)' : '1px solid var(--line)'};border-radius:18px;padding:18px 20px;cursor:pointer;transition:all 0.2s ease;box-shadow:${isSelected ? '0 6px 20px rgba(244,91,154,0.18)' : '0 4px 14px rgba(0,0,0,0.03)'};display:flex;align-items:center;justify-content:space-between">
-            <div style="display:flex;align-items:center;gap:14px;overflow:hidden">
-              <div style="width:44px;height:44px;border-radius:14px;background:${isSelected ? 'linear-gradient(135deg,var(--pink),var(--dark))' : 'var(--pale)'};color:${isSelected ? '#fff' : 'var(--dark)'};display:grid;place-items:center;font-weight:800;font-size:18px;box-shadow:${isSelected ? '0 4px 12px rgba(244,91,154,0.35)' : 'none'};flex-shrink:0">f</div>
+          <div class="page-select-card" id="pageCard_${p.id}" onclick="toggleWizardPageSelect('${p.id}')" style="background:${isSelected ? '#fff0f6' : '#fff'};border:${isSelected ? '2px solid var(--pink)' : '1px solid var(--line)'};border-radius:16px;padding:14px 16px;cursor:pointer;transition:all 0.2s ease;box-shadow:${isSelected ? '0 6px 20px rgba(244,91,154,0.18)' : '0 3px 10px rgba(0,0,0,0.02)'};display:flex;align-items:center;justify-content:space-between">
+            <div style="display:flex;align-items:center;gap:12px;overflow:hidden">
+              <div style="width:38px;height:38px;border-radius:12px;background:${isSelected ? 'linear-gradient(135deg,var(--pink),var(--dark))' : 'var(--pale)'};color:${isSelected ? '#fff' : 'var(--dark)'};display:grid;place-items:center;font-weight:800;font-size:16px;flex-shrink:0">f</div>
               <div style="overflow:hidden">
-                <div style="font-weight:800;font-size:14.5px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.pageName || p.name}</div>
-                <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
-                  <span style="font-size:11.5px;color:var(--muted)">ID: ${p.facebookPageId}</span>
-                  <span class="badge ${isValid ? 'ok' : 'err'}" style="padding:3px 10px;border-radius:8px;font-size:11px;font-weight:700">${isValid ? 'VALID ✓' : p.tokenStatus || 'INVALID'}</span>
+                <div style="font-weight:800;font-size:13.5px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.pageName || p.name}</div>
+                <div style="display:flex;align-items:center;gap:6px;margin-top:2px">
+                  <span style="font-size:11px;color:var(--muted)">ID: ${p.facebookPageId}</span>
+                  <span class="badge ${isValid ? 'ok' : 'err'}" style="padding:2px 8px;border-radius:6px;font-size:10.5px;font-weight:700">${isValid ? 'VALID ✓' : 'INVALID'}</span>
                 </div>
               </div>
             </div>
-            <div style="margin-left:14px;flex-shrink:0">
-              <input type="checkbox" id="pageCb_${p.id}" ${isSelected ? 'checked' : ''} onclick="event.stopPropagation(); toggleWizardPageSelect('${p.id}')" style="width:20px;height:20px;accent-color:var(--pink);cursor:pointer">
-            </div>
+            <input type="checkbox" id="pageCb_${p.id}" ${isSelected ? 'checked' : ''} onclick="event.stopPropagation(); toggleWizardPageSelect('${p.id}')" style="width:18px;height:18px;accent-color:var(--pink);cursor:pointer;flex-shrink:0">
           </div>
         `;
       }).join('');
 
       return `
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;background:var(--pale);padding:14px 20px;border-radius:14px;border:1px solid #f6e3ec">
+        <div style="display:flex;flex-direction:column;gap:16px">
           <div>
-            <span style="font-weight:800;font-size:14px;color:var(--ink)">Chọn các Facebook Page sẽ tham gia chiến dịch tự động hóa</span>
-            <div style="font-size:12px;color:var(--muted);margin-top:2px">Mỗi Page sẽ nhận được lịch đăng bài độc lập và nội dung bài viết AI.</div>
+            <label style="font-weight:800;font-size:13.5px;color:var(--ink)">Tên chiến dịch</label>
+            <input id="wName" value="${wizardData.name}" onchange="wizardData.name=this.value" placeholder="VD: Chiến dịch Marketing Tự Động">
           </div>
-          <div style="display:flex;align-items:center;gap:10px">
-            <span class="badge ok" id="selectedPageCountBadge" style="padding:6px 14px;border-radius:10px;font-size:12px;font-weight:800">Đã chọn: ${selectedCount} / ${pages.length} Page</span>
-            <button type="button" class="ghost small" style="border-radius:10px;padding:6px 14px;font-weight:700" onclick="selectAllWizardPages(true)">Select All</button>
-            <button type="button" class="ghost small" style="border-radius:10px;padding:6px 14px;font-weight:700" onclick="selectAllWizardPages(false)">Deselect All</button>
-          </div>
-        </div>
 
-        <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(340px, 1fr));gap:16px;max-height:480px;overflow-y:auto;padding-right:4px">
-          ${pageCardsHtml}
+          <div>
+            <label style="font-weight:800;font-size:13.5px;color:var(--ink)">Nội dung bài viết / Ý tưởng mẫu cho AI</label>
+            <textarea id="wPrompt" onchange="wizardData.prompt=this.value" style="height:140px;font-size:13.5px;line-height:1.6;padding:12px" placeholder="Nhập bài viết mẫu hoặc ý tưởng để AI viết bài content tự động...">${wizardData.prompt}</textarea>
+          </div>
+
+          <div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+              <label style="font-weight:800;font-size:13.5px;color:var(--ink);margin:0">Chọn Facebook Page đăng bài (${selectedCount} / ${pages.length})</label>
+              <div style="display:flex;gap:8px">
+                <button type="button" class="ghost small" style="padding:4px 10px;font-size:11.5px" onclick="selectAllWizardPages(true)">Chọn tất cả</button>
+                <button type="button" class="ghost small" style="padding:4px 10px;font-size:11.5px" onclick="selectAllWizardPages(false)">Bỏ chọn</button>
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(300px, 1fr));gap:12px;max-height:280px;overflow-y:auto;padding:2px">
+              ${pageCardsHtml}
+            </div>
+          </div>
         </div>
       `;
     }
   },
-  { title: 'Nội dung bài viết', getHtml: () => `
-    <div class="notice" style="border-left:4px solid var(--pink)">
-      📝 <b>Nhập nội dung bài viết đăng Page:</b><br>
-      Nhập trực tiếp bài viết bạn muốn đăng lên Facebook Page (hoặc nhập ý tưởng/prompt để AI phát triển bài viết).
-    </div>
-    <label style="font-weight:700;font-size:14px;margin-bottom:8px">Nội dung bài viết / Ý tưởng đăng bài</label>
-    <textarea id="wPrompt" onchange="wizardData.prompt=this.value" style="height:220px;font-size:14px;line-height:1.6;padding:12px" placeholder="Nhập toàn bộ nội dung bài viết cần đăng lên Facebook Page tại đây...">${wizardData.prompt}</textarea>
-    
-    <div style="margin-top:15px">
-      <button type="button" class="ghost small" onclick="const el=document.getElementById('advConfigFields'); el.style.display = (el.style.display==='none' || !el.style.display) ? 'block' : 'none'">⚙️ Cấu hình thông tin mở rộng (Tùy chọn)</button>
-    </div>
-
-    <div id="advConfigFields" style="display:none;margin-top:15px;padding:15px;background:var(--pale);border:1px solid var(--line);border-radius:12px">
-      <div class="row">
-        <div style="flex:1"><label>Tên sản phẩm (Tùy chọn)</label><input value="${wizardData.productName||''}" onchange="wizardData.productName=this.value" placeholder="Tùy chọn"></div>
-        <div style="flex:1"><label>Thương hiệu (Tùy chọn)</label><input value="${wizardData.brandName||''}" onchange="wizardData.brandName=this.value" placeholder="Tùy chọn"></div>
-      </div>
-      <div class="row">
-        <div style="flex:1"><label>Giá bán</label><input value="${wizardData.productPrice||''}" onchange="wizardData.productPrice=this.value" placeholder="Tùy chọn"></div>
-        <div style="flex:1"><label>Giá khuyến mãi</label><input value="${wizardData.discountPrice||''}" onchange="wizardData.discountPrice=this.value" placeholder="Tùy chọn"></div>
-        <div style="flex:1"><label>Mã SKU</label><input value="${wizardData.sku||''}" onchange="wizardData.sku=this.value" placeholder="Tùy chọn"></div>
-      </div>
-      <label>Từ khóa bắt buộc xuất hiện</label><input value="${wizardData.mandatoryKeywords||''}" onchange="wizardData.mandatoryKeywords=this.value" placeholder="Tùy chọn">
-      <label>Từ khóa cấm xuất hiện</label><input value="${wizardData.bannedKeywords||''}" onchange="wizardData.bannedKeywords=this.value" placeholder="Tùy chọn">
-      <label>Lời kêu gọi hành động (CTA)</label><input value="${wizardData.ctaRequired||''}" onchange="wizardData.ctaRequired=this.value" placeholder="Tùy chọn">
-    </div>
-  `},
-  { title: 'Cấu hình AI', getHtml: () => `
-    <div class="row">
-      <div style="flex:1"><label>Giọng văn mong muốn</label><select onchange="wizardData.tone=this.value"><option>Thân thiện, Hấp dẫn</option><option>Chuyên nghiệp, Uy tín</option><option>Sôi nổi, Hào hứng</option></select></div>
-      <div style="flex:1"><label>Sử dụng Emoji</label><select onchange="wizardData.allowEmoji=this.value==='true'"><option value="true" ${wizardData.allowEmoji?'selected':''}>Có</option><option value="false" ${!wizardData.allowEmoji?'selected':''}>Không</option></select></div>
-      <div style="flex:1"><label>Sử dụng Hashtag</label><select onchange="wizardData.allowHashtag=this.value==='true'"><option value="true" ${wizardData.allowHashtag?'selected':''}>Có</option><option value="false" ${!wizardData.allowHashtag?'selected':''}>Không</option></select></div>
-    </div>
-  `},
-  { title: 'Tải media', getHtml: () => `
-    <div class="notice">Tải lên hình ảnh hoặc video cho chiến dịch. Bài hình lấy <b>đúng 6 hình</b> per post.</div>
-    <input type="file" id="wMediaFiles" multiple accept="image/*,video/*">
-    <p style="color:var(--muted)">Đã sẵn sàng kho media mặc định để tự động phân bổ.</p>
-  `},
-  { title: 'Phân bổ media', getHtml: () => {
+  { 
+    title: '2. Cấu Hinh Lịch & Media', 
+    getHtml: () => {
       const mediaList = window.loadedMedia || [];
       const imageCount = mediaList.filter(m => m.mimeType?.startsWith('image') || m.type==='IMAGE').length;
       const videoCount = mediaList.filter(m => m.mimeType?.startsWith('video') || m.type==='VIDEO').length;
 
       return `
-        <!-- ALGORITHM EXPLANATION BANNER -->
-        <div style="background:linear-gradient(135deg,#20141f,#3b1a2f);color:#fff;border-radius:20px;padding:24px 28px;margin-bottom:24px;box-shadow:0 10px 30px rgba(32,20,31,0.25);position:relative;overflow:hidden">
-          <div style="position:absolute;right:-20px;bottom:-20px;font-size:120px;opacity:0.06;pointer-events:none">🎲</div>
-          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px">
-            <div>
-              <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(244,91,154,0.2);color:var(--pink);padding:6px 14px;border-radius:30px;font-weight:800;font-size:12px;letter-spacing:0.5px;margin-bottom:10px">
-                ⚡ FISHER-YATES SHUFFLE ALGORITHM
-              </div>
-              <h3 style="margin:0;font-weight:800;font-size:20px;color:#fff">Thuật Toán Phân Bổ Media Ngẫu Nhiên Tự Động</h3>
-              <p style="margin:6px 0 0;color:rgba(255,255,255,0.7);font-size:13.5px;max-width:620px;line-height:1.5">
-                Hệ thống áp dụng thuật toán xáo trộn Fisher-Yates để chọn <b>đúng 6 hình ảnh</b> cho mỗi bài viết dạng ảnh (hoặc <b>đúng 1 video</b> cho bài video), đảm bảo các bài đăng không bị lặp lại thứ tự media.
-              </p>
-            </div>
-            <div style="display:flex;gap:12px">
-              <div style="background:rgba(255,255,255,0.1);backdrop-filter:blur(10px);padding:14px 20px;border-radius:14px;border:1px solid rgba(255,255,255,0.15);text-align:center">
-                <div style="font-size:11px;color:rgba(255,255,255,0.7);text-transform:uppercase;font-weight:700">Mỗi Bài Viết Ảnh</div>
-                <div style="font-size:22px;font-weight:900;color:var(--pink);margin-top:2px">6 Hình</div>
-              </div>
-              <div style="background:rgba(255,255,255,0.1);backdrop-filter:blur(10px);padding:14px 20px;border-radius:14px;border:1px solid rgba(255,255,255,0.15);text-align:center">
-                <div style="font-size:11px;color:rgba(255,255,255,0.7);text-transform:uppercase;font-weight:700">Mỗi Bài Video</div>
-                <div style="font-size:22px;font-weight:900;color:#38ef7d;margin-top:2px">1 Video</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- RESOURCE CAPACITY CARDS & MEDIA REUSE SETTING -->
-        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:18px;margin-bottom:24px">
-          
-          <!-- CARD 1: IMAGE POOL STATUS -->
-          <div style="background:#fff;border:1px solid var(--line);border-radius:18px;padding:20px;box-shadow:0 4px 14px rgba(0,0,0,0.03)">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-              <div style="display:flex;align-items:center;gap:10px">
-                <div style="width:36px;height:36px;border-radius:10px;background:#fff0f6;color:var(--pink);display:grid;place-items:center;font-weight:800;font-size:16px">📸</div>
-                <span style="font-weight:800;font-size:14.5px;color:var(--ink)">Kho Ảnh Khả Dụng</span>
-              </div>
-              <span class="badge ${imageCount>=6 ? 'ok':'err'}" style="padding:4px 12px;border-radius:8px;font-size:11px;font-weight:800">
-                ${imageCount>=6 ? '🟢 ĐỦ RESOURCE' : '⚠️ THIẾU ẢNH'}
-              </span>
-            </div>
-            <div style="font-size:26px;font-weight:900;color:var(--ink);margin-bottom:4px">${imageCount} <span style="font-size:13px;font-weight:600;color:var(--muted)">tệp ảnh trong hệ thống</span></div>
-            <div style="font-size:12px;color:var(--muted)">Đủ tạo ra <b>${Math.floor(imageCount/6)}</b> bài viết ảnh độc lập không trùng lặp.</div>
-          </div>
-
-          <!-- CARD 2: VIDEO POOL STATUS -->
-          <div style="background:#fff;border:1px solid var(--line);border-radius:18px;padding:20px;box-shadow:0 4px 14px rgba(0,0,0,0.03)">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-              <div style="display:flex;align-items:center;gap:10px">
-                <div style="width:36px;height:36px;border-radius:10px;background:#eef6ff;color:var(--blue);display:grid;place-items:center;font-weight:800;font-size:16px">🎥</div>
-                <span style="font-weight:800;font-size:14.5px;color:var(--ink)">Kho Video Khả Dụng</span>
-              </div>
-              <span class="badge ${videoCount>=1 ? 'ok':'err'}" style="padding:4px 12px;border-radius:8px;font-size:11px;font-weight:800">
-                ${videoCount>=1 ? '🟢 ĐỦ RESOURCE' : '⚠️ CHƯA CÓ VIDEO'}
-              </span>
-            </div>
-            <div style="font-size:26px;font-weight:900;color:var(--ink);margin-bottom:4px">${videoCount} <span style="font-size:13px;font-weight:600;color:var(--muted)">tệp video trong hệ thống</span></div>
-            <div style="font-size:12px;color:var(--muted)">Đủ tạo ra <b>${videoCount}</b> bài đăng video độc lập.</div>
-          </div>
-
-          <!-- CARD 3: REUSE SETTING CARD -->
-          <div style="background:${wizardData.allowMediaReuse ? '#fff0f6' : '#fff'};border:${wizardData.allowMediaReuse ? '2px solid var(--pink)' : '1px solid var(--line)'};border-radius:18px;padding:20px;box-shadow:0 4px 14px rgba(0,0,0,0.03);cursor:pointer;transition:all 0.2s ease" onclick="toggleWizardMediaReuse()">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-              <div style="display:flex;align-items:center;gap:10px">
-                <div style="width:36px;height:36px;border-radius:10px;background:${wizardData.allowMediaReuse ? 'linear-gradient(135deg,var(--pink),var(--dark))' : 'var(--pale)'};color:${wizardData.allowMediaReuse ? '#fff' : 'var(--dark)'};display:grid;place-items:center;font-weight:800;font-size:16px">♻️</div>
-                <span style="font-weight:800;font-size:14.5px;color:var(--ink)">Tái Sử Dụng Media</span>
-              </div>
-              <input type="checkbox" id="wMediaReuseCb" ${wizardData.allowMediaReuse ? 'checked' : ''} onclick="event.stopPropagation(); toggleWizardMediaReuse()" style="width:20px;height:20px;accent-color:var(--pink);cursor:pointer">
-            </div>
-            <div style="font-weight:800;font-size:14px;color:var(--ink);margin-bottom:4px">Cho phép quay vòng Media</div>
-            <div style="font-size:12px;color:var(--muted)">Nếu bật, hình ảnh/video sẽ được xoay vòng ngẫu nhiên khi số lượng bài viết nhiều hơn số tệp media trong kho.</div>
-          </div>
-
-        </div>
-
-        <div style="background:var(--pale);border:1px solid #f6e3ec;border-radius:16px;padding:16px 20px;display:flex;align-items:center;justify-content:space-between">
-          <div style="display:flex;align-items:center;gap:12px">
-            <span style="font-size:22px">🎲</span>
-            <div>
-              <div style="font-weight:800;font-size:14px;color:var(--ink)">Chế độ xáo trộn ngẫu nhiên (Fisher-Yates Shuffle) đã sẵn sàng</div>
-              <div style="font-size:12px;color:var(--muted)">Mỗi bài viết tạo ra ở bước tiếp theo sẽ tự động được gán bộ media 6 ảnh ngẫu nhiên.</div>
-            </div>
-          </div>
-          <button type="button" class="ghost small" style="border-radius:10px;padding:8px 16px;font-weight:700;color:var(--pink);border-color:var(--pink)" onclick="openPage('media')">🖼️ Xem Kho Media</button>
-        </div>
-      `;
-    }
-  },
-  { title: 'Xem & chỉnh nội dung AI', getHtml: () => `
     <div class="notice">Kiểm tra danh sách bài viết AI đã khởi tạo và tiến hành phê duyệt trước khi chuyển sang bước Thiết lập lịch đăng bài.</div>
     <div id="step7PostsContainer">Đang kiểm tra dữ liệu bài viết...</div>
   `},
@@ -1821,23 +1589,18 @@ function renderWizard(){
 }
 
 function gotoWizardStep(targetStep) {
-  const isAdmin = isApproverUser();
-  if (targetStep >= 7 && !currentCampaignApproved && !isAdmin) {
-    alert('🔒 BÀI VIẾT CHƯA ĐƯỢC ADMIN / MANAGER PHÊ DUYỆT!\n\nVui lòng chờ Admin hoặc Manager xem qua bài viết tại Bước 7 và bấm "Duyệt bài đăng ✓" để mở khóa Bước 8 (Thiết lập lịch đăng), Bước 9 và Bước 10!');
-    return;
-  }
   step = targetStep;
   renderWizard();
 }
 
 async function submitCampaign() {
-  if (selectedPageIds.length === 0) {
-    alert('Vui lòng chọn ít nhất 1 Facebook Page ở Bước 2!');
-    step = 1; renderWizard(); return;
-  }
   if (!wizardData.prompt || !wizardData.prompt.trim()) {
-    alert('Vui lòng nhập Nội dung bài viết ở Bước 3!');
-    step = 2; renderWizard(); return;
+    alert('Vui lòng nhập Tên & Nội dung bài viết ở Bước 1!');
+    step = 0; renderWizard(); return;
+  }
+  if (selectedPageIds.length === 0) {
+    alert('Vui lòng chọn ít nhất 1 Facebook Page ở Bước 1!');
+    step = 0; renderWizard(); return;
   }
 
   const payload = {
