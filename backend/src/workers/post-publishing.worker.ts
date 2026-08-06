@@ -10,6 +10,18 @@ interface PostSchedulingJob {
   postId: string;
 }
 
+function getPublicMediaUrl(rawUrl: string): string {
+  if (!rawUrl) return '';
+  const publicBase = process.env.APP_URL || 'https://umbomilk-facebook-auto-post.onrender.com';
+  if (rawUrl.startsWith('http://') || rawUrl.startsWith('https://')) {
+    if (rawUrl.includes('localhost') || rawUrl.includes('127.0.0.1')) {
+      return rawUrl.replace(/http:\/\/(localhost|127\.0\.0\.1)(:\d+)?/, publicBase);
+    }
+    return rawUrl;
+  }
+  return `${publicBase.replace(/\/+$/, '')}/${rawUrl.replace(/^\/+/, '')}`;
+}
+
 export async function publishPost(postId: string) {
   const post = await prisma.generatedPost.findUnique({
     where: { id: postId },
@@ -32,13 +44,12 @@ export async function publishPost(postId: string) {
 
   const accessToken = decryptString(page.encryptedPageAccessToken);
   const mediaCount = post.postMedias?.length || 0;
+  let facebookPostId: string | null = null;
 
   try {
-    let facebookPostId: string | null = null;
-
     if (post.mediaType === 'VIDEO' && mediaCount > 0) {
       // 1. Post Video
-      const videoUrl = post.postMedias[0].mediaFile.storageUrl;
+      const videoUrl = getPublicMediaUrl(post.postMedias[0].mediaFile.storageUrl);
       const res = await axios.post(
         `https://graph.facebook.com/v19.0/${page.facebookPageId}/videos`,
         null,
@@ -54,58 +65,82 @@ export async function publishPost(postId: string) {
       facebookPostId = res.data?.id?.toString() ?? null;
     } else if (mediaCount > 1) {
       // 2. Post Multi-Photo Album (e.g. 6 Photos)
-      const attachedMediaIds: string[] = [];
+      try {
+        const attachedMediaIds: string[] = [];
+        for (const pm of post.postMedias) {
+          const photoUrl = getPublicMediaUrl(pm.mediaFile.storageUrl);
+          const photoRes = await axios.post(
+            `https://graph.facebook.com/v19.0/${page.facebookPageId}/photos`,
+            null,
+            {
+              params: {
+                access_token: accessToken,
+                url: photoUrl,
+                published: false,
+              },
+              timeout: 20000,
+            }
+          );
+          if (photoRes.data?.id) {
+            attachedMediaIds.push(photoRes.data.id);
+          }
+        }
 
-      // Step A: Upload photos unpublished to get photo IDs
-      for (const pm of post.postMedias) {
-        const photoRes = await axios.post(
+        const feedParams: Record<string, unknown> = {
+          access_token: accessToken,
+          message: post.content,
+        };
+        attachedMediaIds.forEach((id, idx) => {
+          feedParams[`attached_media[${idx}]`] = JSON.stringify({ media_fbid: id });
+        });
+
+        const feedRes = await axios.post(
+          `https://graph.facebook.com/v19.0/${page.facebookPageId}/feed`,
+          null,
+          { params: feedParams, timeout: 20000 }
+        );
+        facebookPostId = feedRes.data?.id?.toString() ?? null;
+      } catch (albumErr: any) {
+        logger.warn(`Multi-photo upload failed (${albumErr.message}). Publishing feed post...`);
+        const feedRes = await axios.post(
+          `https://graph.facebook.com/v19.0/${page.facebookPageId}/feed`,
+          null,
+          {
+            params: { access_token: accessToken, message: post.content },
+            timeout: 15000,
+          }
+        );
+        facebookPostId = feedRes.data?.id?.toString() ?? null;
+      }
+    } else if (mediaCount === 1) {
+      // 3. Single Photo Post with fallback
+      try {
+        const photoUrl = getPublicMediaUrl(post.postMedias[0].mediaFile.storageUrl);
+        const res = await axios.post(
           `https://graph.facebook.com/v19.0/${page.facebookPageId}/photos`,
           null,
           {
             params: {
               access_token: accessToken,
-              url: pm.mediaFile.storageUrl,
-              published: false,
+              caption: post.content,
+              url: photoUrl,
             },
             timeout: 20000,
           }
         );
-        if (photoRes.data?.id) {
-          attachedMediaIds.push(photoRes.data.id);
-        }
+        facebookPostId = res.data?.id?.toString() ?? null;
+      } catch (photoErr: any) {
+        logger.warn(`Single photo upload failed (${photoErr.message}). Publishing feed post...`);
+        const feedRes = await axios.post(
+          `https://graph.facebook.com/v19.0/${page.facebookPageId}/feed`,
+          null,
+          {
+            params: { access_token: accessToken, message: post.content },
+            timeout: 15000,
+          }
+        );
+        facebookPostId = feedRes.data?.id?.toString() ?? null;
       }
-
-      // Step B: Create Feed post containing attached media IDs
-      const feedParams: Record<string, unknown> = {
-        access_token: accessToken,
-        message: post.content,
-      };
-      attachedMediaIds.forEach((id, idx) => {
-        feedParams[`attached_media[${idx}]`] = JSON.stringify({ media_fbid: id });
-      });
-
-      const feedRes = await axios.post(
-        `https://graph.facebook.com/v19.0/${page.facebookPageId}/feed`,
-        null,
-        { params: feedParams, timeout: 20000 }
-      );
-      facebookPostId = feedRes.data?.id?.toString() ?? null;
-    } else if (mediaCount === 1) {
-      // 3. Post Single Photo
-      const photoUrl = post.postMedias[0].mediaFile.storageUrl;
-      const res = await axios.post(
-        `https://graph.facebook.com/v19.0/${page.facebookPageId}/photos`,
-        null,
-        {
-          params: {
-            access_token: accessToken,
-            caption: post.content,
-            url: photoUrl,
-          },
-          timeout: 20000,
-        }
-      );
-      facebookPostId = res.data?.id?.toString() ?? null;
     } else {
       // 4. Text-only Post
       const res = await axios.post(
