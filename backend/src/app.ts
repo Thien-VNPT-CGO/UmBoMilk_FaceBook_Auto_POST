@@ -38,18 +38,26 @@ export function createApp(): express.Express {
 
   // Static frontend directory serving
   const possibleFrontendDirs = [
-    path.join(process.cwd(), 'frontend'),
-    path.join(process.cwd(), '..', 'frontend'),
-    path.join(__dirname, '../../frontend')
+    path.resolve(process.cwd(), '../frontend'),
+    path.resolve(process.cwd(), 'frontend'),
+    path.resolve(__dirname, '../../frontend'),
+    path.resolve(__dirname, '../frontend'),
+    path.resolve(__dirname, '../../../frontend'),
+    '/opt/render/project/src/frontend'
   ];
+
   let frontendDir = possibleFrontendDirs.find(d => {
-    try { return fs.existsSync(d); } catch { return false; }
+    try {
+      return fs.existsSync(path.join(d, 'index.html'));
+    } catch {
+      return false;
+    }
   }) || possibleFrontendDirs[0];
 
   app.use(express.static(frontendDir));
 
   app.get('/health', (_req, res) => {
-    res.json({ status: 'ok', service: 'facebook-automation-backend' });
+    res.json({ status: 'ok', service: 'facebook-automation-backend', frontendDir });
   });
 
   app.use('/api/auth', authRoutes);
@@ -69,7 +77,21 @@ export function createApp(): express.Express {
 
   // Fallback to frontend index.html for SPA routes
   app.get('*', (_req, res) => {
-    res.sendFile(path.join(frontendDir, 'index.html'));
+    const indexPath = path.resolve(frontendDir, 'index.html');
+    if (fs.existsSync(indexPath)) {
+      res.sendFile(indexPath);
+    } else {
+      res.status(200).send(`
+        <!DOCTYPE html>
+        <html>
+        <head><title>UmBoMilk - Facebook Auto Post</title></head>
+        <body style="font-family:sans-serif;padding:40px;text-align:center">
+          <h2>🚀 UmBoMilk Backend API Server is Running!</h2>
+          <p>API Health Check: <a href="/health">/health</a></p>
+        </body>
+        </html>
+      `);
+    }
   });
 
   app.use(errorHandler);

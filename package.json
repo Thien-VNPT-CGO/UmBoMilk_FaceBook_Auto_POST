@@ -5,7 +5,7 @@
   "description": "UmBoMilk - Marketing Auto-Post Page Facebook Automation System",
   "main": "backend/dist/index.js",
   "scripts": {
-    "build": "cd backend && npm install && DATABASE_URL=\"postgresql://placeholder:placeholder@localhost:5432/placeholder?schema=public\" npx prisma generate && npm run build",
+    "build": "cd backend && npm install && DATABASE_URL=\"postgresql://placeholder:placeholder@localhost:5432/placeholder?schema=public\" npx prisma generate && npm run build && (mkdir -p frontend && cp -r ../frontend/* frontend/ || true)",
     "start": "cd backend && (npx prisma db push || true) && node dist/index.js",
     "vercel-build": "cd backend && DATABASE_URL=\"postgresql://placeholder:placeholder@localhost:5432/placeholder?schema=public\" npx prisma generate && tsc"
   },
