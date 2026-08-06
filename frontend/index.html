@@ -423,7 +423,9 @@ tr:hover td{background:#fff0f633}
 </div>
 
 <script>
-const apiBase = 'http://localhost:5000/api';
+const apiBase = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+  ? `http://${window.location.hostname}:5000/api`
+  : `${window.location.protocol}//${window.location.hostname}/api`;
 let token = localStorage.getItem('pinkflow_token');
 let currentUser = null;
 let activeCampaignId = null;
