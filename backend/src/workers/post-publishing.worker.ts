@@ -10,7 +10,7 @@ interface PostSchedulingJob {
   postId: string;
 }
 
-async function publishPost(postId: string) {
+export async function publishPost(postId: string) {
   const post = await prisma.generatedPost.findUnique({
     where: { id: postId },
     include: {

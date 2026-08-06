@@ -1579,11 +1579,12 @@ async function loadStep7Data() {
                       ? '<b style="color:var(--red)">✗ Đã từ chối</b>' 
                       : '<b style="color:var(--yellow)">⏳ Chờ duyệt</b>'}
                   </span>
-                  <div style="display:flex;gap:10px">
+                  <div style="display:flex;gap:10px;align-items:center">
                     ${isAdmin && p.status === 'PENDING_APPROVAL' ? `
                       <button class="ghost small" style="color:var(--red);border-color:#fecdd3;background:#fff0f3;padding:8px 18px;border-radius:10px;font-size:13px;font-weight:700" onclick="rejectWizardPost('${p.id}')">Từ chối ✗</button>
                       <button class="small" style="background:linear-gradient(135deg,#10b981,#059669);color:#fff;padding:8px 22px;border-radius:10px;font-size:13px;font-weight:700;box-shadow:0 4px 14px rgba(16,185,129,0.3)" onclick="approveWizardPost('${p.id}')">Duyệt bài đăng ✓</button>
                     ` : `<span class="badge ${p.status === 'APPROVED' ? 'ok' : 'wait'}" style="padding:6px 14px;border-radius:10px;font-size:12px;font-weight:700">${p.status === 'APPROVED' ? '✓ Đã duyệt' : 'Chờ Admin'}</span>`}
+                    <button class="small" style="background:linear-gradient(135deg,#3b82f6,#1d4ed8);color:#fff;padding:8px 18px;border-radius:10px;font-size:12.5px;font-weight:700;box-shadow:0 4px 14px rgba(59,130,246,0.3)" onclick="publishPostNowDirectly('${p.id}')">⚡ Đăng Ngay Lên FB</button>
                   </div>
                 </div>
               </div>
@@ -1620,6 +1621,34 @@ async function rejectWizardPost(id) {
     renderWizard();
   } catch (err) {
     alert('Lỗi từ chối: ' + (err.error?.message || err.message));
+  }
+}
+
+async function publishPostNowDirectly(id) {
+  if (!id || String(id).startsWith('ai_draft_')) {
+    alert('⚠️ Bài viết này đang ở chế độ xem thử. Vui lòng bấm "🚀 Kích hoạt chiến dịch ngay" ở Bước 10 để xuất bản bài viết lên Facebook Page!');
+    return;
+  }
+
+  const btn = event?.target;
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = '⏳ Đang đăng...';
+  }
+
+  try {
+    const res = await request(`/posts/${id}/publish-now`, { method: 'POST' });
+    alert(res.message || '✅ Đã đăng bài thành công lên Facebook Page!');
+    loadData();
+    if (typeof loadApprovalQueue === 'function') loadApprovalQueue();
+    if (typeof loadStep7Data === 'function') loadStep7Data();
+  } catch (err) {
+    alert('🔴 Lỗi đăng bài Facebook: ' + (err.error?.message || err.message || 'Lỗi kết nối Facebook Graph API'));
+  } finally {
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = '⚡ Đăng Ngay Lên FB';
+    }
   }
 }
 

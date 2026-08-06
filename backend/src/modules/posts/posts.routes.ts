@@ -215,15 +215,18 @@ router.post('/:id/publish-now', requireAuth, requirePermission('post.publish'), 
     const post = await prisma.generatedPost.findUnique({ where: { id: req.params.id } });
     if (!post) throw new NotFoundError('Không tìm thấy bài viết');
 
-    await facebookPublishingQueue.add(
-      'publish-now',
-      { postId: post.id },
-      { jobId: `pub-now-${post.id}-${Date.now()}` }
-    );
+    const { publishPost } = await import('../../workers/post-publishing.worker');
+    await publishPost(post.id);
 
-    res.json({ message: 'Đã đưa bài viết vào hàng đợi đăng ngay lập tức' });
-  } catch (err) {
-    next(err);
+    const updated = await prisma.generatedPost.findUnique({ where: { id: post.id } });
+    res.json({
+      success: true,
+      message: `Đã đăng bài thành công lên Facebook Page! Post ID: ${updated?.facebookPostId || 'OK'}`,
+      data: updated,
+    });
+  } catch (err: any) {
+    const msg = err.response?.data?.error?.message || err.message || 'Lỗi đăng bài Facebook';
+    res.status(400).json({ success: false, message: `Lỗi đăng bài Facebook: ${msg}` });
   }
 });
 

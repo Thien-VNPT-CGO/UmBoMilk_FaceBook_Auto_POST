@@ -4,6 +4,7 @@ import cookieParser from 'cookie-parser';
 import path from 'path';
 import fs from 'fs';
 import { errorHandler } from './common/middleware/errorHandler';
+import { prisma } from './common/database/prisma';
 import authRoutes from './modules/auth/auth.routes';
 import usersRoutes from './modules/users/users.routes';
 import rolesRoutes from './modules/roles/roles.routes';
@@ -95,5 +96,33 @@ export function createApp(): express.Express {
   });
 
   app.use(errorHandler);
+
+  // Continuous background Facebook Post Auto-Publisher Scheduler (Every 30 seconds)
+  setInterval(async () => {
+    try {
+      const now = new Date();
+      const duePosts = await prisma.generatedPost.findMany({
+        where: {
+          status: { in: ['APPROVED', 'SCHEDULED', 'RETRYING'] },
+          scheduledAt: { lte: now },
+        },
+        take: 10,
+      });
+
+      if (duePosts.length > 0) {
+        for (const post of duePosts) {
+          try {
+            const { publishPost } = await import('./workers/post-publishing.worker');
+            await publishPost(post.id);
+          } catch (err: any) {
+            /* logged inside worker */
+          }
+        }
+      }
+    } catch (err) {
+      /* ignore background scheduler error */
+    }
+  }, 30000);
+
   return app;
 }
