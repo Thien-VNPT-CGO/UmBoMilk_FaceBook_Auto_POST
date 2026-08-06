@@ -2681,44 +2681,43 @@
     }
 
     function renderWizard() {
-      const isAdmin = isApproverUser();
-
+      const totalSteps = steps.length;
       setElHtml('wizardTabs', steps.map((s, i) => {
-        const isLocked = i >= 7 && !currentCampaignApproved && !isAdmin;
         const isCompleted = i < step;
         const isActive = i === step;
-        const icon = isLocked ? '🔒' : isCompleted ? '✓' : `${i + 1}`;
+        const icon = isCompleted ? '✓' : `${i + 1}`;
 
         let btnStyle = `padding:8px 16px;border-radius:12px;font-weight:700;font-size:12.5px;transition:all 0.2s ease;display:inline-flex;align-items:center;gap:8px;`;
         if (isActive) {
           btnStyle += `background:linear-gradient(135deg,var(--pink),var(--dark));color:#fff;box-shadow:0 4px 14px rgba(244,91,154,0.35);border:none;`;
         } else if (isCompleted) {
           btnStyle += `background:#ecfdf5;color:#047857;border:1px solid #a7f3d0;`;
-        } else if (isLocked) {
-          btnStyle += `background:#f3f4f6;color:#9ca3af;border:1px solid #e5e7eb;cursor:not-allowed;`;
         } else {
           btnStyle += `background:#fff;color:var(--muted);border:1px solid var(--line);`;
         }
 
-        return `<button class="${isActive ? 'active' : ''} ${isLocked ? 'disabled' : ''}" style="${btnStyle}" onclick="gotoWizardStep(${i})">
+        return `<button class="${isActive ? 'active' : ''}" style="${btnStyle}" onclick="gotoWizardStep(${i})">
       <span style="width:20px;height:20px;border-radius:50%;background:${isActive ? 'rgba(255,255,255,0.25)' : isCompleted ? '#047857' : 'rgba(0,0,0,0.06)'};color:${isActive || isCompleted ? '#fff' : 'inherit'};display:grid;place-items:center;font-size:11px">${icon}</span>
       ${s.title}
     </button>`;
       }).join(''));
 
       let content = steps[step].getHtml();
-      let progressPercent = Math.round(((step + 1) / 10) * 100);
+      let progressPercent = Math.round(((step + 1) / totalSteps) * 100);
 
       let buttons = `<div class="row" style="margin-top:28px;justify-content:space-between;padding-top:20px;border-top:1px solid var(--line)">
-    <button class="ghost" style="padding:11px 22px;border-radius:12px;font-weight:700" onclick="gotoWizardStep(Math.max(0,step-1))" ${step === 0 ? 'disabled' : ''}>← Quay lại</button>
-    ${step < 9 ? `<button style="padding:11px 26px;border-radius:12px;font-weight:700;box-shadow:0 4px 16px rgba(244,91,154,0.35)" onclick="gotoWizardStep(step+1)">Tiếp tục →</button>` : `<button style="background:linear-gradient(135deg,#10b981,#059669);padding:12px 30px;border-radius:12px;font-weight:800;box-shadow:0 4px 16px rgba(16,185,129,0.35)" onclick="submitCampaign()">🚀 Kích hoạt chiến dịch ngay ✓</button>`}
+    <button type="button" class="ghost" style="padding:11px 22px;border-radius:12px;font-weight:700" onclick="gotoWizardStep(Math.max(0,step-1))" ${step === 0 ? 'disabled' : ''}>← Quay lại</button>
+    ${step < totalSteps - 1 
+      ? `<button type="button" style="padding:11px 26px;border-radius:12px;font-weight:700;box-shadow:0 4px 16px rgba(244,91,154,0.35)" onclick="gotoWizardStep(step+1)">Tiếp tục →</button>` 
+      : `<button type="button" style="background:linear-gradient(135deg,#10b981,#059669);padding:12px 30px;border-radius:12px;font-weight:800;box-shadow:0 4px 16px rgba(16,185,129,0.35)" onclick="submitCampaign()">🚀 Kích hoạt chiến dịch ngay ✓</button>`
+    }
   </div>`;
 
       setElHtml('wizard', `
     <div class="card" style="border-radius:24px;padding:30px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
         <div>
-          <span style="font-size:12px;font-weight:800;color:var(--pink);text-transform:uppercase;letter-spacing:0.5px">Tiến trình thiết lập chiến dịch (${step + 1}/10)</span>
+          <span style="font-size:12px;font-weight:800;color:var(--pink);text-transform:uppercase;letter-spacing:0.5px">Tiến trình thiết lập chiến dịch (${step + 1}/${totalSteps})</span>
           <h2 style="margin:4px 0 0;font-size:22px;font-weight:800;color:var(--ink)">Bước ${step + 1}: ${steps[step].title}</h2>
         </div>
         <span class="badge ok" style="padding:6px 14px;border-radius:10px;font-size:12px;font-weight:800">${progressPercent}% Hoàn tất</span>
@@ -2733,8 +2732,8 @@
     </div>
   `);
 
-      if (step === 6) {
-        loadStep7Data();
+      if (step === 2) {
+        setTimeout(loadStep7Data, 50);
       }
     }
 
