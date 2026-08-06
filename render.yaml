@@ -1,0 +1,32 @@
+services:
+  - type: web
+    name: umbo-milk-facebook-autopost
+    env: node
+    region: singapore
+    plan: free
+    buildCommand: cd backend && npm install && npx prisma generate && npm run build
+    startCommand: cd backend && npx prisma db push && node dist/index.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: JWT_SECRET
+        value: fb_automation_super_secret_jwt_key_2026
+      - key: JWT_REFRESH_SECRET
+        value: fb_automation_super_secret_refresh_jwt_key_2026
+      - key: ENCRYPTION_KEY
+        value: 12345678901234567890123456789012
+      - key: AI_PROVIDER
+        value: 9router
+      - key: AI_API_BASE_URL
+        value: http://localhost:20128/v1
+      - key: AI_MODEL
+        value: COMBO_API_ALL
+      - key: DATABASE_URL
+        fromDatabase:
+          name: umbo-milk-db
+          property: connectionString
+
+databases:
+  - name: umbo-milk-db
+    region: singapore
+    plan: free

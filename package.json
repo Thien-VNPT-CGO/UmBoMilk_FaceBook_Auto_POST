@@ -3,7 +3,10 @@
   "version": "1.0.0",
   "private": true,
   "description": "UmBoMilk - Marketing Auto-Post Page Facebook Automation System",
+  "main": "backend/dist/index.js",
   "scripts": {
+    "build": "cd backend && npm install && npx prisma generate && npm run build",
+    "start": "cd backend && npx prisma db push && node dist/index.js",
     "vercel-build": "cd backend && npx prisma generate && tsc"
   },
   "dependencies": {
