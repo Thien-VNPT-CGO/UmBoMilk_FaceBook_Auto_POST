@@ -748,20 +748,26 @@ function openFetchUserPagesModal() {
   showModal(
     '⚡ Tự Động Quét & Thêm Danh Sách Facebook Page',
     `
-    <div class="notice" style="border-left:4px solid var(--pink);background:var(--pale);margin-bottom:15px">
-      🔑 <b>Dùng Facebook User Access Token để hiện tất cả Page:</b><br>
-      Nhập mã <b>User Access Token (bắt đầu bằng EAAB...)</b> cấp từ Graph API Explorer (có quyền <i>pages_show_list</i> / <i>pages_read_engagement</i>).<br>
-      Hệ thống sẽ <b>tự động lấy toàn bộ danh sách Page</b> mà bạn sở hữu kèm Page ID & Token để kết nối vào ứng dụng chỉ với 1 click!
+    <div style="background:linear-gradient(135deg,#fff0f6,#fff7fb);border:1px solid #f6d2e4;border-radius:16px;padding:18px 22px;margin-bottom:20px;box-shadow:0 4px 14px rgba(217,54,122,0.04)">
+      <div style="display:flex;align-items:center;gap:10px;font-weight:800;font-size:14.5px;color:var(--dark);margin-bottom:6px">
+        <span style="font-size:18px">🔑</span> Dùng Facebook User Access Token Quét Tự Động
+      </div>
+      <div style="font-size:13px;line-height:1.6;color:var(--muted)">
+        Dán mã <b>User Access Token (bắt đầu bằng EAAB...)</b> từ Facebook Graph API Explorer.<br>
+        Hệ thống sẽ <b>tự động quét & lấy tất cả các Page</b> mà bạn sở hữu kèm ID & Token để kết nối vào ứng dụng chỉ với 1 click!
+      </div>
     </div>
 
-    <label>Facebook User Access Token (Mã token cá nhân EAAB...)</label>
-    <textarea id="mUserTokenInput" style="height:90px;font-size:13px;padding:10px" placeholder="Dán mã Facebook User Access Token (EAAB...) tại đây..."></textarea>
+    <label style="font-weight:800;font-size:13px;color:var(--ink);margin-bottom:8px">Mã Facebook User Access Token (EAAB...)</label>
+    <textarea id="mUserTokenInput" style="height:100px;font-size:12.5px;font-family:Consolas,monospace;padding:12px 14px;border-radius:14px;border:1px solid var(--line);background:#faf8fa;color:var(--ink)" placeholder="Dán mã Facebook User Access Token (EAAB...) tại đây..."></textarea>
 
-    <div style="margin-top:12px;margin-bottom:15px">
-      <button type="button" class="small" style="background:linear-gradient(135deg,var(--pink),var(--dark));color:#fff;padding:9px 18px;border-radius:10px;font-weight:700" onclick="fetchPagesFromFacebookToken()">🔍 Quét Danh Sách Page</button>
+    <div style="margin-top:14px;margin-bottom:18px">
+      <button type="button" style="background:linear-gradient(135deg,var(--pink),var(--dark));color:#fff;padding:11px 24px;border-radius:12px;font-weight:800;font-size:14px;box-shadow:0 6px 20px rgba(244,91,154,0.35)" onclick="fetchPagesFromFacebookToken()">
+        🔍 Quét Danh Sách Page
+      </button>
     </div>
 
-    <div id="fetchedPagesContainer" style="display:none;max-height:240px;overflow-y:auto;border:1px solid var(--line);border-radius:12px;padding:12px;background:#fff;margin-bottom:10px">
+    <div id="fetchedPagesContainer" style="display:none;max-height:300px;overflow-y:auto;border:1px solid var(--line);border-radius:16px;padding:16px;background:#fff;box-shadow:inset 0 2px 6px rgba(0,0,0,0.02)">
     </div>
     `,
     async () => {
@@ -801,7 +807,12 @@ async function fetchPagesFromFacebookToken() {
   const container = document.getElementById('fetchedPagesContainer');
   if (container) {
     container.style.display = 'block';
-    container.innerHTML = '<p style="color:var(--muted)">⏳ Đang truy vấn Graph API kết nối danh sách Page của bạn...</p>';
+    container.innerHTML = `
+      <div style="text-align:center;padding:24px 10px">
+        <div style="font-size:28px;margin-bottom:8px">⏳</div>
+        <div style="font-weight:800;font-size:14px;color:var(--dark)">Đang kết nối Facebook Graph API quét danh sách Page của bạn...</div>
+      </div>
+    `;
   }
 
   try {
@@ -812,31 +823,35 @@ async function fetchPagesFromFacebookToken() {
 
     const pages = res.data || [];
     if (!pages.length) {
-      container.innerHTML = '<p style="color:var(--red)">Không tìm thấy Fanpage nào trong Token này. Vui lòng chọn lại Token có quyền <b>pages_show_list</b>.</p>';
+      container.innerHTML = '<p style="color:var(--red);padding:10px">🔴 Không tìm thấy Fanpage nào trong Token này. Vui lòng kiểm tra lại Token hoặc chọn Token có quyền <b>pages_show_list</b>.</p>';
       return;
     }
 
     let html = `
-      <div style="font-weight:800;font-size:13px;color:var(--ink);margin-bottom:10px">
-        🎉 Đã tìm thấy ${pages.length} Facebook Page (Chọn các Page để kết nối vào ứng dụng):
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--pale)">
+        <span style="font-weight:800;font-size:14px;color:var(--ink)">🎉 Đã tìm thấy <b>${pages.length}</b> Facebook Page</span>
+        <button type="button" class="ghost small" style="border-radius:8px;padding:4px 10px;font-size:11.5px;font-weight:700" onclick="document.querySelectorAll('.fetched-page-cb').forEach(c=>c.checked=!c.checked)">Đổi chọn tất cả</button>
       </div>
+      <div style="display:flex;flex-direction:column;gap:10px">
     `;
 
     html += pages.map(p => `
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:#faf5f8;border:1px solid #f6e3ec;border-radius:10px;margin-bottom:8px">
-        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-weight:700;margin:0;font-size:13.5px">
-          <input type="checkbox" class="fetched-page-cb" checked data-id="${p.id}" data-name="${p.name}" data-token="${p.access_token}">
-          <div style="width:28px;height:28px;border-radius:8px;background:var(--pink);color:#fff;display:grid;place-items:center;font-weight:800;font-size:12px">f</div>
-          <span>${p.name}</span>
-        </label>
-        <span class="badge ok" style="font-size:11px">ID: ${p.id}</span>
+      <div class="fetched-page-item" style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:#fff;border:1.5px solid var(--line);border-radius:14px;transition:all 0.2s ease;box-shadow:0 3px 10px rgba(0,0,0,0.02);cursor:pointer" onclick="const cb=this.querySelector('input');cb.checked=!cb.checked;event.stopPropagation();">
+        <div style="display:flex;align-items:center;gap:14px;overflow:hidden">
+          <input type="checkbox" class="fetched-page-cb" checked data-id="${p.id}" data-name="${p.name}" data-token="${p.access_token}" onclick="event.stopPropagation()" style="width:18px;height:18px;accent-color:var(--pink);cursor:pointer;flex-shrink:0">
+          <div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#1877F2,#0056b3);color:#fff;display:grid;place-items:center;font-weight:800;font-size:16px;flex-shrink:0;box-shadow:0 4px 10px rgba(24,119,242,0.3)">f</div>
+          <div style="font-weight:800;font-size:14px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.name}</div>
+        </div>
+        <span class="badge ok" style="font-size:11.5px;font-weight:800;padding:4px 12px;border-radius:8px;font-family:Consolas,monospace;background:#ecfdf5;color:#047857">ID: ${p.id}</span>
       </div>
     `).join('');
+
+    html += '</div>';
 
     container.innerHTML = html;
   } catch (err) {
     if (container) {
-      container.innerHTML = `<p style="color:var(--red)">🔴 Lỗi Graph API: ${err.error?.message || err.message || 'Token không hợp lệ'}</p>`;
+      container.innerHTML = `<p style="color:var(--red);padding:10px">🔴 Lỗi Graph API: ${err.error?.message || err.message || 'Token không hợp lệ'}</p>`;
     }
   }
 }
