@@ -228,7 +228,7 @@ model GeneratedPost {
 
 model MediaFile {
   id          String      @id @default(uuid())
-  campaignId  String
+  campaignId  String?
   fileName    String
   storageUrl  String
   mimeType    String
@@ -237,7 +237,7 @@ model MediaFile {
   checksum    String
   status      String      @default("ACTIVE")
   createdAt   DateTime    @default(now())
-  campaign    Campaign    @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  campaign    Campaign?   @relation(fields: [campaignId], references: [id], onDelete: Cascade)
   postMedias  PostMedia[]
 
   @@map("media_files")

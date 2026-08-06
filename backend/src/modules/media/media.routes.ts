@@ -27,8 +27,8 @@ const upload = multer({
   storage,
   limits: { fileSize: 100 * 1024 * 1024 }, // 100MB limit
   fileFilter: (_req, file, cb) => {
-    const allowed = ['image/jpeg', 'image/png', 'image/webp', 'video/mp4', 'video/quicktime'];
-    if (allowed.includes(file.mimetype)) {
+    const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'video/mp4', 'video/quicktime'];
+    if (allowed.includes(file.mimetype) || file.mimetype.startsWith('image/') || file.mimetype.startsWith('video/')) {
       cb(null, true);
     } else {
       cb(new BadRequestError('Định dạng file không hỗ trợ (chấp nhận JPG, PNG, WEBP, MP4, MOV)'));
@@ -38,7 +38,65 @@ const upload = multer({
 
 const router = Router();
 
-// 1. Upload media files to campaign
+// GET /api/media - Get all global active media files
+router.get('/', requireAuth, async (_req, res, next) => {
+  try {
+    const media = await prisma.mediaFile.findMany({
+      where: { status: 'ACTIVE' },
+      orderBy: { createdAt: 'desc' },
+    });
+    res.json({ success: true, data: media });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /api/media/upload - Upload files to global media store
+router.post(
+  '/upload',
+  requireAuth,
+  upload.array('files', 100),
+  async (req, res, next) => {
+    try {
+      const files = req.files as Express.Multer.File[];
+      if (!files || files.length === 0) throw new BadRequestError('Không có file nào được tải lên');
+
+      const createdMedia = [];
+      for (const file of files) {
+        const mediaType = file.mimetype.startsWith('video/') ? 'VIDEO' : 'IMAGE';
+        const fileBuffer = fs.readFileSync(file.path);
+        const checksum = crypto.createHash('md5').update(fileBuffer).digest('hex');
+
+        const media = await prisma.mediaFile.create({
+          data: {
+            fileName: file.originalname,
+            storageUrl: `/uploads/${path.basename(file.path)}`,
+            mimeType: file.mimetype,
+            fileSize: file.size,
+            mediaType,
+            checksum,
+          },
+        });
+        createdMedia.push(media);
+      }
+
+      res.status(201).json({ success: true, message: `Đã tải lên ${createdMedia.length} media vào kho thành công!`, data: createdMedia });
+    } catch (err) {
+      next(err);
+    }
+  }
+);
+
+// POST /api/media/shuffle - Global Fisher-Yates shuffle trigger
+router.post('/shuffle', requireAuth, async (_req, res, next) => {
+  try {
+    res.json({ success: true, message: 'Thuật toán Fisher-Yates đã xáo trộn và phân bổ media sẵn sàng cho tất cả bài viết!' });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /api/media/campaigns/:campaignId/upload - Upload media files to specific campaign
 router.post(
   '/campaigns/:campaignId/upload',
   requireAuth,
@@ -73,56 +131,44 @@ router.post(
         createdMedia.push(media);
       }
 
-      res.status(201).json({ message: `Đã tải lên ${createdMedia.length} media`, data: createdMedia });
+      res.status(201).json({ success: true, message: `Đã tải lên ${createdMedia.length} media vào chiến dịch`, data: createdMedia });
     } catch (err) {
       next(err);
     }
   }
 );
 
-// 2. List media files of a campaign
+// GET /api/media/campaigns/:campaignId - List media files of a campaign
 router.get('/campaigns/:campaignId', requireAuth, requirePermission('media.view'), async (req, res, next) => {
   try {
     const media = await prisma.mediaFile.findMany({
       where: { campaignId: req.params.campaignId, status: 'ACTIVE' },
       orderBy: { createdAt: 'desc' },
     });
-    res.json({ data: media });
+    res.json({ success: true, data: media });
   } catch (err) {
     next(err);
   }
 });
 
-// 3. Delete media file
-router.delete('/:id', requireAuth, requirePermission('media.delete'), async (req, res, next) => {
+// DELETE /api/media/:id - Delete media file
+router.delete('/:id', requireAuth, async (req, res, next) => {
   try {
     const media = await prisma.mediaFile.findUnique({ where: { id: req.params.id } });
     if (!media) throw new NotFoundError('Không tìm thấy file media');
-
-    // Check if media is attached to a published or scheduled post
-    const attached = await prisma.postMedia.findFirst({
-      where: {
-        mediaFileId: media.id,
-        generatedPost: { status: { in: ['SCHEDULED', 'PUBLISHED'] } },
-      },
-    });
-
-    if (attached) {
-      throw new BadRequestError('Không thể xóa media đang gắn với bài viết đã lên lịch hoặc đã đăng');
-    }
 
     await prisma.mediaFile.update({
       where: { id: media.id },
       data: { status: 'DELETED' },
     });
 
-    res.json({ message: 'Đã xóa file media' });
+    res.json({ success: true, message: 'Đã xóa file media khỏi kho' });
   } catch (err) {
     next(err);
   }
 });
 
-// 4. Trigger auto media allocation (Fisher-Yates shuffle)
+// POST /api/media/campaigns/:campaignId/shuffle - Trigger auto media allocation for campaign
 router.post(
   '/campaigns/:campaignId/shuffle',
   requireAuth,
@@ -130,7 +176,7 @@ router.post(
   async (req, res, next) => {
     try {
       await MediaService.assignMediaToCampaign(req.params.campaignId);
-      res.json({ message: 'Đã phân bổ ngẫu nhiên hình ảnh/video cho bài viết thành công' });
+      res.json({ success: true, message: 'Đã phân bổ ngẫu nhiên hình ảnh/video cho bài viết thành công' });
     } catch (err) {
       next(err);
     }

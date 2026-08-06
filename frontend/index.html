@@ -503,6 +503,7 @@ async function loadData() {
     setElText('usersCount', users.length);
     setElText('campaignsCount', campaigns.length);
     setElText('pendingApprovalCount', approvalPosts.length);
+    loadMedia();
 
     // Render pages table
     const pagesHtml = pages.length ? pages.map(p => `
@@ -937,8 +938,126 @@ function openPage(page){
   if(page==='logs') loadSystemLogs();
   if(page==='posts') loadPosts();
   if(page==='settings') loadAiSettings();
+  if(page==='media') loadMedia();
 }
 document.querySelectorAll('.nav button').forEach(x=>x.onclick=()=>openPage(x.dataset.page));
+
+async function loadMedia() {
+  const grid = document.getElementById('mediaGridDisplay');
+  if (!grid) return;
+
+  try {
+    const res = await request('/media').catch(() => ({ data: [] }));
+    const mediaList = extractList(res);
+    window.loadedMedia = mediaList;
+
+    const images = mediaList.filter(m => m.mimeType?.startsWith('image') || m.mediaType === 'IMAGE');
+    const videos = mediaList.filter(m => m.mimeType?.startsWith('video') || m.mediaType === 'VIDEO');
+
+    setElText('totalImagesCount', images.length);
+    setElText('totalVideosCount', videos.length);
+
+    const statusBadge = document.getElementById('mediaStatusBadge');
+    if (statusBadge) {
+      if (images.length >= 6 || videos.length >= 1) {
+        statusBadge.className = 'badge ok';
+        statusBadge.textContent = 'Đủ tài nguyên';
+      } else {
+        statusBadge.className = 'badge err';
+        statusBadge.textContent = 'Cần thêm ảnh (Tối thiểu 6 ảnh)';
+      }
+    }
+
+    if (!mediaList.length) {
+      grid.innerHTML = '<p class="empty" style="grid-column:1/-1;text-align:center;padding:40px;color:var(--muted)">Chưa có tệp media nào trong kho. Bấm nút <b>↑ Tải media lên</b> để tải hình ảnh/video đầu tiên!</p>';
+      return;
+    }
+
+    grid.innerHTML = mediaList.map(m => {
+      const isVideo = m.mimeType?.startsWith('video') || m.mediaType === 'VIDEO';
+      const url = m.storageUrl;
+      const sizeMb = (m.fileSize / (1024 * 1024)).toFixed(2);
+      return `
+        <div style="background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.03);position:relative">
+          <div style="height:140px;background:#f5e8ef;display:grid;place-items:center;overflow:hidden;position:relative">
+            ${isVideo ? `
+              <video src="${url}" style="width:100%;height:100%;object-fit:cover" controls></video>
+            ` : `
+              <img src="${url}" style="width:100%;height:100%;object-fit:cover" alt="${m.fileName}">
+            `}
+            <span class="badge ${isVideo ? 'run' : 'ok'}" style="position:absolute;top:8px;right:8px;font-size:10px;font-weight:800;padding:2px 8px;border-radius:6px">${isVideo ? 'VIDEO' : 'IMAGE'}</span>
+          </div>
+          <div style="padding:10px 12px">
+            <div style="font-weight:700;font-size:12.5px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${m.fileName}">${m.fileName}</div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
+              <span style="font-size:11px;color:var(--muted)">${sizeMb} MB</span>
+              <button type="button" class="ghost small" style="color:var(--red);border-color:var(--red);padding:2px 8px;font-size:11px" onclick="deleteMediaFile('${m.id}')">🗑️ Xóa</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  } catch (err) {
+    grid.innerHTML = `<p style="color:var(--red);grid-column:1/-1">🔴 Lỗi tải kho media: ${err.message}</p>`;
+  }
+}
+
+async function uploadGlobalMedia(input) {
+  const files = input.files;
+  if (!files || !files.length) return;
+
+  const formData = new FormData();
+  for (let i = 0; i < files.length; i++) {
+    formData.append('files', files[i]);
+  }
+
+  const grid = document.getElementById('mediaGridDisplay');
+  if (grid) {
+    grid.innerHTML = '<p style="color:var(--pink);grid-column:1/-1;padding:20px">⏳ Đang tải tệp media lên kho dùng chung...</p>';
+  }
+
+  try {
+    const token = localStorage.getItem('accessToken');
+    const response = await fetch('/api/media/upload', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      },
+      body: formData
+    });
+
+    const res = await response.json();
+    if (!response.ok) throw new Error(res.error?.message || res.message || 'Lỗi tải media');
+
+    alert(res.message || '✅ Đã tải media thành công!');
+    input.value = '';
+    loadMedia();
+  } catch (err) {
+    alert('🔴 Lỗi tải media: ' + err.message);
+    loadMedia();
+  }
+}
+
+async function deleteMediaFile(id) {
+  if (!confirm('Xác nhận xóa tệp media này khỏi kho?')) return;
+  try {
+    const res = await request(`/media/${id}`, { method: 'DELETE' });
+    alert(res.message || 'Đã xóa tệp media');
+    loadMedia();
+  } catch (err) {
+    alert('Lỗi: ' + (err.error?.message || err.message));
+  }
+}
+
+async function shuffleMediaAllocation() {
+  try {
+    const res = await request('/media/shuffle', { method: 'POST' });
+    alert('🎲 ' + (res.message || 'Đã phân bổ ngẫu nhiên media thành công!'));
+    loadMedia();
+  } catch (err) {
+    alert('Lỗi: ' + (err.error?.message || err.message));
+  }
+}
 
 // 10 STEP CAMPAIGN WIZARD DATA & RENDER
 let wizardData = {
