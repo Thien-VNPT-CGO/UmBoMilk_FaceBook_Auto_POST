@@ -1329,10 +1329,12 @@
                   <div class="card c6"
                     style="box-shadow:none;border:1px solid var(--line);background:#faf5f8;padding:18px">
                     <label>Nhà Cung Cấp AI (AI Provider)</label>
-                    <select id="aiProviderSelect">
-                      <option value="9router" selected>🟢 9router (Local AI Free - Khuyên dùng)</option>
-                      <option value="local">💻 Local AI / Ollama / LM Studio (http://localhost:11434/v1)</option>
-                      <option value="openai">⚡ OpenAI API (gpt-4o-mini)</option>
+                    <select id="aiProviderSelect" onchange="onAiProviderChange(this.value)">
+                      <option value="openai" selected>⚡ OpenAI API ChatGPT (gpt-4o-mini / gpt-4o)</option>
+                      <option value="groq">🚀 Groq Cloud API (Miễn phí & Siêu nhanh)</option>
+                      <option value="openrouter">🌐 OpenRouter API (Hỗ trợ 100+ Model AI)</option>
+                      <option value="9router">🟢 9router (Local AI Free)</option>
+                      <option value="local">💻 Local AI / Ollama (http://localhost:11434/v1)</option>
                       <option value="custom">⚙ Custom OpenAI-Compatible API</option>
                     </select>
 
@@ -2911,14 +2913,42 @@
       alert('Đã lưu cấu hình khung giờ 08:00 - 22:00 và khoảng cách 15 phút thành công!');
     }
 
+    function onAiProviderChange(val) {
+      const urlInp = document.getElementById('aiBaseUrlInput');
+      const modelInp = document.getElementById('aiModelInput');
+      const keyInp = document.getElementById('aiApiKeyInput');
+
+      if (val === 'openai') {
+        if (urlInp) urlInp.value = 'https://api.openai.com/v1';
+        if (modelInp) modelInp.value = 'gpt-4o-mini';
+        if (keyInp) {
+          keyInp.placeholder = 'Dán mã API Key ChatGPT của bạn tại đây (sk-proj-...)';
+          if (keyInp.value === '9router-key-local' || !keyInp.value) keyInp.value = '';
+          keyInp.focus();
+        }
+      } else if (val === 'groq') {
+        if (urlInp) urlInp.value = 'https://api.groq.com/openai/v1';
+        if (modelInp) modelInp.value = 'llama-3.3-70b-versatile';
+        if (keyInp && keyInp.value === '9router-key-local') keyInp.value = '';
+      } else if (val === 'openrouter') {
+        if (urlInp) urlInp.value = 'https://openrouter.ai/api/v1';
+        if (modelInp) modelInp.value = 'openai/gpt-4o-mini';
+        if (keyInp && keyInp.value === '9router-key-local') keyInp.value = '';
+      } else if (val === '9router') {
+        if (urlInp) urlInp.value = 'http://localhost:2000/v1';
+        if (modelInp) modelInp.value = 'qwen2.5';
+        if (keyInp && !keyInp.value) keyInp.value = '9router-key-local';
+      }
+    }
+
     async function loadAiSettings() {
       try {
         const res = await request('/settings/ai-config');
         if (res && res.data) {
           const cfg = res.data;
-          if (document.getElementById('aiProviderSelect')) document.getElementById('aiProviderSelect').value = cfg.provider || '9router';
-          if (document.getElementById('aiBaseUrlInput')) document.getElementById('aiBaseUrlInput').value = cfg.baseUrl || 'http://localhost:2000/v1';
-          if (document.getElementById('aiModelInput')) document.getElementById('aiModelInput').value = cfg.model || 'qwen2.5';
+          if (document.getElementById('aiProviderSelect')) document.getElementById('aiProviderSelect').value = cfg.provider || 'openai';
+          if (document.getElementById('aiBaseUrlInput')) document.getElementById('aiBaseUrlInput').value = cfg.baseUrl || 'https://api.openai.com/v1';
+          if (document.getElementById('aiModelInput')) document.getElementById('aiModelInput').value = cfg.model || 'gpt-4o-mini';
           if (document.getElementById('aiApiKeyInput')) document.getElementById('aiApiKeyInput').value = cfg.apiKey || '';
 
           const isAdmin = res.isAdmin;
