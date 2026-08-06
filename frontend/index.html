@@ -550,9 +550,18 @@ async function loadData() {
         <td><b>${p.pageName || p.name}</b></td>
         <td>${p.facebookPageId}</td>
         <td><span class="badge ${p.tokenStatus==='VALID'?'ok':'err'}">${p.tokenStatus || 'VALID'}</span></td>
-        <td>${p.defaultPostCount || 10}</td>
-        <td>${p.defaultIntervalMinutes || 15} phút</td>
         <td>
+          <button type="button" class="ghost small" style="border-radius:10px;padding:4px 10px;font-size:12px;font-weight:800;color:var(--dark);border-color:#cbd5e1;background:#f8fafc" onclick="openEditPageSettingsModal('${p.id}', '${p.pageName || p.name}', ${p.defaultPostCount || 10}, ${p.defaultIntervalMinutes || 15})">
+            📝 ${p.defaultPostCount || 10} bài ✏️
+          </button>
+        </td>
+        <td>
+          <button type="button" class="ghost small" style="border-radius:10px;padding:4px 10px;font-size:12px;font-weight:800;color:var(--dark);border-color:#cbd5e1;background:#f8fafc" onclick="openEditPageSettingsModal('${p.id}', '${p.pageName || p.name}', ${p.defaultPostCount || 10}, ${p.defaultIntervalMinutes || 15})">
+            ⏱ ${p.defaultIntervalMinutes || 15} phút ✏️
+          </button>
+        </td>
+        <td>
+          <button class="ghost small" style="color:var(--dark);border-color:var(--pink);font-weight:700" onclick="openEditPageSettingsModal('${p.id}', '${p.pageName || p.name}', ${p.defaultPostCount || 10}, ${p.defaultIntervalMinutes || 15})">⚙ Cấu hình</button>
           <button class="ghost small" style="color:var(--dark);border-color:var(--pink)" onclick="openUpdateTokenModal('${p.id}', '${p.pageName || p.name}')">🔑 Cập nhật Token</button>
           <button class="ghost small" onclick="testPageToken('${p.id}')">Kiểm tra Token</button>
           <button class="ghost small" style="color:var(--red);border-color:var(--red)" onclick="deletePage('${p.id}')">Xóa</button>
@@ -916,6 +925,40 @@ async function deletePage(id) {
     alert('Đã xóa Facebook Page');
     loadData();
   } catch(err) { alert('Lỗi: ' + (err.error?.message || err.message)); }
+}
+
+function openEditPageSettingsModal(pageId, pageName, currentPostCount = 10, currentIntervalMinutes = 15) {
+  showModal(
+    `⚙ Cài Đặt Bài Đăng & Lịch Trình: ${pageName}`,
+    `
+    <div style="background:linear-gradient(135deg,#f0f9ff,#e0f2fe);border:1px solid #bae6fd;border-radius:16px;padding:16px 20px;margin-bottom:18px">
+      <div style="font-weight:800;font-size:14px;color:#0369a1;margin-bottom:4px">
+        📌 Tùy chỉnh cài đặt đăng bài riêng cho "${pageName}":
+      </div>
+      <div style="font-size:12.5px;color:#0284c7;line-height:1.5">
+        Bạn có thể thiết lập <b>số lượng bài đăng tự tạo</b> và <b>khoảng cách thời gian độc lập</b> cho từng Page mà không bị cố định mặc định.
+      </div>
+    </div>
+
+    <label style="font-weight:800;font-size:13px;color:var(--ink);margin-bottom:6px">Số bài đăng tự động tạo (Bài)</label>
+    <input id="mPagePostCountInput" type="number" min="1" max="500" value="${currentPostCount}" style="margin-bottom:14px;padding:10px 14px;border-radius:12px;font-size:14px;font-weight:700">
+
+    <label style="font-weight:800;font-size:13px;color:var(--ink);margin-bottom:6px">Khoảng cách giữa các bài đăng (Phút)</label>
+    <input id="mPageIntervalInput" type="number" min="1" max="720" value="${currentIntervalMinutes}" style="padding:10px 14px;border-radius:12px;font-size:14px;font-weight:700">
+    `,
+    async () => {
+      const defaultPostCount = parseInt(document.getElementById('mPagePostCountInput').value) || 10;
+      const defaultIntervalMinutes = parseInt(document.getElementById('mPageIntervalInput').value) || 15;
+
+      const res = await request(`/facebook-pages/${pageId}`, {
+        method: 'PUT',
+        body: JSON.stringify({ defaultPostCount, defaultIntervalMinutes })
+      });
+
+      alert(res.message || '✅ Đã lưu cài đặt mới cho Facebook Page thành công!');
+      loadData();
+    }
+  );
 }
 
 function openUpdateTokenModal(pageId, pageName) {

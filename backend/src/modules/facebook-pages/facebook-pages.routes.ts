@@ -84,6 +84,41 @@ router.get(
   }
 );
 
+const updateSchema = z.object({
+  pageName: z.string().optional(),
+  defaultPostCount: z.number().int().min(1).max(500).optional(),
+  defaultIntervalMinutes: z.number().int().min(1).max(720).optional(),
+});
+
+router.put(
+  '/:id',
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const data = updateSchema.parse(req.body);
+      const page = await prisma.facebookPage.findUnique({ where: { id: req.params.id } });
+      if (!page) throw new NotFoundError('Không tìm thấy Facebook Page');
+
+      const updated = await prisma.facebookPage.update({
+        where: { id: req.params.id },
+        data: {
+          ...(data.pageName ? { pageName: data.pageName } : {}),
+          ...(data.defaultPostCount !== undefined ? { defaultPostCount: data.defaultPostCount } : {}),
+          ...(data.defaultIntervalMinutes !== undefined ? { defaultIntervalMinutes: data.defaultIntervalMinutes } : {}),
+        },
+      });
+
+      res.json({
+        success: true,
+        message: `✅ Đã cập nhật cài đặt cho Page ${updated.pageName}!`,
+        data: updated,
+      });
+    } catch (e) {
+      if (e instanceof z.ZodError) return next(new BadRequestError(e.errors[0].message));
+      next(e);
+    }
+  }
+);
+
 router.delete(
   '/:id',
   requirePermission('page.delete'),
@@ -190,6 +225,9 @@ router.post(
         if (!p.facebookPageId || !p.pageName || !p.pageAccessToken) continue;
         const exists = await prisma.facebookPage.findUnique({ where: { facebookPageId: p.facebookPageId } });
         let pageId = '';
+        const postCount = parseInt(p.defaultPostCount) || 10;
+        const intervalMinutes = parseInt(p.defaultIntervalMinutes) || 15;
+
         if (exists) {
           await prisma.facebookPage.update({
             where: { id: exists.id },
@@ -197,6 +235,8 @@ router.post(
               pageName: p.pageName,
               encryptedPageAccessToken: encryptString(p.pageAccessToken),
               tokenStatus: 'VALID',
+              ...(p.defaultPostCount ? { defaultPostCount: postCount } : {}),
+              ...(p.defaultIntervalMinutes ? { defaultIntervalMinutes: intervalMinutes } : {}),
             },
           });
           pageId = exists.id;
@@ -208,6 +248,8 @@ router.post(
               facebookPageId: p.facebookPageId,
               encryptedPageAccessToken: encryptString(p.pageAccessToken),
               tokenStatus: 'VALID',
+              defaultPostCount: postCount,
+              defaultIntervalMinutes: intervalMinutes,
             },
           });
           pageId = created.id;
