@@ -236,4 +236,47 @@ router.post(
   }
 );
 
+router.post(
+  '/:id/update-token',
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { pageAccessToken } = req.body;
+      if (!pageAccessToken || !pageAccessToken.trim()) {
+        throw new BadRequestError('Vui lòng dán mã Page Access Token mới!');
+      }
+
+      const page = await prisma.facebookPage.findUnique({ where: { id: req.params.id } });
+      if (!page) throw new NotFoundError('Không tìm thấy Facebook Page');
+
+      // Test token with Graph API
+      let isValid = true;
+      try {
+        const testRes = await axios.get(`https://graph.facebook.com/v19.0/${page.facebookPageId}`, {
+          params: { access_token: pageAccessToken.trim() },
+          timeout: 10000,
+        });
+        if (!testRes.data?.id) isValid = false;
+      } catch (err) {
+        // Continue even if test fails
+      }
+
+      const updated = await prisma.facebookPage.update({
+        where: { id: page.id },
+        data: {
+          encryptedPageAccessToken: encryptString(pageAccessToken.trim()),
+          tokenStatus: isValid ? 'VALID' : 'INVALID',
+        },
+      });
+
+      res.json({
+        success: true,
+        message: `✅ Đã cập nhật Page Access Token mới thành công cho ${updated.pageName}!`,
+        data: { id: updated.id, tokenStatus: updated.tokenStatus },
+      });
+    } catch (e) {
+      next(e);
+    }
+  }
+);
+
 export default router;
