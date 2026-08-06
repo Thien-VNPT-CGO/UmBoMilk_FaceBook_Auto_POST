@@ -162,13 +162,20 @@ router.post('/test-ai', requireAuth, async (req, res, next) => {
 
     res.json({
       success: true,
-      message: 'Kết nối tới 9router / Local AI thành công!',
+      message: '🟢 Kết nối tới API Engine AI thành công!',
       data: response.data,
     });
   } catch (err: any) {
+    let errorDetail = err.response?.data?.error?.message || err.message;
+    if (err.response?.status === 429) {
+      errorDetail = `Lỗi 429 (Tài khoản hết số dư / Quota Exceeded). Mã OpenAI API Key này đã hết hạn mức sử dụng miễn phí. Chi tiết: ${errorDetail}`;
+    } else if (err.response?.status === 401) {
+      errorDetail = `Lỗi 401 (API Key không hợp lệ). Vui lòng kiểm tra lại mã API Key. Chi tiết: ${errorDetail}`;
+    }
+
     res.status(400).json({
       success: false,
-      message: `Không thể kết nối tới 9router tại ${(req.body.baseUrl || 'http://localhost:2000/v1')}. Vui lòng kiểm tra 9router server đang bật ở local. Lỗi: ${err.message}`,
+      message: `🔴 Lỗi kết nối API AI (${req.body.baseUrl || 'https://api.openai.com/v1'}): ${errorDetail}`,
     });
   }
 });
