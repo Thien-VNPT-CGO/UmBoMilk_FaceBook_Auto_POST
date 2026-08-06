@@ -2929,11 +2929,19 @@
       } else if (val === 'groq') {
         if (urlInp) urlInp.value = 'https://api.groq.com/openai/v1';
         if (modelInp) modelInp.value = 'llama-3.3-70b-versatile';
-        if (keyInp && keyInp.value === '9router-key-local') keyInp.value = '';
+        if (keyInp) {
+          keyInp.placeholder = 'Dán mã API Key Groq miễn phí của bạn tại đây (gsk_...)';
+          if (keyInp.value === '9router-key-local' || !keyInp.value) keyInp.value = '';
+          keyInp.focus();
+        }
       } else if (val === 'openrouter') {
         if (urlInp) urlInp.value = 'https://openrouter.ai/api/v1';
-        if (modelInp) modelInp.value = 'openai/gpt-4o-mini';
-        if (keyInp && keyInp.value === '9router-key-local') keyInp.value = '';
+        if (modelInp) modelInp.value = 'deepseek/deepseek-r1:free';
+        if (keyInp) {
+          keyInp.placeholder = 'Dán mã API Key OpenRouter của bạn tại đây (sk-or-...)';
+          if (keyInp.value === '9router-key-local' || !keyInp.value) keyInp.value = '';
+          keyInp.focus();
+        }
       } else if (val === '9router') {
         if (urlInp) urlInp.value = 'http://localhost:2000/v1';
         if (modelInp) modelInp.value = 'qwen2.5';
