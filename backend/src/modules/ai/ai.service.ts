@@ -168,7 +168,7 @@ Bắt buộc tuân thủ tuyệt đối:
             'Content-Type': 'application/json',
             ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}),
           },
-          timeout: 3000,
+          timeout: 45000,
         }
       );
 
