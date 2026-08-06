@@ -1,562 +1,1544 @@
 <!doctype html>
 <html lang="vi">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>UmBoMilk - Marketing Auto-Post Page Facebook</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<style>
-:root{--pink:#f45b9a;--dark:#d9367a;--pale:#fff0f6;--bg:#fff9fc;--ink:#1e1b26;--muted:#6f6875;--line:#f1dce7;--green:#10b981;--blue:#3b82f6;--yellow:#f59e0b;--red:#ef4444}
-*{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font:14px 'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;-webkit-font-smoothing:antialiased}
-button,input,textarea,select{font:inherit}
-button{border:0;border-radius:10px;background:linear-gradient(135deg,var(--pink),var(--dark));color:#fff;padding:10px 18px;font-weight:700;cursor:pointer;transition:all 0.25s ease;box-shadow:0 4px 14px rgba(244,91,154,0.3)}
-button:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(244,91,154,0.4)}
-button.ghost{background:#fff;color:var(--dark);border:1px solid var(--line);box-shadow:none}
-button.ghost:hover{background:var(--pale);border-color:var(--pink)}
-button.small{padding:6px 12px;font-size:12px;border-radius:8px}
-.layout{display:flex;min-height:100vh}
-.sidebar{width:260px;background:#fff;border-right:1px solid var(--line);padding:24px 16px;position:fixed;inset:0 auto 0 0;z-index:2;box-shadow:4px 0 20px rgba(0,0,0,0.01)}
-.brand{display:flex;align-items:center;gap:12px;padding:5px 10px 25px;font-size:19px;font-weight:800;color:var(--dark)}
-.logo{width:42px;height:42px;border-radius:12px;object-fit:cover;overflow:hidden;background:linear-gradient(135deg,var(--pink),#ffb1cd);box-shadow:0 6px 16px rgba(244,91,154,0.3)}
-.logo img{width:100%;height:100%;object-fit:cover;display:block}
-.nav-title{color:#b49aaa;font-size:11px;text-transform:uppercase;font-weight:800;padding:14px 11px 6px;letter-spacing:0.5px}
-.nav button{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:transparent;color:var(--muted);font-weight:600;padding:11px 14px;margin:3px 0;border-radius:12px;box-shadow:none}
-.nav button:hover,.nav button.active{background:var(--pale);color:var(--dark);font-weight:700}
-.main{margin-left:260px;flex:1}
-.topbar{height:76px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 32px;box-shadow:0 4px 20px rgba(0,0,0,0.02)}
-.crumb{color:var(--muted);font-size:13px}.crumb b{color:var(--ink);font-weight:700}
-.profile{display:flex;align-items:center;gap:12px}
-.avatar{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--pink),var(--dark));color:#fff;display:grid;place-items:center;font-weight:800;box-shadow:0 4px 12px rgba(244,91,154,0.25)}
-.content{padding:30px 36px;max-width:1450px}
-.page-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:26px}
-.page-head h1{margin:0;font-size:26px;font-weight:800;color:var(--ink)}
-.page-head p{color:var(--muted);margin:6px 0 0;font-size:13px}
-.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:20px}
-.card{background:#fff;border:1px solid var(--line);border-radius:20px;padding:24px;box-shadow:0 10px 30px rgba(217,54,122,0.04),0 1px 3px rgba(0,0,0,0.02)}
-.c3{grid-column:span 3}.c4{grid-column:span 4}.c6{grid-column:span 6}.c8{grid-column:span 8}.c12{grid-column:span 12}
-.stat{display:flex;justify-content:space-between;align-items:center}
-.stat small{color:var(--muted);font-weight:600;font-size:12px}
-.stat strong{font-size:32px;display:block;margin-top:6px;font-weight:800;color:var(--ink)}
-.stat-icon{width:46px;height:46px;border-radius:14px;background:var(--pale);color:var(--dark);display:grid;place-items:center;font-size:20px}
-.section-title{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
-.section-title h2,.section-title h3{margin:0;font-size:18px;font-weight:800;color:var(--ink)}
-.section-title span{color:var(--muted);font-size:12px}
-label{display:block;color:var(--muted);font-size:12px;font-weight:700;margin:14px 0 6px}
-input,textarea,select{width:100%;border:1px solid var(--line);border-radius:10px;padding:11px 14px;background:#fff;color:var(--ink);outline:none;transition:border 0.2s}
-input:focus,textarea:focus,select:focus{border-color:var(--pink);box-shadow:0 0 0 3px rgba(244,91,154,0.15)}
-textarea{min-height:95px;resize:vertical}
-.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-.badge{display:inline-flex;align-items:center;gap:4px;border-radius:20px;padding:5px 12px;font-size:11px;font-weight:700;background:#f1f3f5;color:var(--muted)}
-.ok{background:#ecfdf5;color:#047857}.wait{background:#fffbeb;color:#b45309}.run{background:#eff6ff;color:#1d4ed8}.err{background:#fef2f2;color:#b91c1c}
-table{width:100%;border-collapse:separate;border-spacing:0}
-th,td{text-align:left;padding:13px 14px;border-bottom:1px solid #f9ebf2;font-size:13px}
-th{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:0.5px;font-weight:800;background:#fff9fc;padding-top:10px;padding-bottom:10px}
-tr:last-child td{border-bottom:0}
-tr:hover td{background:#fff0f633}
-.tabs{display:flex;gap:8px;overflow:auto;padding-bottom:12px;margin-bottom:20px}
-.tabs button{white-space:nowrap;background:#fff;color:var(--muted);border:1px solid var(--line);border-radius:12px;box-shadow:none}
-.tabs button.active{background:linear-gradient(135deg,var(--pink),var(--dark));color:#fff;box-shadow:0 4px 14px rgba(244,91,154,0.3)}
-.panel{display:none}.panel.active{display:block}
-.notice{padding:16px;border-radius:14px;background:var(--pale);color:var(--dark);margin-bottom:18px;line-height:1.6;font-size:13px}
-.log{background:#1e1b26;color:#fce7f3;border-radius:14px;padding:16px;min-height:140px;white-space:pre-wrap;font:12px Consolas,monospace}
-.empty{text-align:center;color:var(--muted);padding:40px}
-.footer{color:#a895a1;text-align:center;padding:25px;font-size:12px}
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>UmBoMilk - Marketing Auto-Post Page Facebook</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --pink: #f45b9a;
+      --dark: #d9367a;
+      --pale: #fff0f6;
+      --bg: #fff9fc;
+      --ink: #1e1b26;
+      --muted: #6f6875;
+      --line: #f1dce7;
+      --green: #10b981;
+      --blue: #3b82f6;
+      --yellow: #f59e0b;
+      --red: #ef4444
+    }
 
-.login-screen{position:fixed;top:0;left:0;width:100%;height:100%;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:9999}
-.login-box{background:#fff;padding:44px;border-radius:24px;box-shadow:0 15px 50px rgba(217,54,122,0.12);width:100%;max-width:420px;text-align:center;border:1px solid var(--line)}
-.login-box h2{color:var(--pink);margin-top:0;font-size:26px;font-weight:800}
-.login-box input{margin-bottom:15px}
-.login-box button{width:100%;font-size:16px;padding:13px}
-.media-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px;margin-top:10px}
-.media-thumb{height:90px;border-radius:12px;overflow:hidden;border:1px solid var(--line);position:relative;background:#000}
-.media-thumb img,.media-thumb video{width:100%;height:100%;object-fit:cover}
-.media-thumb span{position:absolute;bottom:4px;right:4px;background:rgba(0,0,0,0.7);color:#fff;font-size:10px;padding:2px 5px;border-radius:4px}
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.4);display:none;align-items:center;justify-content:center;z-index:99999;backdrop-filter:blur(5px)}
-.modal-box{background:#fff;border-radius:24px;padding:30px;width:100%;max-width:680px;box-shadow:0 20px 60px rgba(217,54,122,0.25);max-height:90vh;overflow-y:auto;border:1px solid var(--line)}
+    * {
+      box-sizing: border-box
+    }
 
-/* MODERN RBAC STYLING */
-.role-card-group{display:flex;flex-direction:column;gap:10px;margin-top:10px}
-.role-card{display:flex;align-items:center;gap:14px;padding:14px 16px;border:2px solid var(--line);border-radius:14px;cursor:pointer;transition:all 0.25s ease;background:#fff}
-.role-card:hover{border-color:var(--pink);box-shadow:0 5px 20px rgba(244,91,154,0.15);transform:translateY(-2px)}
-.role-card input[type="radio"]{width:18px;height:18px;accent-color:var(--pink)}
-.role-card-icon{width:40px;height:40px;border-radius:12px;background:var(--pale);color:var(--dark);display:grid;place-items:center;font-size:18px;flex-shrink:0}
-.role-card-title{font-weight:800;font-size:14px;color:var(--ink)}
-.role-card-desc{font-size:12px;color:var(--muted);margin-top:2px}
-.perm-matrix-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;margin-top:14px}
-.perm-group-card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;transition:all 0.25s ease;box-shadow:0 4px 12px rgba(0,0,0,0.02)}
-.perm-group-card:hover{border-color:#f1b3d0;transform:translateY(-2px);box-shadow:0 8px 25px rgba(217,54,122,0.08)}
-.perm-group-header{display:flex;align-items:center;gap:10px;font-weight:800;font-size:14px;color:var(--dark);margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--pale)}
-.perm-group-icon{width:34px;height:34px;border-radius:10px;background:var(--pale);display:grid;place-items:center;font-size:16px}
-.perm-item-row{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-radius:8px;background:var(--bg);margin-bottom:6px;font-size:12px}
-.perm-code{font-family:Consolas,monospace;background:#fff;padding:2px 6px;border-radius:4px;border:1px solid var(--line);color:var(--dark);font-weight:700}
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font: 14px 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif;
+      -webkit-font-smoothing: antialiased
+    }
 
-/* UNIVERSAL RESPONSIVE DESIGN SYSTEM */
-.table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; margin-bottom: 15px; }
-.mobile-menu-btn { display: none; background: var(--pale); color: var(--dark); border: 1px solid var(--line); font-size: 20px; padding: 8px 14px; border-radius: 10px; cursor: pointer; box-shadow: none; }
-.mobile-menu-btn:hover { background: #fce7f3; }
-.sidebar-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 998; display: none; backdrop-filter: blur(4px); }
+    button,
+    input,
+    textarea,
+    select {
+      font: inherit
+    }
 
-@media (max-width: 1200px) {
-  .grid { gap: 14px; }
-  .c3 { grid-column: span 6; }
-  .c4 { grid-column: span 6; }
-  .c8 { grid-column: span 12; }
-}
+    button {
+      border: 0;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--pink), var(--dark));
+      color: #fff;
+      padding: 10px 18px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      box-shadow: 0 4px 14px rgba(244, 91, 154, 0.3)
+    }
 
-@media (max-width: 768px) {
-  .mobile-menu-btn { display: inline-flex; align-items: center; justify-content: center; }
-  .sidebar { transform: translateX(-100%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); width: 270px; z-index: 999; box-shadow: 10px 0 30px rgba(0,0,0,0.15); }
-  .sidebar.open { transform: translateX(0); }
-  .sidebar-overlay.active { display: block; }
-  .main { margin-left: 0 !important; width: 100%; }
-  .topbar { padding: 0 16px; height: 66px; }
-  .crumb { display: none; }
-  .content { padding: 16px 12px; }
-  .page-head { flex-direction: column; align-items: flex-start; gap: 12px; }
-  .page-head button { width: 100%; }
-  .c3, .c4, .c6, .c8, .c12 { grid-column: span 12 !important; }
-  .stat { padding: 16px; }
-  .modal-box { padding: 20px 16px; width: 94%; border-radius: 18px; }
-  .section-title { flex-direction: column; align-items: flex-start; gap: 10px; }
-  .section-title .row { width: 100%; justify-content: flex-start; }
-  .tabs { padding-bottom: 6px; }
-  .login-box { padding: 28px 20px; border-radius: 20px; }
-}
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(244, 91, 154, 0.4)
+    }
 
-@media (max-width: 480px) {
-  body { font-size: 13.5px; }
-  .page-head h1 { font-size: 22px; }
-  button { padding: 9px 14px; font-size: 13px; }
-  .stat strong { font-size: 26px; }
-}
-</style>
+    button.ghost {
+      background: #fff;
+      color: var(--dark);
+      border: 1px solid var(--line);
+      box-shadow: none
+    }
+
+    button.ghost:hover {
+      background: var(--pale);
+      border-color: var(--pink)
+    }
+
+    button.small {
+      padding: 6px 12px;
+      font-size: 12px;
+      border-radius: 8px
+    }
+
+    .layout {
+      display: flex;
+      min-height: 100vh
+    }
+
+    .sidebar {
+      width: 260px;
+      background: #fff;
+      border-right: 1px solid var(--line);
+      padding: 24px 16px;
+      position: fixed;
+      inset: 0 auto 0 0;
+      z-index: 2;
+      box-shadow: 4px 0 20px rgba(0, 0, 0, 0.01)
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 5px 10px 25px;
+      font-size: 19px;
+      font-weight: 800;
+      color: var(--dark)
+    }
+
+    .logo {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      object-fit: cover;
+      overflow: hidden;
+      background: linear-gradient(135deg, var(--pink), #ffb1cd);
+      box-shadow: 0 6px 16px rgba(244, 91, 154, 0.3)
+    }
+
+    .logo img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block
+    }
+
+    .nav-title {
+      color: #b49aaa;
+      font-size: 11px;
+      text-transform: uppercase;
+      font-weight: 800;
+      padding: 14px 11px 6px;
+      letter-spacing: 0.5px
+    }
+
+    .nav button {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      text-align: left;
+      background: transparent;
+      color: var(--muted);
+      font-weight: 600;
+      padding: 11px 14px;
+      margin: 3px 0;
+      border-radius: 12px;
+      box-shadow: none
+    }
+
+    .nav button:hover,
+    .nav button.active {
+      background: var(--pale);
+      color: var(--dark);
+      font-weight: 700
+    }
+
+    .main {
+      margin-left: 260px;
+      flex: 1
+    }
+
+    .topbar {
+      height: 76px;
+      background: #fff;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 32px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02)
+    }
+
+    .crumb {
+      color: var(--muted);
+      font-size: 13px
+    }
+
+    .crumb b {
+      color: var(--ink);
+      font-weight: 700
+    }
+
+    .profile {
+      display: flex;
+      align-items: center;
+      gap: 12px
+    }
+
+    .avatar {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--pink), var(--dark));
+      color: #fff;
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+      box-shadow: 0 4px 12px rgba(244, 91, 154, 0.25)
+    }
+
+    .content {
+      padding: 30px 36px;
+      max-width: 1450px
+    }
+
+    .page-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 26px
+    }
+
+    .page-head h1 {
+      margin: 0;
+      font-size: 26px;
+      font-weight: 800;
+      color: var(--ink)
+    }
+
+    .page-head p {
+      color: var(--muted);
+      margin: 6px 0 0;
+      font-size: 13px
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 20px
+    }
+
+    .card {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: 0 10px 30px rgba(217, 54, 122, 0.04), 0 1px 3px rgba(0, 0, 0, 0.02)
+    }
+
+    .c3 {
+      grid-column: span 3
+    }
+
+    .c4 {
+      grid-column: span 4
+    }
+
+    .c6 {
+      grid-column: span 6
+    }
+
+    .c8 {
+      grid-column: span 8
+    }
+
+    .c12 {
+      grid-column: span 12
+    }
+
+    .stat {
+      display: flex;
+      justify-content: space-between;
+      align-items: center
+    }
+
+    .stat small {
+      color: var(--muted);
+      font-weight: 600;
+      font-size: 12px
+    }
+
+    .stat strong {
+      font-size: 32px;
+      display: block;
+      margin-top: 6px;
+      font-weight: 800;
+      color: var(--ink)
+    }
+
+    .stat-icon {
+      width: 46px;
+      height: 46px;
+      border-radius: 14px;
+      background: var(--pale);
+      color: var(--dark);
+      display: grid;
+      place-items: center;
+      font-size: 20px
+    }
+
+    .section-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 18px
+    }
+
+    .section-title h2,
+    .section-title h3 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--ink)
+    }
+
+    .section-title span {
+      color: var(--muted);
+      font-size: 12px
+    }
+
+    label {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      margin: 14px 0 6px
+    }
+
+    input,
+    textarea,
+    select {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 11px 14px;
+      background: #fff;
+      color: var(--ink);
+      outline: none;
+      transition: border 0.2s
+    }
+
+    input:focus,
+    textarea:focus,
+    select:focus {
+      border-color: var(--pink);
+      box-shadow: 0 0 0 3px rgba(244, 91, 154, 0.15)
+    }
+
+    textarea {
+      min-height: 95px;
+      resize: vertical
+    }
+
+    .row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      border-radius: 20px;
+      padding: 5px 12px;
+      font-size: 11px;
+      font-weight: 700;
+      background: #f1f3f5;
+      color: var(--muted)
+    }
+
+    .ok {
+      background: #ecfdf5;
+      color: #047857
+    }
+
+    .wait {
+      background: #fffbeb;
+      color: #b45309
+    }
+
+    .run {
+      background: #eff6ff;
+      color: #1d4ed8
+    }
+
+    .err {
+      background: #fef2f2;
+      color: #b91c1c
+    }
+
+    table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0
+    }
+
+    th,
+    td {
+      text-align: left;
+      padding: 13px 14px;
+      border-bottom: 1px solid #f9ebf2;
+      font-size: 13px
+    }
+
+    th {
+      color: var(--muted);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-weight: 800;
+      background: #fff9fc;
+      padding-top: 10px;
+      padding-bottom: 10px
+    }
+
+    tr:last-child td {
+      border-bottom: 0
+    }
+
+    tr:hover td {
+      background: #fff0f633
+    }
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+      overflow: auto;
+      padding-bottom: 12px;
+      margin-bottom: 20px
+    }
+
+    .tabs button {
+      white-space: nowrap;
+      background: #fff;
+      color: var(--muted);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      box-shadow: none
+    }
+
+    .tabs button.active {
+      background: linear-gradient(135deg, var(--pink), var(--dark));
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(244, 91, 154, 0.3)
+    }
+
+    .panel {
+      display: none
+    }
+
+    .panel.active {
+      display: block
+    }
+
+    .notice {
+      padding: 16px;
+      border-radius: 14px;
+      background: var(--pale);
+      color: var(--dark);
+      margin-bottom: 18px;
+      line-height: 1.6;
+      font-size: 13px
+    }
+
+    .log {
+      background: #1e1b26;
+      color: #fce7f3;
+      border-radius: 14px;
+      padding: 16px;
+      min-height: 140px;
+      white-space: pre-wrap;
+      font: 12px Consolas, monospace
+    }
+
+    .empty {
+      text-align: center;
+      color: var(--muted);
+      padding: 40px
+    }
+
+    .footer {
+      color: #a895a1;
+      text-align: center;
+      padding: 25px;
+      font-size: 12px
+    }
+
+    .login-screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: var(--bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999
+    }
+
+    .login-box {
+      background: #fff;
+      padding: 44px;
+      border-radius: 24px;
+      box-shadow: 0 15px 50px rgba(217, 54, 122, 0.12);
+      width: 100%;
+      max-width: 420px;
+      text-align: center;
+      border: 1px solid var(--line)
+    }
+
+    .login-box h2 {
+      color: var(--pink);
+      margin-top: 0;
+      font-size: 26px;
+      font-weight: 800
+    }
+
+    .login-box input {
+      margin-bottom: 15px
+    }
+
+    .login-box button {
+      width: 100%;
+      font-size: 16px;
+      padding: 13px
+    }
+
+    .media-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+      gap: 10px;
+      margin-top: 10px
+    }
+
+    .media-thumb {
+      height: 90px;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      position: relative;
+      background: #000
+    }
+
+    .media-thumb img,
+    .media-thumb video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover
+    }
+
+    .media-thumb span {
+      position: absolute;
+      bottom: 4px;
+      right: 4px;
+      background: rgba(0, 0, 0, 0.7);
+      color: #fff;
+      font-size: 10px;
+      padding: 2px 5px;
+      border-radius: 4px
+    }
+
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.4);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 99999;
+      backdrop-filter: blur(5px)
+    }
+
+    .modal-box {
+      background: #fff;
+      border-radius: 24px;
+      padding: 30px;
+      width: 100%;
+      max-width: 680px;
+      box-shadow: 0 20px 60px rgba(217, 54, 122, 0.25);
+      max-height: 90vh;
+      overflow-y: auto;
+      border: 1px solid var(--line)
+    }
+
+    /* MODERN RBAC STYLING */
+    .role-card-group {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 10px
+    }
+
+    .role-card {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 16px;
+      border: 2px solid var(--line);
+      border-radius: 14px;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      background: #fff
+    }
+
+    .role-card:hover {
+      border-color: var(--pink);
+      box-shadow: 0 5px 20px rgba(244, 91, 154, 0.15);
+      transform: translateY(-2px)
+    }
+
+    .role-card input[type="radio"] {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--pink)
+    }
+
+    .role-card-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      background: var(--pale);
+      color: var(--dark);
+      display: grid;
+      place-items: center;
+      font-size: 18px;
+      flex-shrink: 0
+    }
+
+    .role-card-title {
+      font-weight: 800;
+      font-size: 14px;
+      color: var(--ink)
+    }
+
+    .role-card-desc {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 2px
+    }
+
+    .perm-matrix-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 14px;
+      margin-top: 14px
+    }
+
+    .perm-group-card {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 16px;
+      transition: all 0.25s ease;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02)
+    }
+
+    .perm-group-card:hover {
+      border-color: #f1b3d0;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(217, 54, 122, 0.08)
+    }
+
+    .perm-group-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 800;
+      font-size: 14px;
+      color: var(--dark);
+      margin-bottom: 12px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--pale)
+    }
+
+    .perm-group-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      background: var(--pale);
+      display: grid;
+      place-items: center;
+      font-size: 16px
+    }
+
+    .perm-item-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 12px;
+      border-radius: 8px;
+      background: var(--bg);
+      margin-bottom: 6px;
+      font-size: 12px
+    }
+
+    .perm-code {
+      font-family: Consolas, monospace;
+      background: #fff;
+      padding: 2px 6px;
+      border-radius: 4px;
+      border: 1px solid var(--line);
+      color: var(--dark);
+      font-weight: 700
+    }
+
+    /* UNIVERSAL RESPONSIVE DESIGN SYSTEM */
+    .table-responsive {
+      width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      margin-bottom: 15px;
+    }
+
+    .mobile-menu-btn {
+      display: none;
+      background: var(--pale);
+      color: var(--dark);
+      border: 1px solid var(--line);
+      font-size: 20px;
+      padding: 8px 14px;
+      border-radius: 10px;
+      cursor: pointer;
+      box-shadow: none;
+    }
+
+    .mobile-menu-btn:hover {
+      background: #fce7f3;
+    }
+
+    .sidebar-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 998;
+      display: none;
+      backdrop-filter: blur(4px);
+    }
+
+    @media (max-width: 1200px) {
+      .grid {
+        gap: 14px;
+      }
+
+      .c3 {
+        grid-column: span 6;
+      }
+
+      .c4 {
+        grid-column: span 6;
+      }
+
+      .c8 {
+        grid-column: span 12;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .mobile-menu-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .sidebar {
+        transform: translateX(-100%);
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        width: 270px;
+        z-index: 999;
+        box-shadow: 10px 0 30px rgba(0, 0, 0, 0.15);
+      }
+
+      .sidebar.open {
+        transform: translateX(0);
+      }
+
+      .sidebar-overlay.active {
+        display: block;
+      }
+
+      .main {
+        margin-left: 0 !important;
+        width: 100%;
+      }
+
+      .topbar {
+        padding: 0 16px;
+        height: 66px;
+      }
+
+      .crumb {
+        display: none;
+      }
+
+      .content {
+        padding: 16px 12px;
+      }
+
+      .page-head {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+      }
+
+      .page-head button {
+        width: 100%;
+      }
+
+      .c3,
+      .c4,
+      .c6,
+      .c8,
+      .c12 {
+        grid-column: span 12 !important;
+      }
+
+      .stat {
+        padding: 16px;
+      }
+
+      .modal-box {
+        padding: 20px 16px;
+        width: 94%;
+        border-radius: 18px;
+      }
+
+      .section-title {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+      }
+
+      .section-title .row {
+        width: 100%;
+        justify-content: flex-start;
+      }
+
+      .tabs {
+        padding-bottom: 6px;
+      }
+
+      .login-box {
+        padding: 28px 20px;
+        border-radius: 20px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      body {
+        font-size: 13.5px;
+      }
+
+      .page-head h1 {
+        font-size: 22px;
+      }
+
+      button {
+        padding: 9px 14px;
+        font-size: 13px;
+      }
+
+      .stat strong {
+        font-size: 26px;
+      }
+    }
+  </style>
 </head>
+
 <body>
 
-<div id="loginScreen" class="login-screen">
-  <div class="login-box">
-    <div class="logo" style="width:80px;height:80px;margin:0 auto 20px;border-radius:20px;"><img src="logo.jpg" alt="Logo UmBoMilk"></div>
-    <h2>UmBoMilk</h2>
-    <p style="color:var(--muted); margin-bottom: 20px;">Marketing Auto-Post Page Facebook</p>
-    <form id="loginForm">
-      <input type="email" id="loginEmail" placeholder="Email" value="admin@example.com" required>
-      <input type="password" id="loginPassword" placeholder="Mật khẩu" value="Admin@123" required>
-      <button type="submit">Đăng nhập hệ thống</button>
-    </form>
-    <p id="loginError" style="color: var(--red); display: none; font-size: 13px; margin-top: 15px; font-weight: 600;"></p>
-  </div>
-</div>
-
-<div id="appLayout" class="layout" style="display: none;">
-<aside class="sidebar">
-<div class="brand"><div class="logo"><img src="logo.jpg" alt="Logo UmBoMilk"></div><span>UmBoMilk</span></div>
-<div class="nav-title">Quản trị</div><div class="nav">
-<button class="active" data-page="overview">◈ <span>Tổng quan</span></button>
-<button data-page="campaign">▣ <span>Chiến dịch</span></button>
-<button data-page="approval">✓ <span>Duyệt nội dung</span></button>
-<button data-page="calendar">◷ <span>Lịch đăng bài</span></button>
-<button data-page="posts">▤ <span>Bài viết</span></button>
-<button data-page="pages">▰ <span>Facebook Page</span></button>
-<button data-page="media">▧ <span>Kho media</span></button>
-<button data-page="reports">◒ <span>Báo cáo</span></button>
-</div><div class="nav-title">Hệ thống</div><div class="nav">
-<button data-page="users">♙ <span>Người dùng</span></button><button data-page="logs">📋 <span>Nhật ký log</span></button><button data-page="settings">⚙ <span>Cài đặt</span></button><button data-page="guide">? <span>Hướng dẫn</span></button>
-</div>
-<div class="footer">© 2026. All rights reserved.</div>
-</aside>
-
-<div id="sidebarOverlay" class="sidebar-overlay" onclick="closeMobileSidebar()"></div>
-<section class="main"><header class="topbar"><div style="display:flex;align-items:center;gap:12px"><button type="button" class="mobile-menu-btn" onclick="toggleMobileSidebar()">☰</button><div class="crumb">Trang chủ / <b id="crumb">Tổng quan</b></div></div><div class="profile"><span id="apiStatus" class="badge wait">API checking...</span><div class="avatar">A</div><span id="userNameDisplay">Admin</span><button class="ghost small" onclick="logout()" style="margin-left: 10px">Đăng xuất</button></div></header>
-<main class="content">
-<div class="page-head"><div><h1 id="title">Tổng quan</h1><p id="subtitle">Theo dõi toàn bộ hoạt động tự động hóa Facebook</p></div><button onclick="openPage('campaign')">＋ Tạo chiến dịch mới</button></div>
-
-<!-- TAB 1: OVERVIEW -->
-<div id="overview" class="panel active">
-<div class="grid">
-<div class="card c3 stat"><div><small>Facebook Pages</small><strong id="pagesCount">0</strong></div><div class="stat-icon">▰</div></div>
-<div class="card c3 stat"><div><small>Chiến dịch</small><strong id="campaignsCount">0</strong></div><div class="stat-icon">▣</div></div>
-<div class="card c3 stat"><div><small>Bài chờ duyệt</small><strong id="pendingApprovalCount">0</strong></div><div class="stat-icon">✓</div></div>
-<div class="card c3 stat"><div><small>Người dùng</small><strong id="usersCount">0</strong></div><div class="stat-icon">♙</div></div>
-<div class="card c12"><div class="section-title"><h3>Chiến dịch gần đây</h3><button class="ghost small" onclick="loadData()">Làm mới</button></div><table><thead><tr><th>Tên chiến dịch</th><th>Mô tả / Prompt</th><th>Chế độ</th><th>Trạng thái</th><th>Ngày tạo</th><th>Thao tác</th></tr></thead><tbody id="campaignsTbody"><tr><td colspan="6">Đang tải dữ liệu...</td></tr></tbody></table></div>
-</div></div>
-
-<!-- TAB 2: CAMPAIGN WIZARD (10 STEPS) -->
-<div id="campaign" class="panel"><div class="tabs" id="wizardTabs"></div><div id="wizard"></div></div>
-
-<!-- TAB 3: APPROVAL QUEUE -->
-<div id="approval" class="panel">
-  <div class="card">
-    <div class="section-title">
-      <div>
-        <h3 style="font-size:20px;font-weight:800;color:var(--ink)">✓ Hàng chờ duyệt bài viết</h3>
-        <p style="margin:4px 0 0;font-size:12px;color:var(--muted)">Kiểm duyệt bài viết do AI/Biên tập viên tạo trước khi xuất bản lên Facebook Page</p>
-      </div>
-      <button class="ghost small" style="border-radius:10px;padding:8px 16px" onclick="loadApprovalQueue()">↻ Làm mới danh sách</button>
-    </div>
-    <div class="notice" style="border-left:4px solid var(--pink);background:var(--pale);padding:14px 18px;border-radius:14px;margin-bottom:22px">
-      🛡️ <b>Quy trình phê duyệt nội dung:</b> Mọi bài viết ở trạng thái <b>PENDING_APPROVAL</b> đều xuất hiện ở dạng thẻ thông minh dưới đây. Admin hoặc Manager bấm <b>Duyệt bài đăng ✓</b> để đưa bài viết vào lịch phát hành Facebook Page.
-    </div>
-    <div id="approvalContainer">Đang tải danh sách bài viết chờ duyệt...</div>
-  </div>
-</div>
-
-<!-- TAB 4: CALENDAR VIEW -->
-<div id="calendar" class="panel"><div class="card"><div class="section-title"><h3>Lịch đăng theo từng Page</h3><div class="row"><button class="ghost small" onclick="addCustomSchedule()">＋ Thêm lịch thủ công</button><button class="ghost small" onclick="shiftCampaignSchedule()">⏩ Dời lịch (+30 phút)</button></div></div><div class="notice">Mỗi Page có lịch độc lập. Khung giờ được phép đăng mặc định: <b>08:00 - 22:00</b> (Asia/Ho_Chi_Minh). Tự động dời bài ngoài khung giờ sang ngày hôm sau.</div><div id="calendarTimeline"></div></div></div>
-
-<!-- TAB 5: POSTS LIST -->
-<div id="posts" class="panel"><div class="card"><div class="section-title"><h3>Tất cả bài viết</h3><div class="row"><select style="width:180px" id="postStatusFilter" onchange="loadPosts()"><option value="">Tất cả trạng thái</option><option>PENDING_APPROVAL</option><option>APPROVED</option><option>REJECTED</option><option>SCHEDULED</option><option>PUBLISHED</option><option>FAILED</option></select><button class="ghost small" onclick="loadPosts()">Làm mới</button></div></div><table><thead><tr><th>Nội dung bài viết</th><th>Facebook Page</th><th>Trạng thái</th><th>Thời gian lên lịch</th><th>Thao tác</th></tr></thead><tbody id="postsTbody"><tr><td colspan="5" class="empty">Đang tải...</td></tr></tbody></table></div></div>
-
-<!-- TAB 6: PAGES MANAGEMENT -->
-<div id="pages" class="panel"><div class="card"><div class="section-title"><h3>Facebook Page (Quản lý Fanpage)</h3><div class="row" style="gap:10px"><button class="ghost" onclick="openFetchUserPagesModal()" style="border-color:var(--pink);color:var(--pink);font-weight:700">⚡ Tự động tải tất cả Page từ User Token</button><button onclick="openAddPageModal()">＋ Thêm Facebook Page thủ công</button></div></div><table><thead><tr><th>Tên Page</th><th>Facebook Page ID</th><th>Trạng thái Token</th><th>Số bài mặc định</th><th>Khoảng cách</th><th>Hành động</th></tr></thead><tbody id="pagesTbody"><tr><td colspan="6">Đang tải...</td></tr></tbody></table></div></div>
-
-<!-- TAB 7: MEDIA STORE -->
-<div id="media" class="panel"><div class="grid"><div class="card c8"><div class="section-title"><h3>Kho hình ảnh và video</h3><div class="row"><label class="button" style="cursor:pointer;display:inline-block;padding:9px 15px;background:var(--pink);color:#fff;border-radius:9px;font-weight:700">↑ Tải media lên <input type="file" id="globalMediaUpload" multiple accept="image/*,video/*" style="display:none" onchange="uploadGlobalMedia(this)"></label><button class="ghost small" onclick="shuffleMediaAllocation()">🎲 Phân bổ ngẫu nhiên</button></div></div><div class="notice">Bài hình ảnh cần <b>đúng 6 hình</b> ngẫu nhiên (Fisher-Yates shuffle). Bài video cần <b>đúng 1 video</b>.</div><div id="mediaGridDisplay" class="media-grid"></div></div><div class="card c4"><h3>Kiểm tra phân bổ tài nguyên</h3><div class="notice">Thống kê dung lượng kho media dùng chung giữa các chiến dịch.</div><p>Tổng hình ảnh khả dụng: <b id="totalImagesCount">0</b></p><p>Tổng video khả dụng: <b id="totalVideosCount">0</b></p><span id="mediaStatusBadge" class="badge ok">Đủ tài nguyên</span></div></div></div>
-
-<!-- TAB 8: REPORTS -->
-<div id="reports" class="panel"><div class="card c12"><div class="section-title"><h3>Báo cáo hiệu quả đăng bài</h3><button class="ghost small" onclick="exportReports()">📥 Xuất báo cáo CSV</button></div><div class="grid" style="margin-bottom:20px"><div class="card c4 stat"><div><small>Đăng thành công</small><strong id="publishedCount" style="color:var(--green)">0</strong></div></div><div class="card c4 stat"><div><small>Đăng thất bại</small><strong id="failedCount" style="color:var(--red)">0</strong></div></div><div class="card c4 stat"><div><small>Tỷ lệ thành công</small><strong id="successRate" style="color:var(--blue)">100%</strong></div></div></div><table><thead><tr><th>Page</th><th>Tổng bài</th><th>Thành công</th><th>Thất bại</th><th>Tỷ lệ</th></tr></thead><tbody id="reportsTbody"><tr><td colspan="5" class="empty">Chưa có dữ liệu báo cáo</td></tr></tbody></table></div></div>
-
-<!-- TAB 9: USERS & RBAC PERMISSIONS -->
-<div id="users" class="panel">
-  <div class="grid">
-    <div class="card c12">
-      <div class="section-title">
-        <h3>Quản lý Người dùng & Cấp Phép RBAC</h3>
-        <button onclick="openAddUserModal()">＋ Thêm người dùng mới</button>
-      </div>
-      <div class="notice" style="border-left: 4px solid var(--pink);">
-        🛡️ <b>Quy trình kiểm duyệt & cấp phép RBAC hệ thống:</b><br>
-        - 👑 <b>ADMIN (Quản trị tối cao):</b> Quyền cao nhất hệ thống, vừa phê duyệt bài viết, vừa có toàn quyền tạo/sửa/xóa người dùng, kết nối/xóa Page & cấu hình hệ thống.<br>
-        - 📊 <b>MANAGER (Quản lý chiến dịch):</b> Có quyền xem & <b>phê duyệt bài viết AI</b>. <i>(⚠️ Không được xóa người dùng, Không được tạo/kết nối Facebook Page).</i><br>
-        - ✍️ <b>EDITOR (Biên tập viên):</b> Tạo chiến dịch & bài viết AI. <i>Mọi bài viết tự động ở trạng thái <b>CHỜ DUYỆT (PENDING_APPROVAL)</b> và bắt buộc ADMIN hoặc MANAGER duyệt mới được phát hành!</i>
-      </div>
-      <table>
-        <thead>
-          <tr>
-            <th>Họ tên</th>
-            <th>Email / Username</th>
-            <th>Vai trò (Role)</th>
-            <th>Trạng thái</th>
-            <th>Cấp phép & Hành động</th>
-          </tr>
-        </thead>
-        <tbody id="usersTbody"><tr><td colspan="5">Đang tải...</td></tr></tbody>
-      </table>
-    </div>
-
-    <!-- SYSTEM PERMISSIONS MATRIX REFERENCE CARD -->
-    <div class="card c12">
-      <div class="section-title">
-        <h3>Ma Trận 16 Quyền Chức Năng Hệ Thống (RBAC Matrix)</h3>
-        <span class="badge ok">16 / 16 Active Permissions</span>
-      </div>
-      <div class="notice">Các nhóm quyền được hệ thống phân chia trực quan theo từng mô-đun để Admin cấp phép chính xác cho từng người dùng:</div>
-      
-      <div class="perm-matrix-grid">
-        <!-- MODULE 1: FACEBOOK PAGE -->
-        <div class="perm-group-card">
-          <div class="perm-group-header">
-            <div class="perm-group-icon">▰</div>
-            <div>Quản Lý Facebook Page</div>
-          </div>
-          <div class="perm-item-row"><span>Xem danh sách Facebook Page</span><span class="perm-code">pages.view</span></div>
-          <div class="perm-item-row"><span>Thêm / Xóa / Kiểm tra Token</span><span class="perm-code">pages.manage</span></div>
-        </div>
-
-        <!-- MODULE 2: CAMPAIGN -->
-        <div class="perm-group-card">
-          <div class="perm-group-header">
-            <div class="perm-group-icon">▣</div>
-            <div>Khởi Tạo Chiến Dịch</div>
-          </div>
-          <div class="perm-item-row"><span>Xem danh sách chiến dịch</span><span class="perm-code">campaigns.view</span></div>
-          <div class="perm-item-row"><span>Tạo chiến dịch mới (10 bước)</span><span class="perm-code">campaigns.create</span></div>
-          <div class="perm-item-row"><span>Cập nhật & Đặt lại lịch đăng</span><span class="perm-code">campaigns.update</span></div>
-        </div>
-
-        <!-- MODULE 3: APPROVAL QUEUE -->
-        <div class="perm-group-card" style="border-color:var(--pink);background:var(--pale)">
-          <div class="perm-group-header" style="color:var(--dark)">
-            <div class="perm-group-icon" style="background:#fff">✓</div>
-            <div>Đặc Quyền Phê Duyệt (Admin/Manager)</div>
-          </div>
-          <div class="perm-item-row" style="background:#fff"><span>Duyệt & Từ chối bài viết AI</span><span class="perm-code" style="color:var(--pink);border-color:var(--pink)">campaigns.approve</span></div>
-          <div class="perm-item-row" style="background:#fff"><span>Phát hành Graph API xuất bản</span><span class="perm-code" style="color:var(--pink);border-color:var(--pink)">campaigns.publish</span></div>
-        </div>
-
-        <!-- MODULE 4: MEDIA STORE -->
-        <div class="perm-group-card">
-          <div class="perm-group-header">
-            <div class="perm-group-icon">▧</div>
-            <div>Kho Media & Phân Bổ</div>
-          </div>
-          <div class="perm-item-row"><span>Upload & Phân bổ 6 ảnh / 1 video</span><span class="perm-code">media.manage</span></div>
-          <div class="perm-item-row"><span>Thuật toán Fisher-Yates shuffle</span><span class="perm-code">media.shuffle</span></div>
-        </div>
-
-        <!-- MODULE 5: REPORTS & AUDIT -->
-        <div class="perm-group-card">
-          <div class="perm-group-header">
-            <div class="perm-group-icon">◒</div>
-            <div>Báo Cáo & Thống Kê</div>
-          </div>
-          <div class="perm-item-row"><span>Xem thống kê hiệu quả bài đăng</span><span class="perm-code">reports.view</span></div>
-          <div class="perm-item-row"><span>Xuất dữ liệu báo cáo chi tiết CSV</span><span class="perm-code">reports.export</span></div>
-        </div>
-
-        <!-- MODULE 6: USERS & RBAC -->
-        <div class="perm-group-card">
-          <div class="perm-group-header">
-            <div class="perm-group-icon">♙</div>
-            <div>Quản Trị Người Dùng & Phân Quyền</div>
-          </div>
-          <div class="perm-item-row"><span>Tạo & Quản lý tài khoản</span><span class="perm-code">users.create/update</span></div>
-          <div class="perm-item-row"><span>Phân quyền vai trò RBAC</span><span class="perm-code">roles.manage</span></div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- TAB 10: SYSTEM LOGS -->
-<div id="logs" class="panel"><div class="card"><div class="section-title"><h3>Nhật ký hoạt động hệ thống (JobLog & AuditLog)</h3><div class="row"><button class="ghost small" onclick="loadSystemLogs()">Làm mới</button><button class="ghost small" style="color:var(--red)" onclick="clearSystemLogs()">Xóa log cũ</button></div></div><div id="logDisplay" class="log">Đang tải log...</div></div></div>
-
-<!-- TAB 11: SETTINGS & BRANDING & AI ROUTER -->
-<div id="settings" class="panel">
-  <div class="grid">
-    <div class="card c6">
-      <h3>Cài đặt thương hiệu</h3>
-      <form id="brandingForm" onsubmit="saveBranding(event)">
-        <label>Tên hệ thống</label>
-        <input id="sysNameInput" value="UmBoMilk - Marketing Auto-Post Page Facebook">
-        <label>Logo thương hiệu (logo.jpg)</label>
-        <input type="file" id="logoFileInput" accept="image/jpeg,image/png">
-        <button type="submit" style="margin-top:15px">Lưu thay đổi</button>
+  <div id="loginScreen" class="login-screen">
+    <div class="login-box">
+      <div class="logo" style="width:80px;height:80px;margin:0 auto 20px;border-radius:20px;"><img src="logo.jpg"
+          alt="Logo UmBoMilk"></div>
+      <h2>UmBoMilk</h2>
+      <p style="color:var(--muted); margin-bottom: 20px;">Marketing Auto-Post Page Facebook</p>
+      <form id="loginForm">
+        <input type="email" id="loginEmail" placeholder="Email" required>
+        <input type="password" id="loginPassword" placeholder="Mật khẩu" required>
+        <button type="submit">Đăng nhập hệ thống</button>
       </form>
-    </div>
-
-    <div class="card c6">
-      <h3>Cấu hình chung hệ thống</h3>
-      <form onsubmit="saveSystemSettings(event)">
-        <label>Múi giờ mặc định</label>
-        <select id="sysTimezone"><option>Asia/Ho_Chi_Minh</option></select>
-        <label>Khoảng cách đăng mặc định (Phút)</label>
-        <input id="sysInterval" value="15" type="number">
-        <label>Khung giờ mặc định được phép đăng</label>
-        <div class="row">
-          <input id="sysStartTime" value="08:00" style="width:120px"> <span>đến</span> <input id="sysEndTime" value="22:00" style="width:120px">
-        </div>
-        <button type="submit" style="margin-top:15px">Lưu cấu hình</button>
-      </form>
-    </div>
-
-    <!-- 9ROUTER / LOCAL AI CONFIGURATION CARD -->
-    <div class="card c12" style="margin-top:10px">
-      <div class="section-title">
-        <div>
-          <h3 style="font-size:19px;font-weight:800;color:var(--ink)">🤖 Cấu hình AI Engine (9router / Local Free AI / OpenAI)</h3>
-          <p style="margin:4px 0 0;font-size:12px;color:var(--muted)">Cấu hình 9router API local endpoint để ứng dụng tự động sinh bài viết bằng mô hình AI của bạn</p>
-        </div>
-        <span class="badge ok" id="aiStatusBadge">🟢 9router Ready</span>
-      </div>
-
-      <div class="notice" style="border-left:4px solid var(--pink);background:var(--pale)">
-        💡 <b>Hướng dẫn cấu hình 9router (Free Local AI Router):</b><br>
-        - Khi mở <b>9router</b> trên máy tính local của bạn, API endpoint mặc định là: <b><code style="background:#fff;padding:2px 6px;border-radius:4px">http://localhost:2000/v1</code></b><br>
-        - Ứng dụng sẽ tự động gửi yêu cầu đến 9router để tự động sinh văn bản cho chiến dịch Facebook.<br>
-        - Nếu 9router chưa mở, hệ thống sẽ tự động chuyển sang mô hình bộ sinh bài viết dự phòng thông minh mà không gây ngắt đoạn công việc.
-      </div>
-
-      <form id="aiConfigForm" onsubmit="saveAiConfig(event)">
-        <div class="grid">
-          <div class="card c6" style="box-shadow:none;border:1px solid var(--line);background:#faf5f8;padding:18px">
-            <label>Nhà Cung Cấp AI (AI Provider)</label>
-            <select id="aiProviderSelect">
-              <option value="9router" selected>🟢 9router (Local AI Free - Khuyên dùng)</option>
-              <option value="local">💻 Local AI / Ollama / LM Studio (http://localhost:11434/v1)</option>
-              <option value="openai">⚡ OpenAI API (gpt-4o-mini)</option>
-              <option value="custom">⚙ Custom OpenAI-Compatible API</option>
-            </select>
-
-            <label>Địa Chỉ API Endpoint (Base URL)</label>
-            <input id="aiBaseUrlInput" value="http://localhost:2000/v1" placeholder="http://localhost:2000/v1">
-            <small style="color:var(--muted);font-size:11px;display:block;margin-top:4px">Mặc định của 9router local: http://localhost:2000/v1</small>
-          </div>
-
-          <div class="card c6" style="box-shadow:none;border:1px solid var(--line);background:#faf5f8;padding:18px">
-            <label>Tên Mô Hình AI (Model Name)</label>
-            <input id="aiModelInput" value="qwen2.5" placeholder="Ví dụ: qwen2.5, llama3, gpt-4o-mini, 9router-default">
-            <small style="color:var(--muted);font-size:11px;display:block;margin-top:4px">Mô hình AI đã nạp trong 9router</small>
-
-            <label>API Key (Khóa truy cập)</label>
-            <input id="aiApiKeyInput" type="password" value="9router-key-local" placeholder="9router-key-local">
-            <small style="color:var(--muted);font-size:11px;display:block;margin-top:4px">Khóa xác thực (với 9router local có thể điền tùy ý)</small>
-          </div>
-        </div>
-
-        <div class="row" style="margin-top:18px;justify-content:flex-end;gap:12px">
-          <button type="button" class="ghost" style="border-radius:10px;padding:10px 18px" onclick="testAiConnection()">⚡ Test Kết Nối 9router</button>
-          <button type="submit" style="background:linear-gradient(135deg,#10b981,#059669);box-shadow:0 4px 14px rgba(16,185,129,0.3);border-radius:10px;padding:10px 22px">💾 Lưu Cấu Hình AI</button>
-        </div>
-      </form>
+      <p id="loginError" style="color: var(--red); display: none; font-size: 13px; margin-top: 15px; font-weight: 600;">
+      </p>
     </div>
   </div>
-</div>
 
-<!-- TAB 12: USER GUIDE -->
-<div id="guide" class="panel"><div class="card"><h3>Trung tâm Hướng dẫn sử dụng</h3><div class="notice"><b>Quy trình 10 bước chuẩn:</b><br>1. Nhập thông tin chiến dịch → 2. Chọn Facebook Page → 3. Nhập Prompt & thông tin bắt buộc → 4. Cấu hình AI → 5. Upload media → 6. Phân bổ ngẫu nhiên → 7. Xem & chỉnh bài AI → 8. Đặt lịch riêng per Page → 9. Kiểm tra checklist → 10. Kích hoạt tự động hóa.</div><p><b>Quy tắc quan trọng:</b></p><ul><li><b>Mã hóa Token:</b> Page Access Token được mã hóa AES-256 trong CSDL và giải mã an toàn trong worker khi gọi Facebook Graph API.</li><li><b>Phân bổ 6 ảnh:</b> Bài đăng hình ảnh lấy ngẫu nhiên đúng 6 ảnh không lặp lại trong 1 bài bằng thuật toán Fisher-Yates.</li><li><b>Khung giờ vàng:</b> Hệ thống tự động dịch chuyển thời gian bài viết ra ngoài khung giờ 08:00 - 22:00 sang 08:00 ngày tiếp theo.</li></ul></div></div>
+  <div id="appLayout" class="layout" style="display: none;">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="logo"><img src="logo.jpg" alt="Logo UmBoMilk"></div><span>UmBoMilk</span>
+      </div>
+      <div class="nav-title">Quản trị</div>
+      <div class="nav">
+        <button class="active" data-page="overview">◈ <span>Tổng quan</span></button>
+        <button data-page="campaign">▣ <span>Chiến dịch</span></button>
+        <button data-page="approval">✓ <span>Duyệt nội dung</span></button>
+        <button data-page="calendar">◷ <span>Lịch đăng bài</span></button>
+        <button data-page="posts">▤ <span>Bài viết</span></button>
+        <button data-page="pages">▰ <span>Facebook Page</span></button>
+        <button data-page="media">▧ <span>Kho media</span></button>
+        <button data-page="reports">◒ <span>Báo cáo</span></button>
+      </div>
+      <div class="nav-title">Hệ thống</div>
+      <div class="nav">
+        <button data-page="users">♙ <span>Người dùng</span></button><button data-page="logs">📋 <span>Nhật ký
+            log</span></button><button data-page="settings">⚙ <span>Cài đặt</span></button><button data-page="guide">?
+          <span>Hướng dẫn</span></button>
+      </div>
+      <div class="footer">© 2026. All rights reserved.</div>
+    </aside>
 
-</main></section></div>
+    <div id="sidebarOverlay" class="sidebar-overlay" onclick="closeMobileSidebar()"></div>
+    <section class="main">
+      <header class="topbar">
+        <div style="display:flex;align-items:center;gap:12px"><button type="button" class="mobile-menu-btn"
+            onclick="toggleMobileSidebar()">☰</button>
+          <div class="crumb">Trang chủ / <b id="crumb">Tổng quan</b></div>
+        </div>
+        <div class="profile"><span id="apiStatus" class="badge wait">API checking...</span>
+          <div class="avatar">A</div><span id="userNameDisplay">Admin</span><button class="ghost small"
+            onclick="logout()" style="margin-left: 10px">Đăng xuất</button>
+        </div>
+      </header>
+      <main class="content">
+        <div class="page-head">
+          <div>
+            <h1 id="title">Tổng quan</h1>
+            <p id="subtitle">Theo dõi toàn bộ hoạt động tự động hóa Facebook</p>
+          </div><button onclick="openPage('campaign')">＋ Tạo chiến dịch mới</button>
+        </div>
 
-<!-- MODAL POPUP DIALOG -->
-<div id="appModal" class="modal-overlay">
-  <div class="modal-box">
-    <h3 id="modalTitle">Tiêu đề Modal</h3>
-    <div id="modalBody">Nội dung Modal</div>
-    <div class="row" style="margin-top:20px;justify-content:flex-end">
-      <button class="ghost" onclick="closeModal()">Hủy</button>
-      <button id="modalConfirmBtn">Xác nhận</button>
+        <!-- TAB 1: OVERVIEW -->
+        <div id="overview" class="panel active">
+          <div class="grid">
+            <div class="card c3 stat">
+              <div><small>Facebook Pages</small><strong id="pagesCount">0</strong></div>
+              <div class="stat-icon">▰</div>
+            </div>
+            <div class="card c3 stat">
+              <div><small>Chiến dịch</small><strong id="campaignsCount">0</strong></div>
+              <div class="stat-icon">▣</div>
+            </div>
+            <div class="card c3 stat">
+              <div><small>Bài chờ duyệt</small><strong id="pendingApprovalCount">0</strong></div>
+              <div class="stat-icon">✓</div>
+            </div>
+            <div class="card c3 stat">
+              <div><small>Người dùng</small><strong id="usersCount">0</strong></div>
+              <div class="stat-icon">♙</div>
+            </div>
+            <div class="card c12">
+              <div class="section-title">
+                <h3>Chiến dịch gần đây</h3><button class="ghost small" onclick="loadData()">Làm mới</button>
+              </div>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Tên chiến dịch</th>
+                    <th>Mô tả / Prompt</th>
+                    <th>Chế độ</th>
+                    <th>Trạng thái</th>
+                    <th>Ngày tạo</th>
+                    <th>Thao tác</th>
+                  </tr>
+                </thead>
+                <tbody id="campaignsTbody">
+                  <tr>
+                    <td colspan="6">Đang tải dữ liệu...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 2: CAMPAIGN WIZARD (10 STEPS) -->
+        <div id="campaign" class="panel">
+          <div class="tabs" id="wizardTabs"></div>
+          <div id="wizard"></div>
+        </div>
+
+        <!-- TAB 3: APPROVAL QUEUE -->
+        <div id="approval" class="panel">
+          <div class="card">
+            <div class="section-title">
+              <div>
+                <h3 style="font-size:20px;font-weight:800;color:var(--ink)">✓ Hàng chờ duyệt bài viết</h3>
+                <p style="margin:4px 0 0;font-size:12px;color:var(--muted)">Kiểm duyệt bài viết do AI/Biên tập viên tạo
+                  trước khi xuất bản lên Facebook Page</p>
+              </div>
+              <button class="ghost small" style="border-radius:10px;padding:8px 16px" onclick="loadApprovalQueue()">↻
+                Làm mới danh sách</button>
+            </div>
+            <div class="notice"
+              style="border-left:4px solid var(--pink);background:var(--pale);padding:14px 18px;border-radius:14px;margin-bottom:22px">
+              🛡️ <b>Quy trình phê duyệt nội dung:</b> Mọi bài viết ở trạng thái <b>PENDING_APPROVAL</b> đều xuất hiện ở
+              dạng thẻ thông minh dưới đây. Admin hoặc Manager bấm <b>Duyệt bài đăng ✓</b> để đưa bài viết vào lịch phát
+              hành Facebook Page.
+            </div>
+            <div id="approvalContainer">Đang tải danh sách bài viết chờ duyệt...</div>
+          </div>
+        </div>
+
+        <!-- TAB 4: CALENDAR VIEW -->
+        <div id="calendar" class="panel">
+          <div class="card">
+            <div class="section-title">
+              <h3>Lịch đăng theo từng Page</h3>
+              <div class="row"><button class="ghost small" onclick="addCustomSchedule()">＋ Thêm lịch thủ
+                  công</button><button class="ghost small" onclick="shiftCampaignSchedule()">⏩ Dời lịch (+30
+                  phút)</button></div>
+            </div>
+            <div class="notice">Mỗi Page có lịch độc lập. Khung giờ được phép đăng mặc định: <b>08:00 - 22:00</b>
+              (Asia/Ho_Chi_Minh). Tự động dời bài ngoài khung giờ sang ngày hôm sau.</div>
+            <div id="calendarTimeline"></div>
+          </div>
+        </div>
+
+        <!-- TAB 5: POSTS LIST -->
+        <div id="posts" class="panel">
+          <div class="card">
+            <div class="section-title">
+              <h3>Tất cả bài viết</h3>
+              <div class="row"><select style="width:180px" id="postStatusFilter" onchange="loadPosts()">
+                  <option value="">Tất cả trạng thái</option>
+                  <option>PENDING_APPROVAL</option>
+                  <option>APPROVED</option>
+                  <option>REJECTED</option>
+                  <option>SCHEDULED</option>
+                  <option>PUBLISHED</option>
+                  <option>FAILED</option>
+                </select><button class="ghost small" onclick="loadPosts()">Làm mới</button></div>
+            </div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Nội dung bài viết</th>
+                  <th>Facebook Page</th>
+                  <th>Trạng thái</th>
+                  <th>Thời gian lên lịch</th>
+                  <th>Thao tác</th>
+                </tr>
+              </thead>
+              <tbody id="postsTbody">
+                <tr>
+                  <td colspan="5" class="empty">Đang tải...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- TAB 6: PAGES MANAGEMENT -->
+        <div id="pages" class="panel">
+          <div class="card">
+            <div class="section-title">
+              <h3>Facebook Page (Quản lý Fanpage)</h3>
+              <div class="row" style="gap:10px"><button class="ghost" onclick="openFetchUserPagesModal()"
+                  style="border-color:var(--pink);color:var(--pink);font-weight:700">⚡ Tự động tải tất cả Page từ User
+                  Token</button><button onclick="openAddPageModal()">＋ Thêm Facebook Page thủ công</button></div>
+            </div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Tên Page</th>
+                  <th>Facebook Page ID</th>
+                  <th>Trạng thái Token</th>
+                  <th>Số bài mặc định</th>
+                  <th>Khoảng cách</th>
+                  <th>Hành động</th>
+                </tr>
+              </thead>
+              <tbody id="pagesTbody">
+                <tr>
+                  <td colspan="6">Đang tải...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- TAB 7: MEDIA STORE -->
+        <div id="media" class="panel">
+          <div class="grid">
+            <div class="card c8">
+              <div class="section-title">
+                <h3>Kho hình ảnh và video</h3>
+                <div class="row"><label class="button"
+                    style="cursor:pointer;display:inline-block;padding:9px 15px;background:var(--pink);color:#fff;border-radius:9px;font-weight:700">↑
+                    Tải media lên <input type="file" id="globalMediaUpload" multiple accept="image/*,video/*"
+                      style="display:none" onchange="uploadGlobalMedia(this)"></label><button class="ghost small"
+                    onclick="shuffleMediaAllocation()">🎲 Phân bổ ngẫu nhiên</button></div>
+              </div>
+              <div class="notice">Bài hình ảnh cần <b>đúng 6 hình</b> ngẫu nhiên (Fisher-Yates shuffle). Bài video cần
+                <b>đúng 1 video</b>.</div>
+              <div id="mediaGridDisplay" class="media-grid"></div>
+            </div>
+            <div class="card c4">
+              <h3>Kiểm tra phân bổ tài nguyên</h3>
+              <div class="notice">Thống kê dung lượng kho media dùng chung giữa các chiến dịch.</div>
+              <p>Tổng hình ảnh khả dụng: <b id="totalImagesCount">0</b></p>
+              <p>Tổng video khả dụng: <b id="totalVideosCount">0</b></p><span id="mediaStatusBadge" class="badge ok">Đủ
+                tài nguyên</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 8: REPORTS -->
+        <div id="reports" class="panel">
+          <div class="card c12">
+            <div class="section-title">
+              <h3>Báo cáo hiệu quả đăng bài</h3><button class="ghost small" onclick="exportReports()">📥 Xuất báo cáo
+                CSV</button>
+            </div>
+            <div class="grid" style="margin-bottom:20px">
+              <div class="card c4 stat">
+                <div><small>Đăng thành công</small><strong id="publishedCount" style="color:var(--green)">0</strong>
+                </div>
+              </div>
+              <div class="card c4 stat">
+                <div><small>Đăng thất bại</small><strong id="failedCount" style="color:var(--red)">0</strong></div>
+              </div>
+              <div class="card c4 stat">
+                <div><small>Tỷ lệ thành công</small><strong id="successRate" style="color:var(--blue)">100%</strong>
+                </div>
+              </div>
+            </div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Page</th>
+                  <th>Tổng bài</th>
+                  <th>Thành công</th>
+                  <th>Thất bại</th>
+                  <th>Tỷ lệ</th>
+                </tr>
+              </thead>
+              <tbody id="reportsTbody">
+                <tr>
+                  <td colspan="5" class="empty">Chưa có dữ liệu báo cáo</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- TAB 9: USERS & RBAC PERMISSIONS -->
+        <div id="users" class="panel">
+          <div class="grid">
+            <div class="card c12">
+              <div class="section-title">
+                <h3>Quản lý Người dùng & Cấp Phép RBAC</h3>
+                <button onclick="openAddUserModal()">＋ Thêm người dùng mới</button>
+              </div>
+              <div class="notice" style="border-left: 4px solid var(--pink);">
+                🛡️ <b>Quy trình kiểm duyệt & cấp phép RBAC hệ thống:</b><br>
+                - 👑 <b>ADMIN (Quản trị tối cao):</b> Quyền cao nhất hệ thống, vừa phê duyệt bài viết, vừa có toàn quyền
+                tạo/sửa/xóa người dùng, kết nối/xóa Page & cấu hình hệ thống.<br>
+                - 📊 <b>MANAGER (Quản lý chiến dịch):</b> Có quyền xem & <b>phê duyệt bài viết AI</b>. <i>(⚠️ Không được
+                  xóa người dùng, Không được tạo/kết nối Facebook Page).</i><br>
+                - ✍️ <b>EDITOR (Biên tập viên):</b> Tạo chiến dịch & bài viết AI. <i>Mọi bài viết tự động ở trạng thái
+                  <b>CHỜ DUYỆT (PENDING_APPROVAL)</b> và bắt buộc ADMIN hoặc MANAGER duyệt mới được phát hành!</i>
+              </div>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Họ tên</th>
+                    <th>Email / Username</th>
+                    <th>Vai trò (Role)</th>
+                    <th>Trạng thái</th>
+                    <th>Cấp phép & Hành động</th>
+                  </tr>
+                </thead>
+                <tbody id="usersTbody">
+                  <tr>
+                    <td colspan="5">Đang tải...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- SYSTEM PERMISSIONS MATRIX REFERENCE CARD -->
+            <div class="card c12">
+              <div class="section-title">
+                <h3>Ma Trận 16 Quyền Chức Năng Hệ Thống (RBAC Matrix)</h3>
+                <span class="badge ok">16 / 16 Active Permissions</span>
+              </div>
+              <div class="notice">Các nhóm quyền được hệ thống phân chia trực quan theo từng mô-đun để Admin cấp phép
+                chính xác cho từng người dùng:</div>
+
+              <div class="perm-matrix-grid">
+                <!-- MODULE 1: FACEBOOK PAGE -->
+                <div class="perm-group-card">
+                  <div class="perm-group-header">
+                    <div class="perm-group-icon">▰</div>
+                    <div>Quản Lý Facebook Page</div>
+                  </div>
+                  <div class="perm-item-row"><span>Xem danh sách Facebook Page</span><span
+                      class="perm-code">pages.view</span></div>
+                  <div class="perm-item-row"><span>Thêm / Xóa / Kiểm tra Token</span><span
+                      class="perm-code">pages.manage</span></div>
+                </div>
+
+                <!-- MODULE 2: CAMPAIGN -->
+                <div class="perm-group-card">
+                  <div class="perm-group-header">
+                    <div class="perm-group-icon">▣</div>
+                    <div>Khởi Tạo Chiến Dịch</div>
+                  </div>
+                  <div class="perm-item-row"><span>Xem danh sách chiến dịch</span><span
+                      class="perm-code">campaigns.view</span></div>
+                  <div class="perm-item-row"><span>Tạo chiến dịch mới (10 bước)</span><span
+                      class="perm-code">campaigns.create</span></div>
+                  <div class="perm-item-row"><span>Cập nhật & Đặt lại lịch đăng</span><span
+                      class="perm-code">campaigns.update</span></div>
+                </div>
+
+                <!-- MODULE 3: APPROVAL QUEUE -->
+                <div class="perm-group-card" style="border-color:var(--pink);background:var(--pale)">
+                  <div class="perm-group-header" style="color:var(--dark)">
+                    <div class="perm-group-icon" style="background:#fff">✓</div>
+                    <div>Đặc Quyền Phê Duyệt (Admin/Manager)</div>
+                  </div>
+                  <div class="perm-item-row" style="background:#fff"><span>Duyệt & Từ chối bài viết AI</span><span
+                      class="perm-code" style="color:var(--pink);border-color:var(--pink)">campaigns.approve</span>
+                  </div>
+                  <div class="perm-item-row" style="background:#fff"><span>Phát hành Graph API xuất bản</span><span
+                      class="perm-code" style="color:var(--pink);border-color:var(--pink)">campaigns.publish</span>
+                  </div>
+                </div>
+
+                <!-- MODULE 4: MEDIA STORE -->
+                <div class="perm-group-card">
+                  <div class="perm-group-header">
+                    <div class="perm-group-icon">▧</div>
+                    <div>Kho Media & Phân Bổ</div>
+                  </div>
+                  <div class="perm-item-row"><span>Upload & Phân bổ 6 ảnh / 1 video</span><span
+                      class="perm-code">media.manage</span></div>
+                  <div class="perm-item-row"><span>Thuật toán Fisher-Yates shuffle</span><span
+                      class="perm-code">media.shuffle</span></div>
+                </div>
+
+                <!-- MODULE 5: REPORTS & AUDIT -->
+                <div class="perm-group-card">
+                  <div class="perm-group-header">
+                    <div class="perm-group-icon">◒</div>
+                    <div>Báo Cáo & Thống Kê</div>
+                  </div>
+                  <div class="perm-item-row"><span>Xem thống kê hiệu quả bài đăng</span><span
+                      class="perm-code">reports.view</span></div>
+                  <div class="perm-item-row"><span>Xuất dữ liệu báo cáo chi tiết CSV</span><span
+                      class="perm-code">reports.export</span></div>
+                </div>
+
+                <!-- MODULE 6: USERS & RBAC -->
+                <div class="perm-group-card">
+                  <div class="perm-group-header">
+                    <div class="perm-group-icon">♙</div>
+                    <div>Quản Trị Người Dùng & Phân Quyền</div>
+                  </div>
+                  <div class="perm-item-row"><span>Tạo & Quản lý tài khoản</span><span
+                      class="perm-code">users.create/update</span></div>
+                  <div class="perm-item-row"><span>Phân quyền vai trò RBAC</span><span
+                      class="perm-code">roles.manage</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 10: SYSTEM LOGS -->
+        <div id="logs" class="panel">
+          <div class="card">
+            <div class="section-title">
+              <h3>Nhật ký hoạt động hệ thống (JobLog & AuditLog)</h3>
+              <div class="row"><button class="ghost small" onclick="loadSystemLogs()">Làm mới</button><button
+                  class="ghost small" style="color:var(--red)" onclick="clearSystemLogs()">Xóa log cũ</button></div>
+            </div>
+            <div id="logDisplay" class="log">Đang tải log...</div>
+          </div>
+        </div>
+
+        <!-- TAB 11: SETTINGS & BRANDING & AI ROUTER -->
+        <div id="settings" class="panel">
+          <div class="grid">
+            <div class="card c6">
+              <h3>Cài đặt thương hiệu</h3>
+              <form id="brandingForm" onsubmit="saveBranding(event)">
+                <label>Tên hệ thống</label>
+                <input id="sysNameInput" value="UmBoMilk - Marketing Auto-Post Page Facebook">
+                <label>Logo thương hiệu (logo.jpg)</label>
+                <input type="file" id="logoFileInput" accept="image/jpeg,image/png">
+                <button type="submit" style="margin-top:15px">Lưu thay đổi</button>
+              </form>
+            </div>
+
+            <div class="card c6">
+              <h3>Cấu hình chung hệ thống</h3>
+              <form onsubmit="saveSystemSettings(event)">
+                <label>Múi giờ mặc định</label>
+                <select id="sysTimezone">
+                  <option>Asia/Ho_Chi_Minh</option>
+                </select>
+                <label>Khoảng cách đăng mặc định (Phút)</label>
+                <input id="sysInterval" value="15" type="number">
+                <label>Khung giờ mặc định được phép đăng</label>
+                <div class="row">
+                  <input id="sysStartTime" value="08:00" style="width:120px"> <span>đến</span> <input id="sysEndTime"
+                    value="22:00" style="width:120px">
+                </div>
+                <button type="submit" style="margin-top:15px">Lưu cấu hình</button>
+              </form>
+            </div>
+
+            <!-- 9ROUTER / LOCAL AI CONFIGURATION CARD -->
+            <div class="card c12" style="margin-top:10px">
+              <div class="section-title">
+                <div>
+                  <h3 style="font-size:19px;font-weight:800;color:var(--ink)">🤖 Cấu hình AI Engine (9router / Local
+                    Free AI / OpenAI)</h3>
+                  <p style="margin:4px 0 0;font-size:12px;color:var(--muted)">Cấu hình 9router API local endpoint để ứng
+                    dụng tự động sinh bài viết bằng mô hình AI của bạn</p>
+                </div>
+                <span class="badge ok" id="aiStatusBadge">🟢 9router Ready</span>
+              </div>
+
+              <div class="notice" style="border-left:4px solid var(--pink);background:var(--pale)">
+                💡 <b>Hướng dẫn cấu hình 9router (Free Local AI Router):</b><br>
+                - Khi mở <b>9router</b> trên máy tính local của bạn, API endpoint mặc định là: <b><code
+                    style="background:#fff;padding:2px 6px;border-radius:4px">http://localhost:2000/v1</code></b><br>
+                - Ứng dụng sẽ tự động gửi yêu cầu đến 9router để tự động sinh văn bản cho chiến dịch Facebook.<br>
+                - Nếu 9router chưa mở, hệ thống sẽ tự động chuyển sang mô hình bộ sinh bài viết dự phòng thông minh mà
+                không gây ngắt đoạn công việc.
+              </div>
+
+              <form id="aiConfigForm" onsubmit="saveAiConfig(event)">
+                <div class="grid">
+                  <div class="card c6"
+                    style="box-shadow:none;border:1px solid var(--line);background:#faf5f8;padding:18px">
+                    <label>Nhà Cung Cấp AI (AI Provider)</label>
+                    <select id="aiProviderSelect">
+                      <option value="9router" selected>🟢 9router (Local AI Free - Khuyên dùng)</option>
+                      <option value="local">💻 Local AI / Ollama / LM Studio (http://localhost:11434/v1)</option>
+                      <option value="openai">⚡ OpenAI API (gpt-4o-mini)</option>
+                      <option value="custom">⚙ Custom OpenAI-Compatible API</option>
+                    </select>
+
+                    <label>Địa Chỉ API Endpoint (Base URL)</label>
+                    <input id="aiBaseUrlInput" value="http://localhost:2000/v1" placeholder="http://localhost:2000/v1">
+                    <small style="color:var(--muted);font-size:11px;display:block;margin-top:4px">Mặc định của 9router
+                      local: http://localhost:2000/v1</small>
+                  </div>
+
+                  <div class="card c6"
+                    style="box-shadow:none;border:1px solid var(--line);background:#faf5f8;padding:18px">
+                    <label>Tên Mô Hình AI (Model Name)</label>
+                    <input id="aiModelInput" value="qwen2.5"
+                      placeholder="Ví dụ: qwen2.5, llama3, gpt-4o-mini, 9router-default">
+                    <small style="color:var(--muted);font-size:11px;display:block;margin-top:4px">Mô hình AI đã nạp
+                      trong 9router</small>
+
+                    <label>API Key (Khóa truy cập)</label>
+                    <input id="aiApiKeyInput" type="password" value="9router-key-local" placeholder="9router-key-local">
+                    <small style="color:var(--muted);font-size:11px;display:block;margin-top:4px">Khóa xác thực (với
+                      9router local có thể điền tùy ý)</small>
+                  </div>
+                </div>
+
+                <div class="row" style="margin-top:18px;justify-content:flex-end;gap:12px">
+                  <button type="button" class="ghost" style="border-radius:10px;padding:10px 18px"
+                    onclick="testAiConnection()">⚡ Test Kết Nối 9router</button>
+                  <button type="submit"
+                    style="background:linear-gradient(135deg,#10b981,#059669);box-shadow:0 4px 14px rgba(16,185,129,0.3);border-radius:10px;padding:10px 22px">💾
+                    Lưu Cấu Hình AI</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 12: USER GUIDE -->
+        <div id="guide" class="panel">
+          <div class="card">
+            <h3>Trung tâm Hướng dẫn sử dụng</h3>
+            <div class="notice"><b>Quy trình 10 bước chuẩn:</b><br>1. Nhập thông tin chiến dịch → 2. Chọn Facebook Page
+              → 3. Nhập Prompt & thông tin bắt buộc → 4. Cấu hình AI → 5. Upload media → 6. Phân bổ ngẫu nhiên → 7. Xem
+              & chỉnh bài AI → 8. Đặt lịch riêng per Page → 9. Kiểm tra checklist → 10. Kích hoạt tự động hóa.</div>
+            <p><b>Quy tắc quan trọng:</b></p>
+            <ul>
+              <li><b>Mã hóa Token:</b> Page Access Token được mã hóa AES-256 trong CSDL và giải mã an toàn trong worker
+                khi gọi Facebook Graph API.</li>
+              <li><b>Phân bổ 6 ảnh:</b> Bài đăng hình ảnh lấy ngẫu nhiên đúng 6 ảnh không lặp lại trong 1 bài bằng thuật
+                toán Fisher-Yates.</li>
+              <li><b>Khung giờ vàng:</b> Hệ thống tự động dịch chuyển thời gian bài viết ra ngoài khung giờ 08:00 -
+                22:00 sang 08:00 ngày tiếp theo.</li>
+            </ul>
+          </div>
+        </div>
+
+      </main>
+    </section>
+  </div>
+
+  <!-- MODAL POPUP DIALOG -->
+  <div id="appModal" class="modal-overlay">
+    <div class="modal-box">
+      <h3 id="modalTitle">Tiêu đề Modal</h3>
+      <div id="modalBody">Nội dung Modal</div>
+      <div class="row" style="margin-top:20px;justify-content:flex-end">
+        <button class="ghost" onclick="closeModal()">Hủy</button>
+        <button id="modalConfirmBtn">Xác nhận</button>
+      </div>
     </div>
   </div>
-</div>
 
-<script>
-const RENDER_BACKEND = 'https://umbomilk-facebook-auto-post.onrender.com';
-const isLocalDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-const apiBase = isLocalDev
-  ? `http://${window.location.hostname}:5000/api`
-  : `${RENDER_BACKEND}/api`;
-let token = localStorage.getItem('pinkflow_token');
-let currentUser = null;
-let activeCampaignId = null;
+  <script>
+    const RENDER_BACKEND = 'https://umbomilk-facebook-auto-post.onrender.com';
+    const isLocalDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    const apiBase = isLocalDev
+      ? `http://${window.location.hostname}:5000/api`
+      : `${RENDER_BACKEND}/api`;
+    let token = localStorage.getItem('pinkflow_token');
+    let currentUser = null;
+    let activeCampaignId = null;
 
-// Safe DOM setters to prevent null reference errors
-function setElText(id, val) {
-  const el = document.getElementById(id);
-  if (el) el.textContent = val;
-}
-function setElHtml(id, val) {
-  const el = document.getElementById(id);
-  if (el) el.innerHTML = val;
-}
-
-async function request(path, options = {}) {
-  const headers = { 'Content-Type': 'application/json', ...(options.headers || {}) };
-  if (token) headers.Authorization = `Bearer ${token}`;
-  const response = await fetch(`${apiBase}${path}`, { ...options, headers });
-  const text = await response.text();
-  let data;
-  try { data = text ? JSON.parse(text) : {}; } catch { data = text; }
-  if (!response.ok) {
-    if (response.status === 401 && path !== '/auth/login') logout();
-    throw data;
-  }
-  return data;
-}
-
-function extractList(data) {
-  if (!data) return [];
-  if (Array.isArray(data)) return data;
-  if (Array.isArray(data.data)) return data.data;
-  if (data.data && Array.isArray(data.data.items)) return data.data.items;
-  if (Array.isArray(data.items)) return data.items;
-  return [];
-}
-
-async function checkAuth() {
-  const loginScreen = document.getElementById('loginScreen');
-  const appLayout = document.getElementById('appLayout');
-  if (!token) {
-    if (loginScreen) loginScreen.style.display = 'flex';
-    if (appLayout) appLayout.style.display = 'none';
-  } else {
-    if (loginScreen) loginScreen.style.display = 'none';
-    if (appLayout) appLayout.style.display = 'flex';
-    loadData();
-    loadAiSettings();
-  }
-}
-
-document.getElementById('loginForm').onsubmit = async (e) => {
-  e.preventDefault();
-  const inputVal = (document.getElementById('loginEmail').value || '').trim();
-  const password = document.getElementById('loginPassword').value;
-  const errEl = document.getElementById('loginError');
-  if (errEl) errEl.style.display = 'none';
-  try {
-    const data = await request('/auth/login', { 
-      method: 'POST', 
-      body: JSON.stringify({ usernameOrEmail: inputVal, email: inputVal, password }) 
-    });
-    token = data.accessToken || data.data?.accessToken;
-    currentUser = data.user || data.data?.user;
-    if (currentUser) setElText('userNameDisplay', currentUser.name || currentUser.email);
-    if (token) localStorage.setItem('pinkflow_token', token);
-    checkAuth();
-  } catch (err) {
-    if (errEl) {
-      errEl.style.display = 'block';
-      errEl.textContent = err.error?.message || err.message || 'Đăng nhập thất bại';
+    // Safe DOM setters to prevent null reference errors
+    function setElText(id, val) {
+      const el = document.getElementById(id);
+      if (el) el.textContent = val;
     }
-  }
-};
+    function setElHtml(id, val) {
+      const el = document.getElementById(id);
+      if (el) el.innerHTML = val;
+    }
 
-function logout() {
-  token = null;
-  currentUser = null;
-  localStorage.removeItem('pinkflow_token');
-  checkAuth();
-}
+    async function request(path, options = {}) {
+      const headers = { 'Content-Type': 'application/json', ...(options.headers || {}) };
+      if (token) headers.Authorization = `Bearer ${token}`;
+      const response = await fetch(`${apiBase}${path}`, { ...options, headers });
+      const text = await response.text();
+      let data;
+      try { data = text ? JSON.parse(text) : {}; } catch { data = text; }
+      if (!response.ok) {
+        if (response.status === 401 && path !== '/auth/login') logout();
+        throw data;
+      }
+      return data;
+    }
 
-// MODAL CONTROLS
-function showModal(title, bodyHtml, onConfirm) {
-  setElText('modalTitle', title);
-  setElHtml('modalBody', bodyHtml);
-  const confirmBtn = document.getElementById('modalConfirmBtn');
-  if (confirmBtn) {
-    confirmBtn.onclick = async () => {
+    function extractList(data) {
+      if (!data) return [];
+      if (Array.isArray(data)) return data;
+      if (Array.isArray(data.data)) return data.data;
+      if (data.data && Array.isArray(data.data.items)) return data.data.items;
+      if (Array.isArray(data.items)) return data.items;
+      return [];
+    }
+
+    async function checkAuth() {
+      const loginScreen = document.getElementById('loginScreen');
+      const appLayout = document.getElementById('appLayout');
+      if (!token) {
+        if (loginScreen) loginScreen.style.display = 'flex';
+        if (appLayout) appLayout.style.display = 'none';
+      } else {
+        if (loginScreen) loginScreen.style.display = 'none';
+        if (appLayout) appLayout.style.display = 'flex';
+        loadData();
+        loadAiSettings();
+      }
+    }
+
+    document.getElementById('loginForm').onsubmit = async (e) => {
+      e.preventDefault();
+      const inputVal = (document.getElementById('loginEmail').value || '').trim();
+      const password = document.getElementById('loginPassword').value;
+      const errEl = document.getElementById('loginError');
+      if (errEl) errEl.style.display = 'none';
       try {
-        await onConfirm();
-        closeModal();
-      } catch(err) {
-        alert('Lỗi: ' + (err.error?.message || err.message || 'Có lỗi xảy ra'));
+        const data = await request('/auth/login', {
+          method: 'POST',
+          body: JSON.stringify({ usernameOrEmail: inputVal, email: inputVal, password })
+        });
+        token = data.accessToken || data.data?.accessToken;
+        currentUser = data.user || data.data?.user;
+        if (currentUser) setElText('userNameDisplay', currentUser.name || currentUser.email);
+        if (token) localStorage.setItem('pinkflow_token', token);
+        checkAuth();
+      } catch (err) {
+        if (errEl) {
+          errEl.style.display = 'block';
+          errEl.textContent = err.error?.message || err.message || 'Đăng nhập thất bại';
+        }
       }
     };
-  }
-  const modal = document.getElementById('appModal');
-  if (modal) modal.style.display = 'flex';
-}
 
-function closeModal() {
-  const modal = document.getElementById('appModal');
-  if (modal) modal.style.display = 'none';
-}
+    function logout() {
+      token = null;
+      currentUser = null;
+      localStorage.removeItem('pinkflow_token');
+      checkAuth();
+    }
 
-async function loadData() {
-  try {
-    const [pages, users, campaigns, reports, approvalPosts] = await Promise.all([
-      request('/facebook-pages').then(extractList).catch(()=>[]),
-      request('/users').then(extractList).catch(()=>[]),
-      request('/campaigns').then(extractList).catch(()=>[]),
-      request('/reports/posts').then(extractList).catch(()=>[]),
-      request('/approval-queue').then(extractList).catch(()=>[])
-    ]);
+    // MODAL CONTROLS
+    function showModal(title, bodyHtml, onConfirm) {
+      setElText('modalTitle', title);
+      setElHtml('modalBody', bodyHtml);
+      const confirmBtn = document.getElementById('modalConfirmBtn');
+      if (confirmBtn) {
+        confirmBtn.onclick = async () => {
+          try {
+            await onConfirm();
+            closeModal();
+          } catch (err) {
+            alert('Lỗi: ' + (err.error?.message || err.message || 'Có lỗi xảy ra'));
+          }
+        };
+      }
+      const modal = document.getElementById('appModal');
+      if (modal) modal.style.display = 'flex';
+    }
 
-    window.loadedPages = pages;
-    setElText('pagesCount', pages.length);
-    setElText('usersCount', users.length);
-    setElText('campaignsCount', campaigns.length);
-    setElText('pendingApprovalCount', approvalPosts.length);
-    loadMedia();
+    function closeModal() {
+      const modal = document.getElementById('appModal');
+      if (modal) modal.style.display = 'none';
+    }
 
-    // Render pages table
-    const pagesHtml = pages.length ? pages.map(p => `
+    async function loadData() {
+      try {
+        const [pages, users, campaigns, reports, approvalPosts] = await Promise.all([
+          request('/facebook-pages').then(extractList).catch(() => []),
+          request('/users').then(extractList).catch(() => []),
+          request('/campaigns').then(extractList).catch(() => []),
+          request('/reports/posts').then(extractList).catch(() => []),
+          request('/approval-queue').then(extractList).catch(() => [])
+        ]);
+
+        window.loadedPages = pages;
+        setElText('pagesCount', pages.length);
+        setElText('usersCount', users.length);
+        setElText('campaignsCount', campaigns.length);
+        setElText('pendingApprovalCount', approvalPosts.length);
+        loadMedia();
+
+        // Render pages table
+        const pagesHtml = pages.length ? pages.map(p => `
       <tr>
         <td><b>${p.pageName || p.name}</b></td>
         <td>${p.facebookPageId}</td>
-        <td><span class="badge ${p.tokenStatus==='VALID'?'ok':'err'}">${p.tokenStatus || 'VALID'}</span></td>
+        <td><span class="badge ${p.tokenStatus === 'VALID' ? 'ok' : 'err'}">${p.tokenStatus || 'VALID'}</span></td>
         <td>
           <button type="button" class="ghost small" style="border-radius:10px;padding:4px 10px;font-size:12px;font-weight:800;color:var(--dark);border-color:#cbd5e1;background:#f8fafc" onclick="openEditPageSettingsModal('${p.id}', '${p.pageName || p.name}', ${p.defaultPostCount || 10}, ${p.defaultIntervalMinutes || 15})">
             📝 ${p.defaultPostCount || 10} bài ✏️
@@ -575,40 +1557,40 @@ async function loadData() {
         </td>
       </tr>
     `).join('') : '<tr><td colspan="6" class="empty">Chưa có Facebook Page nào</td></tr>';
-    setElHtml('pagesTbody', pagesHtml);
+        setElHtml('pagesTbody', pagesHtml);
 
-    // Render users table with rich badges and permission management button
-    const usersHtml = users.length ? users.map(u => {
-      const roleIds = u.roles?.map(r=>r.id) || u.userRoles?.map(r=>r.roleId) || [];
-      const roleNames = ((u.roles && u.roles.length) ? u.roles.map(r=>r.name||r) : (u.userRoles?.map(r=>r.role?.name||r) || [])).join(', ') || 'EDITOR';
-      const isSystemAdmin = roleNames.includes('ADMIN');
-      return `
+        // Render users table with rich badges and permission management button
+        const usersHtml = users.length ? users.map(u => {
+          const roleIds = u.roles?.map(r => r.id) || u.userRoles?.map(r => r.roleId) || [];
+          const roleNames = ((u.roles && u.roles.length) ? u.roles.map(r => r.name || r) : (u.userRoles?.map(r => r.role?.name || r) || [])).join(', ') || 'EDITOR';
+          const isSystemAdmin = roleNames.includes('ADMIN');
+          return `
         <tr>
           <td>
             <div style="display:flex;align-items:center;gap:10px">
-              <div class="avatar" style="width:32px;height:32px;font-size:12px;background:${isSystemAdmin?'#ffe6e7':'var(--pale)'};color:${isSystemAdmin?'var(--red)':'var(--dark)'}">${(u.name||'U')[0].toUpperCase()}</div>
-              <div><b>${u.name||'N/A'}</b></div>
+              <div class="avatar" style="width:32px;height:32px;font-size:12px;background:${isSystemAdmin ? '#ffe6e7' : 'var(--pale)'};color:${isSystemAdmin ? 'var(--red)' : 'var(--dark)'}">${(u.name || 'U')[0].toUpperCase()}</div>
+              <div><b>${u.name || 'N/A'}</b></div>
             </div>
           </td>
           <td>${u.email}</td>
-          <td><span class="badge ${isSystemAdmin?'err':roleNames.includes('MANAGER')?'run':'wait'}">${roleNames}</span></td>
-          <td><span class="badge ${u.status==='ACTIVE'?'ok':'err'}">${u.status}</span></td>
+          <td><span class="badge ${isSystemAdmin ? 'err' : roleNames.includes('MANAGER') ? 'run' : 'wait'}">${roleNames}</span></td>
+          <td><span class="badge ${u.status === 'ACTIVE' ? 'ok' : 'err'}">${u.status}</span></td>
           <td>
-            <button class="ghost small" onclick="openManagePermissionsModal('${u.id}', '${u.name||u.email}', ${JSON.stringify(roleIds)})">⚙ Cấp quyền RBAC</button>
+            <button class="ghost small" onclick="openManagePermissionsModal('${u.id}', '${u.name || u.email}', ${JSON.stringify(roleIds)})">⚙ Cấp quyền RBAC</button>
             <button class="ghost small" onclick="deleteUser('${u.id}')" style="color:var(--red);border-color:var(--red)">Xóa</button>
           </td>
         </tr>
       `;
-    }).join('') : '<tr><td colspan="5" class="empty">Chưa có người dùng nào</td></tr>';
-    setElHtml('usersTbody', usersHtml);
+        }).join('') : '<tr><td colspan="5" class="empty">Chưa có người dùng nào</td></tr>';
+        setElHtml('usersTbody', usersHtml);
 
-    // Render campaigns table
-    const campaignsHtml = campaigns.length ? campaigns.map(c => `
+        // Render campaigns table
+        const campaignsHtml = campaigns.length ? campaigns.map(c => `
       <tr>
-        <td><b>${c.name}</b><br><small style="color:var(--muted)">ID: ${c.id.substring(0,8)}...</small></td>
+        <td><b>${c.name}</b><br><small style="color:var(--muted)">ID: ${c.id.substring(0, 8)}...</small></td>
         <td>${(c.originalContent || c.description || '').substring(0, 40)}...</td>
         <td><span class="badge run">${c.contentMode || 'SHARED'}</span></td>
-        <td><span class="badge ${c.status==='APPROVED'?'ok':c.status==='DRAFT'?'wait':'run'}">${c.status}</span></td>
+        <td><span class="badge ${c.status === 'APPROVED' ? 'ok' : c.status === 'DRAFT' ? 'wait' : 'run'}">${c.status}</span></td>
         <td>${new Date(c.createdAt).toLocaleDateString('vi-VN')}</td>
         <td>
           <button class="ghost small" onclick="openCampaignWizard('${c.id}')">Chi tiết & Lên lịch</button>
@@ -616,34 +1598,34 @@ async function loadData() {
         </td>
       </tr>
     `).join('') : '<tr><td colspan="6" class="empty">Chưa có chiến dịch nào</td></tr>';
-    setElHtml('campaignsTbody', campaignsHtml);
+        setElHtml('campaignsTbody', campaignsHtml);
 
-  } catch (err) { console.error('Lỗi tải dữ liệu', err); }
-}
+      } catch (err) { console.error('Lỗi tải dữ liệu', err); }
+    }
 
-async function openManagePermissionsModal(userId, userName, currentRoleIds = []) {
-  try {
-    const rolesRes = await request('/roles').catch(() => ({ data: [] }));
-    const roles = extractList(rolesRes);
+    async function openManagePermissionsModal(userId, userName, currentRoleIds = []) {
+      try {
+        const rolesRes = await request('/roles').catch(() => ({ data: [] }));
+        const roles = extractList(rolesRes);
 
-    const roleCardsHtml = roles.map(r => {
-      const isSelected = currentRoleIds.includes(r.id);
-      const rn = r.name.toUpperCase();
-      const icon = rn.includes('ADMIN') ? '👑' : rn.includes('MANAGER') ? '📊' : rn.includes('EDITOR') ? '✍️' : rn.includes('VIEWER') ? '👁' : '👤';
-      return `
+        const roleCardsHtml = roles.map(r => {
+          const isSelected = currentRoleIds.includes(r.id);
+          const rn = r.name.toUpperCase();
+          const icon = rn.includes('ADMIN') ? '👑' : rn.includes('MANAGER') ? '📊' : rn.includes('EDITOR') ? '✍️' : rn.includes('VIEWER') ? '👁' : '👤';
+          return `
         <label class="role-card ${isSelected ? 'active' : ''}" style="${isSelected ? 'border-color:var(--pink);background:var(--pale)' : ''}">
           <input type="radio" name="userRole" value="${r.id}" ${isSelected ? 'checked' : ''} onchange="document.querySelectorAll('.role-card').forEach(c=>{c.classList.remove('active');c.style.borderColor='';c.style.background=''});this.closest('.role-card').classList.add('active');this.closest('.role-card').style.borderColor='var(--pink)';this.closest('.role-card').style.background='var(--pale)'">
           <div class="role-card-icon">${icon}</div>
           <div style="flex:1">
             <div class="role-card-title">${r.name}</div>
             <div class="role-card-desc">${r.description || 'Vai trò phân quyền hệ thống'}</div>
-            <div style="font-size:11px;color:var(--muted);margin-top:3px">${(r.permissions||[]).length} quyền</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:3px">${(r.permissions || []).length} quyền</div>
           </div>
         </label>
       `;
-    }).join('');
+        }).join('');
 
-    const bodyHtml = `
+        const bodyHtml = `
       <div class="notice" style="border-left: 4px solid var(--pink);">
         <b>Chi tiết phân quyền theo vai trò:</b><br>
         - 👑 <b>ADMIN:</b> Quản trị viên tối cao, toàn quyền hệ thống, vừa phê duyệt bài viết vừa được tạo/sửa/xóa người dùng & Facebook Page.<br>
@@ -665,51 +1647,51 @@ async function openManagePermissionsModal(userId, userName, currentRoleIds = [])
       </div>
     `;
 
-    showModal(
-      `⚙ Cấp Phép & Phân Quyền: ${userName}`,
-      bodyHtml,
-      async () => {
-        const selectedRoleEl = document.querySelector('input[name="userRole"]:checked');
-        if (!selectedRoleEl) {
-          alert('Vui lòng chọn 1 vai trò cho người dùng!');
-          return;
-        }
-        const roleId = selectedRoleEl.value;
-        await request(`/users/${userId}`, {
-          method: 'PUT',
-          body: JSON.stringify({ roleIds: [roleId] })
-        });
-        alert('Đã cập nhật vai trò và phân quyền thành công cho người dùng!');
-        loadData();
+        showModal(
+          `⚙ Cấp Phép & Phân Quyền: ${userName}`,
+          bodyHtml,
+          async () => {
+            const selectedRoleEl = document.querySelector('input[name="userRole"]:checked');
+            if (!selectedRoleEl) {
+              alert('Vui lòng chọn 1 vai trò cho người dùng!');
+              return;
+            }
+            const roleId = selectedRoleEl.value;
+            await request(`/users/${userId}`, {
+              method: 'PUT',
+              body: JSON.stringify({ roleIds: [roleId] })
+            });
+            alert('Đã cập nhật vai trò và phân quyền thành công cho người dùng!');
+            loadData();
+          }
+        );
+      } catch (err) {
+        alert('Lỗi tải thông tin phân quyền: ' + (err.error?.message || err.message));
       }
-    );
-  } catch(err) {
-    alert('Lỗi tải thông tin phân quyền: ' + (err.error?.message || err.message));
-  }
-}
+    }
 
-async function loadApprovalQueue() {
-  try {
-    const posts = await request('/approval-queue').then(extractList).catch(()=>[]);
-    setElText('pendingApprovalCount', posts.length);
+    async function loadApprovalQueue() {
+      try {
+        const posts = await request('/approval-queue').then(extractList).catch(() => []);
+        setElText('pendingApprovalCount', posts.length);
 
-    if (!posts.length) {
-      setElHtml('approvalContainer', `
+        if (!posts.length) {
+          setElHtml('approvalContainer', `
         <div style="text-align:center;padding:50px 20px;background:#fff;border-radius:18px;border:1px dashed var(--line)">
           <div style="font-size:48px;margin-bottom:10px">🎉</div>
           <h3 style="margin:0;color:var(--ink);font-weight:800">Không có bài viết nào chờ duyệt</h3>
           <p style="color:var(--muted);font-size:13px;margin-top:6px">Tất cả bài viết do AI tạo đã được duyệt hoặc đăng lên lịch thành công.</p>
         </div>
       `);
-      return;
-    }
+          return;
+        }
 
-    const html = posts.map(p => {
-      const pageName = p.campaignPage?.facebookPage?.pageName || p.facebookPage?.pageName || p.pageName || (p.facebookPageId && p.facebookPageId !== 'undefined' ? p.facebookPageId : 'Facebook Page');
-      const scheduledTime = p.scheduledAt ? new Date(p.scheduledAt).toLocaleString('vi-VN') : 'Dự kiến ngay';
-      const mediaBadge = p.mediaType === 'VIDEO' ? '🎥 Video' : '📷 Hình ảnh (6 ảnh)';
+        const html = posts.map(p => {
+          const pageName = p.campaignPage?.facebookPage?.pageName || p.facebookPage?.pageName || p.pageName || (p.facebookPageId && p.facebookPageId !== 'undefined' ? p.facebookPageId : 'Facebook Page');
+          const scheduledTime = p.scheduledAt ? new Date(p.scheduledAt).toLocaleString('vi-VN') : 'Dự kiến ngay';
+          const mediaBadge = p.mediaType === 'VIDEO' ? '🎥 Video' : '📷 Hình ảnh (6 ảnh)';
 
-      return `
+          return `
         <div class="post-card" style="background:#fff;border:1px solid var(--line);border-radius:18px;padding:22px;margin-bottom:18px;box-shadow:0 6px 20px rgba(217,54,122,0.04);transition:all 0.25s ease">
           <div style="display:flex;justify-content:space-between;align-items:center;padding-bottom:14px;margin-bottom:14px;border-bottom:1px solid var(--pale)">
             <div style="display:flex;align-items:center;gap:12px">
@@ -736,34 +1718,34 @@ async function loadApprovalQueue() {
           </div>
         </div>
       `;
-    }).join('');
+        }).join('');
 
-    setElHtml('approvalContainer', html);
-  } catch (err) { console.error(err); }
-}
+        setElHtml('approvalContainer', html);
+      } catch (err) { console.error(err); }
+    }
 
-async function approvePost(id) {
-  try {
-    await request(`/posts/${id}/approve`, { method: 'POST', body: JSON.stringify({ note: 'Duyệt bài qua dashboard' }) });
-    alert('Đã duyệt bài viết thành công');
-    loadApprovalQueue();
-  } catch(err) { alert('Lỗi: ' + (err.error?.message || err.message)); }
-}
+    async function approvePost(id) {
+      try {
+        await request(`/posts/${id}/approve`, { method: 'POST', body: JSON.stringify({ note: 'Duyệt bài qua dashboard' }) });
+        alert('Đã duyệt bài viết thành công');
+        loadApprovalQueue();
+      } catch (err) { alert('Lỗi: ' + (err.error?.message || err.message)); }
+    }
 
-async function rejectPost(id) {
-  const note = prompt('Nhập lý do từ chối bài viết:', 'Cần điều chỉnh lại văn phong');
-  if(!note) return;
-  try {
-    await request(`/posts/${id}/reject`, { method: 'POST', body: JSON.stringify({ note }) });
-    alert('Đã từ chối bài viết');
-    loadApprovalQueue();
-  } catch(err) { alert('Lỗi: ' + (err.error?.message || err.message)); }
-}
+    async function rejectPost(id) {
+      const note = prompt('Nhập lý do từ chối bài viết:', 'Cần điều chỉnh lại văn phong');
+      if (!note) return;
+      try {
+        await request(`/posts/${id}/reject`, { method: 'POST', body: JSON.stringify({ note }) });
+        alert('Đã từ chối bài viết');
+        loadApprovalQueue();
+      } catch (err) { alert('Lỗi: ' + (err.error?.message || err.message)); }
+    }
 
-function openFetchUserPagesModal() {
-  showModal(
-    '⚡ Tự Động Quét & Thêm Danh Sách Facebook Page',
-    `
+    function openFetchUserPagesModal() {
+      showModal(
+        '⚡ Tự Động Quét & Thêm Danh Sách Facebook Page',
+        `
     <div style="background:linear-gradient(135deg,#fff0f6,#fff7fb);border:1px solid #f6d2e4;border-radius:16px;padding:18px 22px;margin-bottom:20px;box-shadow:0 4px 14px rgba(217,54,122,0.04)">
       <div style="display:flex;align-items:center;gap:10px;font-weight:800;font-size:14.5px;color:var(--dark);margin-bottom:6px">
         <span style="font-size:18px">🔑</span> Dùng Facebook User Access Token Quét Tự Động
@@ -793,75 +1775,75 @@ function openFetchUserPagesModal() {
     <div id="fetchedPagesContainer" style="display:none;max-height:360px;overflow-y:auto;border:1px solid var(--line);border-radius:16px;padding:16px;background:#fff;box-shadow:inset 0 2px 6px rgba(0,0,0,0.02)">
     </div>
     `,
-    async () => {
-      const checkboxes = document.querySelectorAll('.fetched-page-cb:checked');
-      if (!checkboxes.length) {
-        alert('Vui lòng chọn ít nhất 1 Facebook Page từ danh sách quét!');
+        async () => {
+          const checkboxes = document.querySelectorAll('.fetched-page-cb:checked');
+          if (!checkboxes.length) {
+            alert('Vui lòng chọn ít nhất 1 Facebook Page từ danh sách quét!');
+            return;
+          }
+          const selectedPages = [];
+          checkboxes.forEach(cb => {
+            const id = cb.dataset.id;
+            const name = cb.dataset.name;
+            const token = cb.dataset.token;
+            const postCountInput = document.getElementById(`postCount_${id}`);
+            const intervalInput = document.getElementById(`interval_${id}`);
+            const defaultPostCount = postCountInput ? parseInt(postCountInput.value) || 10 : 10;
+            const defaultIntervalMinutes = intervalInput ? parseInt(intervalInput.value) || 15 : 15;
+            if (id && name && token) {
+              selectedPages.push({ facebookPageId: id, pageName: name, pageAccessToken: token, defaultPostCount, defaultIntervalMinutes });
+            }
+          });
+
+          const res = await request('/facebook-pages/batch-import', {
+            method: 'POST',
+            body: JSON.stringify({ pages: selectedPages })
+          });
+
+          alert(res.message || '✅ Đã tự động kết nối tất cả Page vào hệ thống thành công!');
+          loadData();
+        }
+      );
+    }
+
+    function updateAllPageDefaults() {
+      const globalPostCount = document.getElementById('mGlobalPostCount')?.value || '10';
+      const globalInterval = document.getElementById('mGlobalInterval')?.value || '15';
+      document.querySelectorAll('.page-post-count-input').forEach(inp => inp.value = globalPostCount);
+      document.querySelectorAll('.page-interval-input').forEach(inp => inp.value = globalInterval);
+    }
+
+    async function fetchPagesFromFacebookToken() {
+      const userAccessToken = document.getElementById('mUserTokenInput').value.trim();
+      if (!userAccessToken) {
+        alert('Vui lòng dán mã Facebook User Access Token!');
         return;
       }
-      const selectedPages = [];
-      checkboxes.forEach(cb => {
-        const id = cb.dataset.id;
-        const name = cb.dataset.name;
-        const token = cb.dataset.token;
-        const postCountInput = document.getElementById(`postCount_${id}`);
-        const intervalInput = document.getElementById(`interval_${id}`);
-        const defaultPostCount = postCountInput ? parseInt(postCountInput.value) || 10 : 10;
-        const defaultIntervalMinutes = intervalInput ? parseInt(intervalInput.value) || 15 : 15;
-        if (id && name && token) {
-          selectedPages.push({ facebookPageId: id, pageName: name, pageAccessToken: token, defaultPostCount, defaultIntervalMinutes });
-        }
-      });
 
-      const res = await request('/facebook-pages/batch-import', {
-        method: 'POST',
-        body: JSON.stringify({ pages: selectedPages })
-      });
-
-      alert(res.message || '✅ Đã tự động kết nối tất cả Page vào hệ thống thành công!');
-      loadData();
-    }
-  );
-}
-
-function updateAllPageDefaults() {
-  const globalPostCount = document.getElementById('mGlobalPostCount')?.value || '10';
-  const globalInterval = document.getElementById('mGlobalInterval')?.value || '15';
-  document.querySelectorAll('.page-post-count-input').forEach(inp => inp.value = globalPostCount);
-  document.querySelectorAll('.page-interval-input').forEach(inp => inp.value = globalInterval);
-}
-
-async function fetchPagesFromFacebookToken() {
-  const userAccessToken = document.getElementById('mUserTokenInput').value.trim();
-  if (!userAccessToken) {
-    alert('Vui lòng dán mã Facebook User Access Token!');
-    return;
-  }
-
-  const container = document.getElementById('fetchedPagesContainer');
-  if (container) {
-    container.style.display = 'block';
-    container.innerHTML = `
+      const container = document.getElementById('fetchedPagesContainer');
+      if (container) {
+        container.style.display = 'block';
+        container.innerHTML = `
       <div style="text-align:center;padding:24px 10px">
         <div style="font-size:28px;margin-bottom:8px">⏳</div>
         <div style="font-weight:800;font-size:14px;color:var(--dark)">Đang kết nối Facebook Graph API quét danh sách Page của bạn...</div>
       </div>
     `;
-  }
+      }
 
-  try {
-    const res = await request('/facebook-pages/fetch-user-pages', {
-      method: 'POST',
-      body: JSON.stringify({ userAccessToken })
-    });
+      try {
+        const res = await request('/facebook-pages/fetch-user-pages', {
+          method: 'POST',
+          body: JSON.stringify({ userAccessToken })
+        });
 
-    const pages = res.data || [];
-    if (!pages.length) {
-      container.innerHTML = '<p style="color:var(--red);padding:10px">🔴 Không tìm thấy Fanpage nào trong Token này. Vui lòng kiểm tra lại Token hoặc chọn Token có quyền <b>pages_show_list</b>.</p>';
-      return;
-    }
+        const pages = res.data || [];
+        if (!pages.length) {
+          container.innerHTML = '<p style="color:var(--red);padding:10px">🔴 Không tìm thấy Fanpage nào trong Token này. Vui lòng kiểm tra lại Token hoặc chọn Token có quyền <b>pages_show_list</b>.</p>';
+          return;
+        }
 
-    let html = `
+        let html = `
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--pale)">
         <span style="font-weight:800;font-size:14px;color:var(--ink)">🎉 Đã tìm thấy <b>${pages.length}</b> Facebook Page</span>
         <button type="button" class="ghost small" style="border-radius:8px;padding:4px 10px;font-size:11.5px;font-weight:700" onclick="document.querySelectorAll('.fetched-page-cb').forEach(c=>c.checked=!c.checked)">Đổi chọn tất cả</button>
@@ -869,7 +1851,7 @@ async function fetchPagesFromFacebookToken() {
       <div style="display:flex;flex-direction:column;gap:10px">
     `;
 
-    html += pages.map(p => `
+        html += pages.map(p => `
       <div class="fetched-page-item" style="background:#fff;border:1.5px solid var(--line);border-radius:16px;padding:14px 16px;transition:all 0.2s ease;box-shadow:0 3px 10px rgba(0,0,0,0.02)">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
           <label style="display:flex;align-items:center;gap:12px;cursor:pointer;flex:1;min-width:0">
@@ -890,20 +1872,20 @@ async function fetchPagesFromFacebookToken() {
       </div>
     `).join('');
 
-    html += '</div>';
+        html += '</div>';
 
-    container.innerHTML = html;
-  } catch (err) {
-    if (container) {
-      container.innerHTML = `<p style="color:var(--red);padding:10px">🔴 Lỗi Graph API: ${err.error?.message || err.message || 'Token không hợp lệ'}</p>`;
+        container.innerHTML = html;
+      } catch (err) {
+        if (container) {
+          container.innerHTML = `<p style="color:var(--red);padding:10px">🔴 Lỗi Graph API: ${err.error?.message || err.message || 'Token không hợp lệ'}</p>`;
+        }
+      }
     }
-  }
-}
 
-function openAddPageModal() {
-  showModal(
-    '＋ Thêm Facebook Page Mới (Dự án thật)',
-    `
+    function openAddPageModal() {
+      showModal(
+        '＋ Thêm Facebook Page Mới (Dự án thật)',
+        `
     <div class="notice" style="border-left:4px solid var(--pink);background:var(--pale);margin-bottom:15px">
       💡 <b>Hướng dẫn kết nối Facebook Page sản xuất:</b><br>
       - <b>Tên Page:</b> Nhập tên trang Facebook của bạn.<br>
@@ -931,41 +1913,41 @@ function openAddPageModal() {
       </div>
     </div>
     `,
-    async () => {
-      const pageName = document.getElementById('mPageName').value.trim();
-      const facebookPageId = document.getElementById('mPageId').value.trim();
-      const pageAccessToken = document.getElementById('mPageToken').value.trim();
-      const defaultPostCount = parseInt(document.getElementById('mPostCount').value) || 10;
-      const defaultIntervalMinutes = parseInt(document.getElementById('mInterval').value) || 15;
+        async () => {
+          const pageName = document.getElementById('mPageName').value.trim();
+          const facebookPageId = document.getElementById('mPageId').value.trim();
+          const pageAccessToken = document.getElementById('mPageToken').value.trim();
+          const defaultPostCount = parseInt(document.getElementById('mPostCount').value) || 10;
+          const defaultIntervalMinutes = parseInt(document.getElementById('mInterval').value) || 15;
 
-      if (!pageName || !facebookPageId || !pageAccessToken) {
-        alert('Vui lòng nhập đầy đủ Tên Page, Facebook Page ID và Page Access Token!');
-        return;
-      }
+          if (!pageName || !facebookPageId || !pageAccessToken) {
+            alert('Vui lòng nhập đầy đủ Tên Page, Facebook Page ID và Page Access Token!');
+            return;
+          }
 
-      await request('/facebook-pages', {
-        method: 'POST',
-        body: JSON.stringify({ pageName, facebookPageId, pageAccessToken, defaultPostCount, defaultIntervalMinutes })
-      });
-      alert('✅ Đã thêm Facebook Page thật thành công!');
-      loadData();
+          await request('/facebook-pages', {
+            method: 'POST',
+            body: JSON.stringify({ pageName, facebookPageId, pageAccessToken, defaultPostCount, defaultIntervalMinutes })
+          });
+          alert('✅ Đã thêm Facebook Page thật thành công!');
+          loadData();
+        }
+      );
     }
-  );
-}
 
-async function deletePage(id) {
-  if(!confirm('Bạn có chắc chắn muốn xóa Facebook Page này?')) return;
-  try {
-    await request(`/facebook-pages/${id}`, { method: 'DELETE' });
-    alert('Đã xóa Facebook Page');
-    loadData();
-  } catch(err) { alert('Lỗi: ' + (err.error?.message || err.message)); }
-}
+    async function deletePage(id) {
+      if (!confirm('Bạn có chắc chắn muốn xóa Facebook Page này?')) return;
+      try {
+        await request(`/facebook-pages/${id}`, { method: 'DELETE' });
+        alert('Đã xóa Facebook Page');
+        loadData();
+      } catch (err) { alert('Lỗi: ' + (err.error?.message || err.message)); }
+    }
 
-function openEditPageSettingsModal(pageId, pageName, currentPostCount = 10, currentIntervalMinutes = 15) {
-  showModal(
-    `⚙ Cài Đặt Bài Đăng & Lịch Trình: ${pageName}`,
-    `
+    function openEditPageSettingsModal(pageId, pageName, currentPostCount = 10, currentIntervalMinutes = 15) {
+      showModal(
+        `⚙ Cài Đặt Bài Đăng & Lịch Trình: ${pageName}`,
+        `
     <div style="background:linear-gradient(135deg,#f0f9ff,#e0f2fe);border:1px solid #bae6fd;border-radius:16px;padding:16px 20px;margin-bottom:18px">
       <div style="font-weight:800;font-size:14px;color:#0369a1;margin-bottom:4px">
         📌 Tùy chỉnh cài đặt đăng bài riêng cho "${pageName}":
@@ -981,25 +1963,25 @@ function openEditPageSettingsModal(pageId, pageName, currentPostCount = 10, curr
     <label style="font-weight:800;font-size:13px;color:var(--ink);margin-bottom:6px">Khoảng cách giữa các bài đăng (Phút)</label>
     <input id="mPageIntervalInput" type="number" min="1" max="720" value="${currentIntervalMinutes}" style="padding:10px 14px;border-radius:12px;font-size:14px;font-weight:700">
     `,
-    async () => {
-      const defaultPostCount = parseInt(document.getElementById('mPagePostCountInput').value) || 10;
-      const defaultIntervalMinutes = parseInt(document.getElementById('mPageIntervalInput').value) || 15;
+        async () => {
+          const defaultPostCount = parseInt(document.getElementById('mPagePostCountInput').value) || 10;
+          const defaultIntervalMinutes = parseInt(document.getElementById('mPageIntervalInput').value) || 15;
 
-      const res = await request(`/facebook-pages/${pageId}`, {
-        method: 'PUT',
-        body: JSON.stringify({ defaultPostCount, defaultIntervalMinutes })
-      });
+          const res = await request(`/facebook-pages/${pageId}`, {
+            method: 'PUT',
+            body: JSON.stringify({ defaultPostCount, defaultIntervalMinutes })
+          });
 
-      alert(res.message || '✅ Đã lưu cài đặt mới cho Facebook Page thành công!');
-      loadData();
+          alert(res.message || '✅ Đã lưu cài đặt mới cho Facebook Page thành công!');
+          loadData();
+        }
+      );
     }
-  );
-}
 
-function openUpdateTokenModal(pageId, pageName) {
-  showModal(
-    `🔑 Cập Nhật Page Access Token: ${pageName}`,
-    `
+    function openUpdateTokenModal(pageId, pageName) {
+      showModal(
+        `🔑 Cập Nhật Page Access Token: ${pageName}`,
+        `
     <div class="notice" style="border-left:4px solid var(--pink);background:var(--pale);margin-bottom:15px">
       ⚠️ <b>Mã Token của Page "${pageName}" đã hết hạn trên Facebook.</b><br>
       Dán mã <b>Page Access Token mới (bắt đầu bằng EAAB...)</b> hoặc mã <b>User Access Token mới</b> vào ô dưới đây để khôi phục kết nối tự động đăng bài ngay lập tức!
@@ -1007,33 +1989,33 @@ function openUpdateTokenModal(pageId, pageName) {
     <label>Mã Page Access Token mới (EAAB...)</label>
     <textarea id="mNewPageTokenInput" style="height:100px;font-size:13px;padding:10px" placeholder="Dán mã Token mới (EAAB...) tại đây..."></textarea>
     `,
-    async () => {
-      const newToken = document.getElementById('mNewPageTokenInput').value.trim();
-      if (!newToken) {
-        alert('Vui lòng dán mã Token mới!');
-        return;
-      }
-      const res = await request(`/facebook-pages/${pageId}/update-token`, {
-        method: 'POST',
-        body: JSON.stringify({ pageAccessToken: newToken })
-      });
-      alert(res.message || '✅ Đã cập nhật Token mới thành công!');
-      loadData();
+        async () => {
+          const newToken = document.getElementById('mNewPageTokenInput').value.trim();
+          if (!newToken) {
+            alert('Vui lòng dán mã Token mới!');
+            return;
+          }
+          const res = await request(`/facebook-pages/${pageId}/update-token`, {
+            method: 'POST',
+            body: JSON.stringify({ pageAccessToken: newToken })
+          });
+          alert(res.message || '✅ Đã cập nhật Token mới thành công!');
+          loadData();
+        }
+      );
     }
-  );
-}
 
-async function testPageToken(id) {
-  try {
-    const res = await request(`/facebook-pages/${id}/test`, { method: 'POST' }).catch(() => request(`/facebook-pages/${id}/check-token`, { method: 'POST' }));
-    alert('🟢 KẾT NỐI FACEBOOK GRAPH API THÀNH CÔNG: ' + (res.message || 'Token Facebook Page hợp lệ!'));
-  } catch(err) { alert('🔴 LỖI TOKEN FACEBOOK: ' + (err.error?.message || err.message || 'Token không hợp lệ hoặc đã hết hạn')); }
-}
+    async function testPageToken(id) {
+      try {
+        const res = await request(`/facebook-pages/${id}/test`, { method: 'POST' }).catch(() => request(`/facebook-pages/${id}/check-token`, { method: 'POST' }));
+        alert('🟢 KẾT NỐI FACEBOOK GRAPH API THÀNH CÔNG: ' + (res.message || 'Token Facebook Page hợp lệ!'));
+      } catch (err) { alert('🔴 LỖI TOKEN FACEBOOK: ' + (err.error?.message || err.message || 'Token không hợp lệ hoặc đã hết hạn')); }
+    }
 
-function openAddUserModal() {
-  showModal(
-    '＋ Thêm Người Dùng Mới',
-    `
+    function openAddUserModal() {
+      showModal(
+        '＋ Thêm Người Dùng Mới',
+        `
     <label>Họ và tên</label><input id="mUserName" value="Nhân Viên Mới">
     <label>Email</label><input id="mUserEmail" value="user_${Date.now().toString().slice(-4)}@example.com">
     <label>Tên đăng nhập (username)</label><input id="mUserUsername" value="user_${Date.now().toString().slice(-4)}">
@@ -1046,112 +2028,112 @@ function openAddUserModal() {
     </select>
     <div class="notice" style="font-size:12px;margin-top:8px">⚠️ Sau khi tạo, Admin cần cấp quyền RBAC chính xác qua nút <b>⚙ Cấp quyền RBAC</b> trong bảng người dùng.</div>
     `,
-    async () => {
-      const name = document.getElementById('mUserName').value;
-      const email = document.getElementById('mUserEmail').value;
-      const username = document.getElementById('mUserUsername').value;
-      const password = document.getElementById('mUserPass').value;
-      const roleName = document.getElementById('mUserRole').value;
+        async () => {
+          const name = document.getElementById('mUserName').value;
+          const email = document.getElementById('mUserEmail').value;
+          const username = document.getElementById('mUserUsername').value;
+          const password = document.getElementById('mUserPass').value;
+          const roleName = document.getElementById('mUserRole').value;
 
-      let roleIds = [];
+          let roleIds = [];
+          try {
+            const rolesRes = await request('/roles').catch(() => ({ data: [] }));
+            const allRoles = extractList(rolesRes);
+            const matchedRole = allRoles.find(r => (r.name || '').toUpperCase().includes(roleName.toUpperCase()));
+            if (matchedRole) roleIds = [matchedRole.id];
+          } catch (e) { /* continue */ }
+
+          await request('/users', {
+            method: 'POST',
+            body: JSON.stringify({ name, email, username, password, roleName: roleName.toUpperCase(), roleIds })
+          });
+          alert('Đã tạo người dùng mới thành công!');
+          loadData();
+        }
+      );
+    }
+
+    async function deleteUser(id) {
+      if (!confirm('Xác nhận xóa tài khoản người dùng này?')) return;
       try {
-        const rolesRes = await request('/roles').catch(() => ({ data: [] }));
-        const allRoles = extractList(rolesRes);
-        const matchedRole = allRoles.find(r => (r.name || '').toUpperCase().includes(roleName.toUpperCase()));
-        if (matchedRole) roleIds = [matchedRole.id];
-      } catch(e) { /* continue */ }
-
-      await request('/users', {
-        method: 'POST',
-        body: JSON.stringify({ name, email, username, password, roleName: roleName.toUpperCase(), roleIds })
-      });
-      alert('Đã tạo người dùng mới thành công!');
-      loadData();
-    }
-  );
-}
-
-async function deleteUser(id) {
-  if(!confirm('Xác nhận xóa tài khoản người dùng này?')) return;
-  try {
-    await request(`/users/${id}`, { method: 'DELETE' });
-    alert('Đã xóa người dùng');
-    loadData();
-  } catch(err) { alert('Lỗi: ' + (err.error?.message || err.message)); }
-}
-
-// Navigation Pages
-const titles={overview:['Tổng quan','Theo dõi hoạt động hệ thống'],campaign:['Chiến dịch','Thiết lập quy trình tự động hóa (10 bước)'],approval:['Duyệt nội dung','Kiểm duyệt nội dung do AI sinh trước khi đăng'],calendar:['Lịch đăng bài','Quản lý lịch riêng độc lập cho từng Page'],posts:['Bài viết','Danh sách tất cả bài viết'],pages:['Facebook Page','Quản lý kết nối Facebook Page'],media:['Kho media','Quản lý hình ảnh và video'],reports:['Báo cáo','Hiệu quả đăng bài'],users:['Người dùng & Cấp Phép RBAC','Quản lý tài khoản & ma trận phân quyền hiện đại'],logs:['Nhật ký log','Nhật ký sự kiện hệ thống'],settings:['Cài đặt','Cấu hình hệ thống & Thương hiệu'],guide:['Hướng dẫn','Quy trình sử dụng hệ thống']};
-
-function toggleMobileSidebar() {
-  const sidebar = document.querySelector('.sidebar');
-  const overlay = document.getElementById('sidebarOverlay');
-  if (sidebar) sidebar.classList.toggle('open');
-  if (overlay) overlay.classList.toggle('active');
-}
-
-function closeMobileSidebar() {
-  const sidebar = document.querySelector('.sidebar');
-  const overlay = document.getElementById('sidebarOverlay');
-  if (sidebar) sidebar.classList.remove('open');
-  if (overlay) overlay.classList.remove('active');
-}
-
-function openPage(page){
-  closeMobileSidebar();
-  document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));
-  const p = document.getElementById(page);
-  if (p) p.classList.add('active');
-  document.querySelectorAll('.nav button').forEach(x=>x.classList.toggle('active',x.dataset.page===page));
-  setElText('title', titles[page][0]);
-  setElText('subtitle', titles[page][1]);
-  setElText('crumb', titles[page][0]);
-
-  if(page==='campaign') renderWizard();
-  if(page==='approval') loadApprovalQueue();
-  if(page==='logs') loadSystemLogs();
-  if(page==='posts') loadPosts();
-  if(page==='settings') loadAiSettings();
-  if(page==='media') loadMedia();
-}
-document.querySelectorAll('.nav button').forEach(x=>x.onclick=()=>openPage(x.dataset.page));
-
-async function loadMedia() {
-  const grid = document.getElementById('mediaGridDisplay');
-  if (!grid) return;
-
-  try {
-    const res = await request('/media').catch(() => ({ data: [] }));
-    const mediaList = extractList(res);
-    window.loadedMedia = mediaList;
-
-    const images = mediaList.filter(m => m.mimeType?.startsWith('image') || m.mediaType === 'IMAGE');
-    const videos = mediaList.filter(m => m.mimeType?.startsWith('video') || m.mediaType === 'VIDEO');
-
-    setElText('totalImagesCount', images.length);
-    setElText('totalVideosCount', videos.length);
-
-    const statusBadge = document.getElementById('mediaStatusBadge');
-    if (statusBadge) {
-      if (images.length >= 6 || videos.length >= 1) {
-        statusBadge.className = 'badge ok';
-        statusBadge.textContent = 'Đủ tài nguyên';
-      } else {
-        statusBadge.className = 'badge err';
-        statusBadge.textContent = 'Cần thêm ảnh (Tối thiểu 6 ảnh)';
-      }
+        await request(`/users/${id}`, { method: 'DELETE' });
+        alert('Đã xóa người dùng');
+        loadData();
+      } catch (err) { alert('Lỗi: ' + (err.error?.message || err.message)); }
     }
 
-    if (!mediaList.length) {
-      grid.innerHTML = '<p class="empty" style="grid-column:1/-1;text-align:center;padding:40px;color:var(--muted)">Chưa có tệp media nào trong kho. Bấm nút <b>↑ Tải media lên</b> để tải hình ảnh/video đầu tiên!</p>';
-      return;
+    // Navigation Pages
+    const titles = { overview: ['Tổng quan', 'Theo dõi hoạt động hệ thống'], campaign: ['Chiến dịch', 'Thiết lập quy trình tự động hóa (10 bước)'], approval: ['Duyệt nội dung', 'Kiểm duyệt nội dung do AI sinh trước khi đăng'], calendar: ['Lịch đăng bài', 'Quản lý lịch riêng độc lập cho từng Page'], posts: ['Bài viết', 'Danh sách tất cả bài viết'], pages: ['Facebook Page', 'Quản lý kết nối Facebook Page'], media: ['Kho media', 'Quản lý hình ảnh và video'], reports: ['Báo cáo', 'Hiệu quả đăng bài'], users: ['Người dùng & Cấp Phép RBAC', 'Quản lý tài khoản & ma trận phân quyền hiện đại'], logs: ['Nhật ký log', 'Nhật ký sự kiện hệ thống'], settings: ['Cài đặt', 'Cấu hình hệ thống & Thương hiệu'], guide: ['Hướng dẫn', 'Quy trình sử dụng hệ thống'] };
+
+    function toggleMobileSidebar() {
+      const sidebar = document.querySelector('.sidebar');
+      const overlay = document.getElementById('sidebarOverlay');
+      if (sidebar) sidebar.classList.toggle('open');
+      if (overlay) overlay.classList.toggle('active');
     }
 
-    grid.innerHTML = mediaList.map(m => {
-      const isVideo = m.mimeType?.startsWith('video') || m.mediaType === 'VIDEO';
-      const url = m.storageUrl;
-      const sizeMb = (m.fileSize / (1024 * 1024)).toFixed(2);
-      return `
+    function closeMobileSidebar() {
+      const sidebar = document.querySelector('.sidebar');
+      const overlay = document.getElementById('sidebarOverlay');
+      if (sidebar) sidebar.classList.remove('open');
+      if (overlay) overlay.classList.remove('active');
+    }
+
+    function openPage(page) {
+      closeMobileSidebar();
+      document.querySelectorAll('.panel').forEach(x => x.classList.remove('active'));
+      const p = document.getElementById(page);
+      if (p) p.classList.add('active');
+      document.querySelectorAll('.nav button').forEach(x => x.classList.toggle('active', x.dataset.page === page));
+      setElText('title', titles[page][0]);
+      setElText('subtitle', titles[page][1]);
+      setElText('crumb', titles[page][0]);
+
+      if (page === 'campaign') renderWizard();
+      if (page === 'approval') loadApprovalQueue();
+      if (page === 'logs') loadSystemLogs();
+      if (page === 'posts') loadPosts();
+      if (page === 'settings') loadAiSettings();
+      if (page === 'media') loadMedia();
+    }
+    document.querySelectorAll('.nav button').forEach(x => x.onclick = () => openPage(x.dataset.page));
+
+    async function loadMedia() {
+      const grid = document.getElementById('mediaGridDisplay');
+      if (!grid) return;
+
+      try {
+        const res = await request('/media').catch(() => ({ data: [] }));
+        const mediaList = extractList(res);
+        window.loadedMedia = mediaList;
+
+        const images = mediaList.filter(m => m.mimeType?.startsWith('image') || m.mediaType === 'IMAGE');
+        const videos = mediaList.filter(m => m.mimeType?.startsWith('video') || m.mediaType === 'VIDEO');
+
+        setElText('totalImagesCount', images.length);
+        setElText('totalVideosCount', videos.length);
+
+        const statusBadge = document.getElementById('mediaStatusBadge');
+        if (statusBadge) {
+          if (images.length >= 6 || videos.length >= 1) {
+            statusBadge.className = 'badge ok';
+            statusBadge.textContent = 'Đủ tài nguyên';
+          } else {
+            statusBadge.className = 'badge err';
+            statusBadge.textContent = 'Cần thêm ảnh (Tối thiểu 6 ảnh)';
+          }
+        }
+
+        if (!mediaList.length) {
+          grid.innerHTML = '<p class="empty" style="grid-column:1/-1;text-align:center;padding:40px;color:var(--muted)">Chưa có tệp media nào trong kho. Bấm nút <b>↑ Tải media lên</b> để tải hình ảnh/video đầu tiên!</p>';
+          return;
+        }
+
+        grid.innerHTML = mediaList.map(m => {
+          const isVideo = m.mimeType?.startsWith('video') || m.mediaType === 'VIDEO';
+          const url = m.storageUrl;
+          const sizeMb = (m.fileSize / (1024 * 1024)).toFixed(2);
+          return `
         <div style="background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.03);position:relative">
           <div style="height:140px;background:#f5e8ef;display:grid;place-items:center;overflow:hidden;position:relative">
             ${isVideo ? `
@@ -1170,114 +2152,114 @@ async function loadMedia() {
           </div>
         </div>
       `;
-    }).join('');
-  } catch (err) {
-    grid.innerHTML = `<p style="color:var(--red);grid-column:1/-1">🔴 Lỗi tải kho media: ${err.message}</p>`;
-  }
-}
+        }).join('');
+      } catch (err) {
+        grid.innerHTML = `<p style="color:var(--red);grid-column:1/-1">🔴 Lỗi tải kho media: ${err.message}</p>`;
+      }
+    }
 
-async function uploadGlobalMedia(input) {
-  const files = input.files;
-  if (!files || !files.length) return;
+    async function uploadGlobalMedia(input) {
+      const files = input.files;
+      if (!files || !files.length) return;
 
-  const formData = new FormData();
-  for (let i = 0; i < files.length; i++) {
-    formData.append('files', files[i]);
-  }
+      const formData = new FormData();
+      for (let i = 0; i < files.length; i++) {
+        formData.append('files', files[i]);
+      }
 
-  const grid = document.getElementById('mediaGridDisplay');
-  if (grid) {
-    grid.innerHTML = '<p style="color:var(--pink);grid-column:1/-1;padding:20px">⏳ Đang tải tệp media lên kho dùng chung...</p>';
-  }
+      const grid = document.getElementById('mediaGridDisplay');
+      if (grid) {
+        grid.innerHTML = '<p style="color:var(--pink);grid-column:1/-1;padding:20px">⏳ Đang tải tệp media lên kho dùng chung...</p>';
+      }
 
-  try {
-    const authToken = token || localStorage.getItem('pinkflow_token');
-    const response = await fetch('/api/media/upload', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${authToken}`
-      },
-      body: formData
-    });
+      try {
+        const authToken = token || localStorage.getItem('pinkflow_token');
+        const response = await fetch('/api/media/upload', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${authToken}`
+          },
+          body: formData
+        });
 
-    const res = await response.json();
-    if (!response.ok) throw new Error(res.error?.message || res.message || 'Lỗi tải media');
+        const res = await response.json();
+        if (!response.ok) throw new Error(res.error?.message || res.message || 'Lỗi tải media');
 
-    alert(res.message || '✅ Đã tải media thành công!');
-    input.value = '';
-    loadMedia();
-  } catch (err) {
-    alert('🔴 Lỗi tải media: ' + err.message);
-    loadMedia();
-  }
-}
+        alert(res.message || '✅ Đã tải media thành công!');
+        input.value = '';
+        loadMedia();
+      } catch (err) {
+        alert('🔴 Lỗi tải media: ' + err.message);
+        loadMedia();
+      }
+    }
 
-async function deleteMediaFile(id) {
-  if (!confirm('Xác nhận xóa tệp media này khỏi kho?')) return;
-  try {
-    const res = await request(`/media/${id}`, { method: 'DELETE' });
-    alert(res.message || 'Đã xóa tệp media');
-    loadMedia();
-  } catch (err) {
-    alert('Lỗi: ' + (err.error?.message || err.message));
-  }
-}
+    async function deleteMediaFile(id) {
+      if (!confirm('Xác nhận xóa tệp media này khỏi kho?')) return;
+      try {
+        const res = await request(`/media/${id}`, { method: 'DELETE' });
+        alert(res.message || 'Đã xóa tệp media');
+        loadMedia();
+      } catch (err) {
+        alert('Lỗi: ' + (err.error?.message || err.message));
+      }
+    }
 
-async function shuffleMediaAllocation() {
-  try {
-    const res = await request('/media/shuffle', { method: 'POST' });
-    alert('🎲 ' + (res.message || 'Đã phân bổ ngẫu nhiên media thành công!'));
-    loadMedia();
-  } catch (err) {
-    alert('Lỗi: ' + (err.error?.message || err.message));
-  }
-}
+    async function shuffleMediaAllocation() {
+      try {
+        const res = await request('/media/shuffle', { method: 'POST' });
+        alert('🎲 ' + (res.message || 'Đã phân bổ ngẫu nhiên media thành công!'));
+        loadMedia();
+      } catch (err) {
+        alert('Lỗi: ' + (err.error?.message || err.message));
+      }
+    }
 
-// 3-STEP CAMPAIGN WIZARD DATA & RENDER
-let wizardData = {
-  name: 'Chiến dịch đăng bài Facebook Page',
-  description: 'Tự động hóa đăng bài viết lên Facebook Page',
-  contentMode: 'SHARED',
-  mediaMode: 'IMAGE',
-  defaultPostCount: 10,
-  defaultIntervalMinutes: 15,
-  prompt: '',
-  productName: '',
-  brandName: '',
-  productPrice: '',
-  discountPrice: '',
-  sku: '',
-  mandatoryKeywords: '',
-  bannedKeywords: '',
-  tone: 'Thân thiện, Hấp dẫn',
-  allowEmoji: true,
-  allowHashtag: true,
-  ctaRequired: '',
-  startDate: new Date().toISOString(),
-  allowedStartTime: '08:00',
-  allowedEndTime: '22:00',
-  allowMediaReuse: true,
-};
-let selectedPageIds = [];
-let step = 0;
+    // 3-STEP CAMPAIGN WIZARD DATA & RENDER
+    let wizardData = {
+      name: 'Chiến dịch đăng bài Facebook Page',
+      description: 'Tự động hóa đăng bài viết lên Facebook Page',
+      contentMode: 'SHARED',
+      mediaMode: 'IMAGE',
+      defaultPostCount: 10,
+      defaultIntervalMinutes: 15,
+      prompt: '',
+      productName: '',
+      brandName: '',
+      productPrice: '',
+      discountPrice: '',
+      sku: '',
+      mandatoryKeywords: '',
+      bannedKeywords: '',
+      tone: 'Thân thiện, Hấp dẫn',
+      allowEmoji: true,
+      allowHashtag: true,
+      ctaRequired: '',
+      startDate: new Date().toISOString(),
+      allowedStartTime: '08:00',
+      allowedEndTime: '22:00',
+      allowMediaReuse: true,
+    };
+    let selectedPageIds = [];
+    let step = 0;
 
-const steps = [
-  { 
-    title: '1. Nội Dung & Chọn Page', 
-    getHtml: () => {
-      const pages = window.loadedPages || [];
-      const selectedCount = selectedPageIds.length;
+    const steps = [
+      {
+        title: '1. Nội Dung & Chọn Page',
+        getHtml: () => {
+          const pages = window.loadedPages || [];
+          const selectedCount = selectedPageIds.length;
 
-      const pageCardsHtml = !pages.length ? `
+          const pageCardsHtml = !pages.length ? `
         <div style="text-align:center;padding:30px 20px;background:#fff;border-radius:18px;border:1px dashed var(--line)">
           <h4 style="margin:0;color:var(--ink)">Chưa có Facebook Page nào trong hệ thống</h4>
           <p style="color:var(--muted);font-size:12.5px;margin:6px 0 12px">Vui lòng sang tab <b>Facebook Page</b> để quét hoặc thêm Page.</p>
           <button onclick="openPage('pages')" class="small">＋ Đến Quản Lý Facebook Page</button>
         </div>
       ` : pages.map(p => {
-        const isSelected = selectedPageIds.includes(p.id);
-        const isValid = p.tokenStatus === 'VALID';
-        return `
+            const isSelected = selectedPageIds.includes(p.id);
+            const isValid = p.tokenStatus === 'VALID';
+            return `
           <div class="page-select-card" id="pageCard_${p.id}" onclick="toggleWizardPageSelect('${p.id}')" style="background:${isSelected ? '#fff0f6' : '#fff'};border:${isSelected ? '2px solid var(--pink)' : '1px solid var(--line)'};border-radius:16px;padding:14px 16px;cursor:pointer;transition:all 0.2s ease;box-shadow:${isSelected ? '0 6px 20px rgba(244,91,154,0.18)' : '0 3px 10px rgba(0,0,0,0.02)'};display:flex;align-items:center;justify-content:space-between">
             <div style="display:flex;align-items:center;gap:12px;overflow:hidden">
               <div style="width:38px;height:38px;border-radius:12px;background:${isSelected ? 'linear-gradient(135deg,var(--pink),var(--dark))' : 'var(--pale)'};color:${isSelected ? '#fff' : 'var(--dark)'};display:grid;place-items:center;font-weight:800;font-size:16px;flex-shrink:0">f</div>
@@ -1292,9 +2274,9 @@ const steps = [
             <input type="checkbox" id="pageCb_${p.id}" ${isSelected ? 'checked' : ''} onclick="event.stopPropagation(); toggleWizardPageSelect('${p.id}')" style="width:18px;height:18px;accent-color:var(--pink);cursor:pointer;flex-shrink:0">
           </div>
         `;
-      }).join('');
+          }).join('');
 
-      return `
+          return `
         <div style="display:flex;flex-direction:column;gap:16px">
           <div>
             <label style="font-weight:800;font-size:13.5px;color:var(--ink)">Tên chiến dịch</label>
@@ -1320,30 +2302,30 @@ const steps = [
           </div>
         </div>
       `;
-    }
-  },
-  { 
-    title: '2. Cấu Hinh Lịch & Media', 
-    getHtml: () => {
-      const mediaList = window.loadedMedia || [];
-      const imageCount = mediaList.filter(m => m.mimeType?.startsWith('image') || m.type==='IMAGE').length;
-      const videoCount = mediaList.filter(m => m.mimeType?.startsWith('video') || m.type==='VIDEO').length;
+        }
+      },
+      {
+        title: '2. Cấu Hinh Lịch & Media',
+        getHtml: () => {
+          const mediaList = window.loadedMedia || [];
+          const imageCount = mediaList.filter(m => m.mimeType?.startsWith('image') || m.type === 'IMAGE').length;
+          const videoCount = mediaList.filter(m => m.mimeType?.startsWith('video') || m.type === 'VIDEO').length;
 
-      return `
+          return `
         <div style="display:flex;flex-direction:column;gap:18px">
           <div class="row" style="gap:16px">
             <div style="flex:1">
               <label style="font-weight:800">Loại bài viết</label>
               <select onchange="wizardData.mediaMode=this.value">
-                <option value="IMAGE" ${wizardData.mediaMode==='IMAGE'?'selected':''}>📸 Bài viết Hình ảnh (Tự chọn đúng 6 hình/bài)</option>
-                <option value="VIDEO" ${wizardData.mediaMode==='VIDEO'?'selected':''}>🎥 Bài viết Video (Tự chọn đúng 1 video/bài)</option>
+                <option value="IMAGE" ${wizardData.mediaMode === 'IMAGE' ? 'selected' : ''}>📸 Bài viết Hình ảnh (Tự chọn đúng 6 hình/bài)</option>
+                <option value="VIDEO" ${wizardData.mediaMode === 'VIDEO' ? 'selected' : ''}>🎥 Bài viết Video (Tự chọn đúng 1 video/bài)</option>
               </select>
             </div>
             <div style="flex:1">
               <label style="font-weight:800">Chế độ phân bổ AI</label>
               <select onchange="wizardData.contentMode=this.value">
-                <option value="SHARED" ${wizardData.contentMode==='SHARED'?'selected':''}>Dùng chung (1 bộ bài cho tất cả Page)</option>
-                <option value="INDIVIDUAL" ${wizardData.contentMode==='INDIVIDUAL'?'selected':''}>Dùng riêng (Mỗi Page 1 bộ bài AI riêng)</option>
+                <option value="SHARED" ${wizardData.contentMode === 'SHARED' ? 'selected' : ''}>Dùng chung (1 bộ bài cho tất cả Page)</option>
+                <option value="INDIVIDUAL" ${wizardData.contentMode === 'INDIVIDUAL' ? 'selected' : ''}>Dùng riêng (Mỗi Page 1 bộ bài AI riêng)</option>
               </select>
             </div>
           </div>
@@ -1374,16 +2356,16 @@ const steps = [
             <div style="flex:1">
               <label style="font-weight:800">Giọng văn AI</label>
               <select onchange="wizardData.tone=this.value">
-                <option ${wizardData.tone==='Thân thiện, Hấp dẫn'?'selected':''}>Thân thiện, Hấp dẫn</option>
-                <option ${wizardData.tone==='Chuyên nghiệp, Uy tín'?'selected':''}>Chuyên nghiệp, Uy tín</option>
-                <option ${wizardData.tone==='Sôi nổi, Hào hứng'?'selected':''}>Sôi nổi, Hào hứng</option>
+                <option ${wizardData.tone === 'Thân thiện, Hấp dẫn' ? 'selected' : ''}>Thân thiện, Hấp dẫn</option>
+                <option ${wizardData.tone === 'Chuyên nghiệp, Uy tín' ? 'selected' : ''}>Chuyên nghiệp, Uy tín</option>
+                <option ${wizardData.tone === 'Sôi nổi, Hào hứng' ? 'selected' : ''}>Sôi nổi, Hào hứng</option>
               </select>
             </div>
             <div style="flex:1">
               <label style="font-weight:800">Tái sử dụng Media</label>
               <select onchange="wizardData.allowMediaReuse=this.value==='true'">
-                <option value="true" ${wizardData.allowMediaReuse?'selected':''}>Cho phép xoay vòng media ngẫu nhiên</option>
-                <option value="false" ${!wizardData.allowMediaReuse?'selected':''}>Không xoay vòng (Không trùng tệp)</option>
+                <option value="true" ${wizardData.allowMediaReuse ? 'selected' : ''}>Cho phép xoay vòng media ngẫu nhiên</option>
+                <option value="false" ${!wizardData.allowMediaReuse ? 'selected' : ''}>Không xoay vòng (Không trùng tệp)</option>
               </select>
             </div>
           </div>
@@ -1397,11 +2379,11 @@ const steps = [
           </div>
         </div>
       `;
-    }
-  },
-  { 
-    title: '3. Xem & Kích Hoạt ⚡', 
-    getHtml: () => `
+        }
+      },
+      {
+        title: '3. Xem & Kích Hoạt ⚡',
+        getHtml: () => `
       <div style="display:flex;flex-direction:column;gap:14px">
         <div style="background:linear-gradient(135deg,#fff0f6,#fff7fb);border:1px solid #f6d2e4;border-radius:16px;padding:16px 20px">
           <div style="font-weight:800;font-size:15px;color:var(--dark);margin-bottom:4px">
@@ -1417,139 +2399,139 @@ const steps = [
         <div id="step7PostsContainer">Đang kiểm tra danh sách bài viết AI...</div>
       </div>
     `
-  }
-];
+      }
+    ];
 
-let currentCampaignApproved = false;
+    let currentCampaignApproved = false;
 
-function toggleWizardMediaReuse() {
-  wizardData.allowMediaReuse = !wizardData.allowMediaReuse;
-  const cb = document.getElementById('wMediaReuseCb');
-  if (cb) cb.checked = wizardData.allowMediaReuse;
-  renderWizard();
-}
-
-function toggleWizardPageSelect(pageId) {
-  const index = selectedPageIds.indexOf(pageId);
-  if (index > -1) {
-    selectedPageIds.splice(index, 1);
-  } else {
-    selectedPageIds.push(pageId);
-  }
-
-  const card = document.getElementById(`pageCard_${pageId}`);
-  const cb = document.getElementById(`pageCb_${pageId}`);
-  const isSelected = selectedPageIds.includes(pageId);
-
-  if (card) {
-    card.style.background = isSelected ? '#fff0f6' : '#fff';
-    card.style.border = isSelected ? '2px solid var(--pink)' : '1px solid var(--line)';
-    card.style.boxShadow = isSelected ? '0 6px 20px rgba(244,91,154,0.18)' : '0 4px 14px rgba(0,0,0,0.03)';
-    const avatar = card.querySelector('div > div');
-    if (avatar) {
-      avatar.style.background = isSelected ? 'linear-gradient(135deg,var(--pink),var(--dark))' : 'var(--pale)';
-      avatar.style.color = isSelected ? '#fff' : 'var(--dark)';
-      avatar.style.boxShadow = isSelected ? '0 4px 12px rgba(244,91,154,0.35)' : 'none';
+    function toggleWizardMediaReuse() {
+      wizardData.allowMediaReuse = !wizardData.allowMediaReuse;
+      const cb = document.getElementById('wMediaReuseCb');
+      if (cb) cb.checked = wizardData.allowMediaReuse;
+      renderWizard();
     }
-  }
-  if (cb) cb.checked = isSelected;
 
-  const badge = document.getElementById('selectedPageCountBadge');
-  if (badge && window.loadedPages) {
-    badge.textContent = `Đã chọn: ${selectedPageIds.length} / ${window.loadedPages.length} Page`;
-  }
-}
+    function toggleWizardPageSelect(pageId) {
+      const index = selectedPageIds.indexOf(pageId);
+      if (index > -1) {
+        selectedPageIds.splice(index, 1);
+      } else {
+        selectedPageIds.push(pageId);
+      }
 
-function selectAllWizardPages(select) {
-  const pages = window.loadedPages || [];
-  if (select) {
-    selectedPageIds = pages.map(p => p.id);
-  } else {
-    selectedPageIds = [];
-  }
-  renderWizard();
-}
+      const card = document.getElementById(`pageCard_${pageId}`);
+      const cb = document.getElementById(`pageCb_${pageId}`);
+      const isSelected = selectedPageIds.includes(pageId);
 
-function isApproverUser() {
-  return true;
-}
+      if (card) {
+        card.style.background = isSelected ? '#fff0f6' : '#fff';
+        card.style.border = isSelected ? '2px solid var(--pink)' : '1px solid var(--line)';
+        card.style.boxShadow = isSelected ? '0 6px 20px rgba(244,91,154,0.18)' : '0 4px 14px rgba(0,0,0,0.03)';
+        const avatar = card.querySelector('div > div');
+        if (avatar) {
+          avatar.style.background = isSelected ? 'linear-gradient(135deg,var(--pink),var(--dark))' : 'var(--pale)';
+          avatar.style.color = isSelected ? '#fff' : 'var(--dark)';
+          avatar.style.boxShadow = isSelected ? '0 4px 12px rgba(244,91,154,0.35)' : 'none';
+        }
+      }
+      if (cb) cb.checked = isSelected;
 
-async function generateWizardAiPreviewPosts() {
-  const container = document.getElementById('step7PostsContainer');
-  if (container) {
-    container.innerHTML = `
+      const badge = document.getElementById('selectedPageCountBadge');
+      if (badge && window.loadedPages) {
+        badge.textContent = `Đã chọn: ${selectedPageIds.length} / ${window.loadedPages.length} Page`;
+      }
+    }
+
+    function selectAllWizardPages(select) {
+      const pages = window.loadedPages || [];
+      if (select) {
+        selectedPageIds = pages.map(p => p.id);
+      } else {
+        selectedPageIds = [];
+      }
+      renderWizard();
+    }
+
+    function isApproverUser() {
+      return true;
+    }
+
+    async function generateWizardAiPreviewPosts() {
+      const container = document.getElementById('step7PostsContainer');
+      if (container) {
+        container.innerHTML = `
       <div style="text-align:center;padding:45px 24px;background:#fff;border-radius:20px;border:1px solid var(--line)">
         <div style="font-size:36px;margin-bottom:12px">🤖</div>
         <h3 style="margin:0;color:var(--ink);font-weight:800">Đang khởi chạy AI 9router tự động viết 10 bài content...</h3>
         <p style="color:var(--muted);font-size:13.5px;margin-top:6px">Vui lòng chờ trong giây lát. Hệ thống đang sinh nội dung hấp dẫn kèm emoji, hashtag & CTA...</p>
       </div>
     `;
-  }
+      }
 
-  try {
-    const res = await request('/campaigns/generate-preview', {
-      method: 'POST',
-      body: JSON.stringify({
-        prompt: wizardData.prompt || wizardData.name,
-        postCount: wizardData.defaultPostCount || 10,
-        productName: wizardData.productName,
-        brandName: wizardData.brandName,
-        tone: wizardData.tone,
-        allowEmoji: wizardData.allowEmoji,
-        allowHashtag: wizardData.allowHashtag,
-        ctaRequired: wizardData.ctaRequired,
-        mandatoryKeywords: wizardData.mandatoryKeywords ? wizardData.mandatoryKeywords.split(',').map(k=>k.trim()) : []
-      })
-    });
+      try {
+        const res = await request('/campaigns/generate-preview', {
+          method: 'POST',
+          body: JSON.stringify({
+            prompt: wizardData.prompt || wizardData.name,
+            postCount: wizardData.defaultPostCount || 10,
+            productName: wizardData.productName,
+            brandName: wizardData.brandName,
+            tone: wizardData.tone,
+            allowEmoji: wizardData.allowEmoji,
+            allowHashtag: wizardData.allowHashtag,
+            ctaRequired: wizardData.ctaRequired,
+            mandatoryKeywords: wizardData.mandatoryKeywords ? wizardData.mandatoryKeywords.split(',').map(k => k.trim()) : []
+          })
+        });
 
-    const list = res.data || [];
-    window.wizardAiPreviewPosts = list.map((text, i) => ({
-      id: `ai_draft_${i+1}`,
-      content: text,
-      status: 'APPROVED',
-      sequenceNumber: i + 1,
-      mediaType: wizardData.mediaMode === 'VIDEO' ? 'VIDEO' : 'IMAGE'
-    }));
+        const list = res.data || [];
+        window.wizardAiPreviewPosts = list.map((text, i) => ({
+          id: `ai_draft_${i + 1}`,
+          content: text,
+          status: 'APPROVED',
+          sequenceNumber: i + 1,
+          mediaType: wizardData.mediaMode === 'VIDEO' ? 'VIDEO' : 'IMAGE'
+        }));
 
-    currentCampaignApproved = true;
-    loadStep7Data();
-  } catch (err) {
-    if (container) {
-      container.innerHTML = `<p style="color:var(--red);padding:20px">🔴 Lỗi sinh bài AI: ${err.error?.message || err.message || 'Không thể kết nối AI Engine'}</p>`;
-    }
-  }
-}
-
-async function loadStep7Data() {
-  const container = document.getElementById('step7PostsContainer');
-  if (!container) return;
-
-  const isAdmin = isApproverUser();
-
-  try {
-    let posts = [];
-    if (activeCampaignId) {
-      const campRes = await request(`/campaigns/${activeCampaignId}`).catch(() => null);
-      if (campRes && campRes.data) {
-        posts = campRes.data.generatedPosts || [];
+        currentCampaignApproved = true;
+        loadStep7Data();
+      } catch (err) {
+        if (container) {
+          container.innerHTML = `<p style="color:var(--red);padding:20px">🔴 Lỗi sinh bài AI: ${err.error?.message || err.message || 'Không thể kết nối AI Engine'}</p>`;
+        }
       }
     }
-    if (!posts.length) {
-      posts = await request('/approval-queue').then(extractList).catch(() => []);
-    }
 
-    const pendingPosts = posts.filter(p => p.status === 'PENDING_APPROVAL' || p.status === 'PENDING' || p.status === 'DRAFT');
-    currentCampaignApproved = posts.length > 0 && pendingPosts.length === 0;
+    async function loadStep7Data() {
+      const container = document.getElementById('step7PostsContainer');
+      if (!container) return;
 
-    let html = '';
+      const isAdmin = isApproverUser();
 
-    if (!posts.length && window.wizardAiPreviewPosts && window.wizardAiPreviewPosts.length) {
-      posts = window.wizardAiPreviewPosts;
-      currentCampaignApproved = true;
-    }
+      try {
+        let posts = [];
+        if (activeCampaignId) {
+          const campRes = await request(`/campaigns/${activeCampaignId}`).catch(() => null);
+          if (campRes && campRes.data) {
+            posts = campRes.data.generatedPosts || [];
+          }
+        }
+        if (!posts.length) {
+          posts = await request('/approval-queue').then(extractList).catch(() => []);
+        }
 
-    if (!posts.length) {
-      html = `
+        const pendingPosts = posts.filter(p => p.status === 'PENDING_APPROVAL' || p.status === 'PENDING' || p.status === 'DRAFT');
+        currentCampaignApproved = posts.length > 0 && pendingPosts.length === 0;
+
+        let html = '';
+
+        if (!posts.length && window.wizardAiPreviewPosts && window.wizardAiPreviewPosts.length) {
+          posts = window.wizardAiPreviewPosts;
+          currentCampaignApproved = true;
+        }
+
+        if (!posts.length) {
+          html = `
         <div style="text-align:center;padding:40px 24px;background:#fff;border-radius:20px;border:1px solid var(--line);box-shadow:0 6px 20px rgba(0,0,0,0.03)">
           <div style="width:60px;height:60px;border-radius:18px;background:var(--pale);color:var(--dark);display:grid;place-items:center;font-size:28px;margin:0 auto 16px">🤖</div>
           <h3 style="margin:0;color:var(--ink);font-weight:800;font-size:20px">Tự Động Sinh Nội Dung Content Bằng AI (9router Engine)</h3>
@@ -1561,8 +2543,8 @@ async function loadStep7Data() {
           </button>
         </div>
       `;
-    } else if (!currentCampaignApproved && !isAdmin) {
-      html = `
+        } else if (!currentCampaignApproved && !isAdmin) {
+          html = `
         <div class="notice" style="border-left:4px solid var(--yellow);background:#fffbeb;color:#b45309;padding:18px 22px;border-radius:16px;margin-bottom:24px;line-height:1.65">
           <div style="font-size:16px;font-weight:800;margin-bottom:6px">⏳ BÀI VIẾT ĐANG CHỜ ADMIN / MANAGER PHÊ DUYỆT (PENDING_APPROVAL)</div>
           • <b>Tổng số bài viết:</b> ${posts.length} bài (${pendingPosts.length} bài chưa duyệt)<br>
@@ -1594,18 +2576,18 @@ async function loadStep7Data() {
           }).join('')}
         </div>
       `;
-    } else {
-      html = `
+        } else {
+          html = `
         <div class="notice" style="border-left:4px solid ${currentCampaignApproved ? 'var(--green)' : 'var(--pink)'};background:${currentCampaignApproved ? '#ecfdf5' : 'var(--pale)'};color:${currentCampaignApproved ? '#047857' : 'var(--dark)'};padding:18px 22px;border-radius:16px;margin-bottom:24px">
           ${currentCampaignApproved
-            ? '✅ <b>TẤT CẢ BÀI VIẾT ĐÃ ĐƯỢC ADMIN PHÊ DUYỆT THÀNH CÔNG!</b> Các bước tiếp theo (Bước 8, 9, 10) đã được mở khóa. Bạn có thể bấm <b>Tiếp tục →</b> để thiết lập lịch đăng bài.'
-            : '👑 <b>BẠN ĐANG TRUY CẬP VỚI QUYỀN ADMIN / MANAGER:</b> Xem lại danh sách bài viết bên dưới và bấm <b>Duyệt bài đăng ✓</b> để mở khóa các bước tiếp theo cho người dùng!'}
+              ? '✅ <b>TẤT CẢ BÀI VIẾT ĐÃ ĐƯỢC ADMIN PHÊ DUYỆT THÀNH CÔNG!</b> Các bước tiếp theo (Bước 8, 9, 10) đã được mở khóa. Bạn có thể bấm <b>Tiếp tục →</b> để thiết lập lịch đăng bài.'
+              : '👑 <b>BẠN ĐANG TRUY CẬP VỚI QUYỀN ADMIN / MANAGER:</b> Xem lại danh sách bài viết bên dưới và bấm <b>Duyệt bài đăng ✓</b> để mở khóa các bước tiếp theo cho người dùng!'}
         </div>
         <div class="posts-card-list">
           ${posts.map(p => {
-            const pageName = p.campaignPage?.facebookPage?.pageName || p.facebookPage?.pageName || p.pageName || (p.facebookPageId && p.facebookPageId !== 'undefined' ? p.facebookPageId : 'Facebook Page');
-            const mediaBadge = p.mediaType === 'VIDEO' ? '🎥 Video' : '📷 Hình ảnh (6 ảnh)';
-            return `
+                const pageName = p.campaignPage?.facebookPage?.pageName || p.facebookPage?.pageName || p.pageName || (p.facebookPageId && p.facebookPageId !== 'undefined' ? p.facebookPageId : 'Facebook Page');
+                const mediaBadge = p.mediaType === 'VIDEO' ? '🎥 Video' : '📷 Hình ảnh (6 ảnh)';
+                return `
               <div style="background:#fff;border:1px solid var(--line);border-radius:18px;padding:22px;margin-bottom:18px;box-shadow:0 6px 20px rgba(217,54,122,0.04)">
                 <div style="display:flex;justify-content:space-between;align-items:center;padding-bottom:12px;margin-bottom:12px;border-bottom:1px solid var(--pale)">
                   <div style="display:flex;align-items:center;gap:10px">
@@ -1619,10 +2601,10 @@ async function loadStep7Data() {
                 </div>
                 <div style="display:flex;justify-content:space-between;align-items:center">
                   <span style="font-size:12px;color:var(--muted)">Trạng thái: 
-                    ${p.status === 'APPROVED' 
-                      ? '<b style="color:var(--green)">✓ Đã được Admin duyệt</b>' 
-                      : p.status === 'REJECTED' 
-                      ? '<b style="color:var(--red)">✗ Đã từ chối</b>' 
+                    ${p.status === 'APPROVED'
+                    ? '<b style="color:var(--green)">✓ Đã được Admin duyệt</b>'
+                    : p.status === 'REJECTED'
+                      ? '<b style="color:var(--red)">✗ Đã từ chối</b>'
                       : '<b style="color:var(--yellow)">⏳ Chờ duyệt</b>'}
                   </span>
                   <div style="display:flex;gap:10px;align-items:center">
@@ -1635,109 +2617,109 @@ async function loadStep7Data() {
                 </div>
               </div>
             `;
-          }).join('')}
+              }).join('')}
         </div>
       `;
+        }
+
+        container.innerHTML = html;
+      } catch (e) {
+        container.innerHTML = `<p style="color:var(--red)">Lỗi kiểm tra bài viết: ${e.message}</p>`;
+      }
     }
 
-    container.innerHTML = html;
-  } catch (e) {
-    container.innerHTML = `<p style="color:var(--red)">Lỗi kiểm tra bài viết: ${e.message}</p>`;
-  }
-}
-
-async function approveWizardPost(id) {
-  try {
-    await request(`/posts/${id}/approve`, { method: 'POST', body: JSON.stringify({ note: 'Duyệt bài trong wizard' }) });
-    alert('Đã duyệt bài viết thành công!');
-    await loadStep7Data();
-    renderWizard();
-  } catch (err) {
-    alert('Lỗi duyệt bài: ' + (err.error?.message || err.message));
-  }
-}
-
-async function rejectWizardPost(id) {
-  const note = prompt('Nhập lý do từ chối bài viết:', 'Cần điều chỉnh nội dung');
-  if (!note) return;
-  try {
-    await request(`/posts/${id}/reject`, { method: 'POST', body: JSON.stringify({ note }) });
-    alert('Đã từ chối bài viết');
-    await loadStep7Data();
-    renderWizard();
-  } catch (err) {
-    alert('Lỗi từ chối: ' + (err.error?.message || err.message));
-  }
-}
-
-async function publishPostNowDirectly(id) {
-  if (!id || String(id).startsWith('ai_draft_')) {
-    alert('⚠️ Bài viết này đang ở chế độ xem thử. Vui lòng bấm "🚀 Kích hoạt chiến dịch ngay" ở Bước 10 để xuất bản bài viết lên Facebook Page!');
-    return;
-  }
-
-  const btn = event?.target;
-  if (btn) {
-    btn.disabled = true;
-    btn.textContent = '⏳ Đang đăng...';
-  }
-
-  try {
-    const res = await request(`/posts/${id}/publish-now`, { method: 'POST' });
-    alert(res.message || '✅ Đã đăng bài thành công lên Facebook Page!');
-    loadData();
-    if (typeof loadApprovalQueue === 'function') loadApprovalQueue();
-    if (typeof loadStep7Data === 'function') loadStep7Data();
-  } catch (err) {
-    alert('🔴 Lỗi đăng bài Facebook: ' + (err.error?.message || err.message || 'Lỗi kết nối Facebook Graph API'));
-  } finally {
-    if (btn) {
-      btn.disabled = false;
-      btn.textContent = '⚡ Đăng Ngay Lên FB';
-    }
-  }
-}
-
-function renderWizard(){
-  const isAdmin = isApproverUser();
-
-  setElHtml('wizardTabs', steps.map((s,i) => {
-    const isLocked = i >= 7 && !currentCampaignApproved && !isAdmin;
-    const isCompleted = i < step;
-    const isActive = i === step;
-    const icon = isLocked ? '🔒' : isCompleted ? '✓' : `${i+1}`;
-    
-    let btnStyle = `padding:8px 16px;border-radius:12px;font-weight:700;font-size:12.5px;transition:all 0.2s ease;display:inline-flex;align-items:center;gap:8px;`;
-    if (isActive) {
-      btnStyle += `background:linear-gradient(135deg,var(--pink),var(--dark));color:#fff;box-shadow:0 4px 14px rgba(244,91,154,0.35);border:none;`;
-    } else if (isCompleted) {
-      btnStyle += `background:#ecfdf5;color:#047857;border:1px solid #a7f3d0;`;
-    } else if (isLocked) {
-      btnStyle += `background:#f3f4f6;color:#9ca3af;border:1px solid #e5e7eb;cursor:not-allowed;`;
-    } else {
-      btnStyle += `background:#fff;color:var(--muted);border:1px solid var(--line);`;
+    async function approveWizardPost(id) {
+      try {
+        await request(`/posts/${id}/approve`, { method: 'POST', body: JSON.stringify({ note: 'Duyệt bài trong wizard' }) });
+        alert('Đã duyệt bài viết thành công!');
+        await loadStep7Data();
+        renderWizard();
+      } catch (err) {
+        alert('Lỗi duyệt bài: ' + (err.error?.message || err.message));
+      }
     }
 
-    return `<button class="${isActive?'active':''} ${isLocked?'disabled':''}" style="${btnStyle}" onclick="gotoWizardStep(${i})">
-      <span style="width:20px;height:20px;border-radius:50%;background:${isActive?'rgba(255,255,255,0.25)':isCompleted?'#047857':'rgba(0,0,0,0.06)'};color:${isActive||isCompleted?'#fff':'inherit'};display:grid;place-items:center;font-size:11px">${icon}</span>
+    async function rejectWizardPost(id) {
+      const note = prompt('Nhập lý do từ chối bài viết:', 'Cần điều chỉnh nội dung');
+      if (!note) return;
+      try {
+        await request(`/posts/${id}/reject`, { method: 'POST', body: JSON.stringify({ note }) });
+        alert('Đã từ chối bài viết');
+        await loadStep7Data();
+        renderWizard();
+      } catch (err) {
+        alert('Lỗi từ chối: ' + (err.error?.message || err.message));
+      }
+    }
+
+    async function publishPostNowDirectly(id) {
+      if (!id || String(id).startsWith('ai_draft_')) {
+        alert('⚠️ Bài viết này đang ở chế độ xem thử. Vui lòng bấm "🚀 Kích hoạt chiến dịch ngay" ở Bước 10 để xuất bản bài viết lên Facebook Page!');
+        return;
+      }
+
+      const btn = event?.target;
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = '⏳ Đang đăng...';
+      }
+
+      try {
+        const res = await request(`/posts/${id}/publish-now`, { method: 'POST' });
+        alert(res.message || '✅ Đã đăng bài thành công lên Facebook Page!');
+        loadData();
+        if (typeof loadApprovalQueue === 'function') loadApprovalQueue();
+        if (typeof loadStep7Data === 'function') loadStep7Data();
+      } catch (err) {
+        alert('🔴 Lỗi đăng bài Facebook: ' + (err.error?.message || err.message || 'Lỗi kết nối Facebook Graph API'));
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = '⚡ Đăng Ngay Lên FB';
+        }
+      }
+    }
+
+    function renderWizard() {
+      const isAdmin = isApproverUser();
+
+      setElHtml('wizardTabs', steps.map((s, i) => {
+        const isLocked = i >= 7 && !currentCampaignApproved && !isAdmin;
+        const isCompleted = i < step;
+        const isActive = i === step;
+        const icon = isLocked ? '🔒' : isCompleted ? '✓' : `${i + 1}`;
+
+        let btnStyle = `padding:8px 16px;border-radius:12px;font-weight:700;font-size:12.5px;transition:all 0.2s ease;display:inline-flex;align-items:center;gap:8px;`;
+        if (isActive) {
+          btnStyle += `background:linear-gradient(135deg,var(--pink),var(--dark));color:#fff;box-shadow:0 4px 14px rgba(244,91,154,0.35);border:none;`;
+        } else if (isCompleted) {
+          btnStyle += `background:#ecfdf5;color:#047857;border:1px solid #a7f3d0;`;
+        } else if (isLocked) {
+          btnStyle += `background:#f3f4f6;color:#9ca3af;border:1px solid #e5e7eb;cursor:not-allowed;`;
+        } else {
+          btnStyle += `background:#fff;color:var(--muted);border:1px solid var(--line);`;
+        }
+
+        return `<button class="${isActive ? 'active' : ''} ${isLocked ? 'disabled' : ''}" style="${btnStyle}" onclick="gotoWizardStep(${i})">
+      <span style="width:20px;height:20px;border-radius:50%;background:${isActive ? 'rgba(255,255,255,0.25)' : isCompleted ? '#047857' : 'rgba(0,0,0,0.06)'};color:${isActive || isCompleted ? '#fff' : 'inherit'};display:grid;place-items:center;font-size:11px">${icon}</span>
       ${s.title}
     </button>`;
-  }).join(''));
+      }).join(''));
 
-  let content = steps[step].getHtml();
-  let progressPercent = Math.round(((step + 1) / 10) * 100);
+      let content = steps[step].getHtml();
+      let progressPercent = Math.round(((step + 1) / 10) * 100);
 
-  let buttons = `<div class="row" style="margin-top:28px;justify-content:space-between;padding-top:20px;border-top:1px solid var(--line)">
-    <button class="ghost" style="padding:11px 22px;border-radius:12px;font-weight:700" onclick="gotoWizardStep(Math.max(0,step-1))" ${step===0?'disabled':''}>← Quay lại</button>
-    ${step<9 ? `<button style="padding:11px 26px;border-radius:12px;font-weight:700;box-shadow:0 4px 16px rgba(244,91,154,0.35)" onclick="gotoWizardStep(step+1)">Tiếp tục →</button>` : `<button style="background:linear-gradient(135deg,#10b981,#059669);padding:12px 30px;border-radius:12px;font-weight:800;box-shadow:0 4px 16px rgba(16,185,129,0.35)" onclick="submitCampaign()">🚀 Kích hoạt chiến dịch ngay ✓</button>`}
+      let buttons = `<div class="row" style="margin-top:28px;justify-content:space-between;padding-top:20px;border-top:1px solid var(--line)">
+    <button class="ghost" style="padding:11px 22px;border-radius:12px;font-weight:700" onclick="gotoWizardStep(Math.max(0,step-1))" ${step === 0 ? 'disabled' : ''}>← Quay lại</button>
+    ${step < 9 ? `<button style="padding:11px 26px;border-radius:12px;font-weight:700;box-shadow:0 4px 16px rgba(244,91,154,0.35)" onclick="gotoWizardStep(step+1)">Tiếp tục →</button>` : `<button style="background:linear-gradient(135deg,#10b981,#059669);padding:12px 30px;border-radius:12px;font-weight:800;box-shadow:0 4px 16px rgba(16,185,129,0.35)" onclick="submitCampaign()">🚀 Kích hoạt chiến dịch ngay ✓</button>`}
   </div>`;
 
-  setElHtml('wizard', `
+      setElHtml('wizard', `
     <div class="card" style="border-radius:24px;padding:30px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
         <div>
-          <span style="font-size:12px;font-weight:800;color:var(--pink);text-transform:uppercase;letter-spacing:0.5px">Tiến trình thiết lập chiến dịch (${step+1}/10)</span>
-          <h2 style="margin:4px 0 0;font-size:22px;font-weight:800;color:var(--ink)">Bước ${step+1}: ${steps[step].title}</h2>
+          <span style="font-size:12px;font-weight:800;color:var(--pink);text-transform:uppercase;letter-spacing:0.5px">Tiến trình thiết lập chiến dịch (${step + 1}/10)</span>
+          <h2 style="margin:4px 0 0;font-size:22px;font-weight:800;color:var(--ink)">Bước ${step + 1}: ${steps[step].title}</h2>
         </div>
         <span class="badge ok" style="padding:6px 14px;border-radius:10px;font-size:12px;font-weight:800">${progressPercent}% Hoàn tất</span>
       </div>
@@ -1751,100 +2733,100 @@ function renderWizard(){
     </div>
   `);
 
-  if (step === 6) {
-    loadStep7Data();
-  }
-}
+      if (step === 6) {
+        loadStep7Data();
+      }
+    }
 
-function gotoWizardStep(targetStep) {
-  step = targetStep;
-  renderWizard();
-}
+    function gotoWizardStep(targetStep) {
+      step = targetStep;
+      renderWizard();
+    }
 
-async function submitCampaign() {
-  if (!wizardData.prompt || !wizardData.prompt.trim()) {
-    alert('Vui lòng nhập Tên & Nội dung bài viết ở Bước 1!');
-    step = 0; renderWizard(); return;
-  }
-  if (selectedPageIds.length === 0) {
-    alert('Vui lòng chọn ít nhất 1 Facebook Page ở Bước 1!');
-    step = 0; renderWizard(); return;
-  }
+    async function submitCampaign() {
+      if (!wizardData.prompt || !wizardData.prompt.trim()) {
+        alert('Vui lòng nhập Tên & Nội dung bài viết ở Bước 1!');
+        step = 0; renderWizard(); return;
+      }
+      if (selectedPageIds.length === 0) {
+        alert('Vui lòng chọn ít nhất 1 Facebook Page ở Bước 1!');
+        step = 0; renderWizard(); return;
+      }
 
-  const payload = {
-    name: wizardData.name,
-    description: wizardData.description,
-    originalContent: wizardData.prompt,
-    facebookPageIds: selectedPageIds,
-    defaultPostCount: wizardData.defaultPostCount,
-    defaultIntervalMinutes: wizardData.defaultIntervalMinutes,
-    startDate: wizardData.startDate,
-    allowedStartTime: wizardData.allowedStartTime,
-    allowedEndTime: wizardData.allowedEndTime,
-    contentMode: wizardData.contentMode,
-    mediaMode: wizardData.mediaMode,
-    productName: wizardData.productName,
-    brandName: wizardData.brandName,
-    productPrice: wizardData.productPrice,
-    discountPrice: wizardData.discountPrice,
-    sku: wizardData.sku,
-    mandatoryKeywords: wizardData.mandatoryKeywords ? wizardData.mandatoryKeywords.split(',').map(s=>s.trim()) : [],
-    bannedKeywords: wizardData.bannedKeywords ? wizardData.bannedKeywords.split(',').map(s=>s.trim()) : [],
-    tone: wizardData.tone,
-    allowEmoji: wizardData.allowEmoji,
-    allowHashtag: wizardData.allowHashtag,
-    ctaRequired: wizardData.ctaRequired,
-    allowMediaReuse: wizardData.allowMediaReuse,
-  };
+      const payload = {
+        name: wizardData.name,
+        description: wizardData.description,
+        originalContent: wizardData.prompt,
+        facebookPageIds: selectedPageIds,
+        defaultPostCount: wizardData.defaultPostCount,
+        defaultIntervalMinutes: wizardData.defaultIntervalMinutes,
+        startDate: wizardData.startDate,
+        allowedStartTime: wizardData.allowedStartTime,
+        allowedEndTime: wizardData.allowedEndTime,
+        contentMode: wizardData.contentMode,
+        mediaMode: wizardData.mediaMode,
+        productName: wizardData.productName,
+        brandName: wizardData.brandName,
+        productPrice: wizardData.productPrice,
+        discountPrice: wizardData.discountPrice,
+        sku: wizardData.sku,
+        mandatoryKeywords: wizardData.mandatoryKeywords ? wizardData.mandatoryKeywords.split(',').map(s => s.trim()) : [],
+        bannedKeywords: wizardData.bannedKeywords ? wizardData.bannedKeywords.split(',').map(s => s.trim()) : [],
+        tone: wizardData.tone,
+        allowEmoji: wizardData.allowEmoji,
+        allowHashtag: wizardData.allowHashtag,
+        ctaRequired: wizardData.ctaRequired,
+        allowMediaReuse: wizardData.allowMediaReuse,
+      };
 
-  try {
-    const res = await request('/campaigns', { method: 'POST', body: JSON.stringify(payload) });
-    activeCampaignId = res.data?.id || res.id;
-    alert('Khởi tạo chiến dịch thành công! Nội dung AI đang được tạo trong nền và chờ Admin duyệt.');
-    step = 0;
-    openPage('overview');
-    loadData();
-  } catch(e) {
-    alert('Lỗi tạo chiến dịch: ' + (e.error?.message || e.message || 'Có lỗi xảy ra'));
-  }
-}
+      try {
+        const res = await request('/campaigns', { method: 'POST', body: JSON.stringify(payload) });
+        activeCampaignId = res.data?.id || res.id;
+        alert('Khởi tạo chiến dịch thành công! Nội dung AI đang được tạo trong nền và chờ Admin duyệt.');
+        step = 0;
+        openPage('overview');
+        loadData();
+      } catch (e) {
+        alert('Lỗi tạo chiến dịch: ' + (e.error?.message || e.message || 'Có lỗi xảy ra'));
+      }
+    }
 
-async function openCampaignWizard(id) {
-  activeCampaignId = id;
-  openPage('campaign');
-}
+    async function openCampaignWizard(id) {
+      activeCampaignId = id;
+      openPage('campaign');
+    }
 
-async function deleteCampaign(id) {
-  if (!confirm('Bạn có chắc chắn muốn xóa chiến dịch này?')) return;
-  try {
-    await request(`/campaigns/${id}`, { method: 'DELETE' });
-    alert('Đã xóa chiến dịch thành công');
-    loadData();
-  } catch (err) {
-    alert('Lỗi xóa chiến dịch: ' + (err.error?.message || err.message));
-  }
-}
+    async function deleteCampaign(id) {
+      if (!confirm('Bạn có chắc chắn muốn xóa chiến dịch này?')) return;
+      try {
+        await request(`/campaigns/${id}`, { method: 'DELETE' });
+        alert('Đã xóa chiến dịch thành công');
+        loadData();
+      } catch (err) {
+        alert('Lỗi xóa chiến dịch: ' + (err.error?.message || err.message));
+      }
+    }
 
-async function loadPosts() {
-  try {
-    const filterEl = document.getElementById('postStatusFilter');
-    const status = filterEl ? filterEl.value : '';
-    const path = status ? `/reports/posts?status=${status}` : '/reports/posts';
-    const posts = await request(path).then(extractList).catch(()=>[]);
-    const html = posts.length ? posts.map(p => {
-      const pageName = p.campaignPage?.facebookPage?.pageName || p.facebookPage?.pageName || p.pageName || (p.facebookPageId && p.facebookPageId !== 'undefined' ? p.facebookPageId : 'Facebook Page');
-      const st = p.status;
-      const statusBadge = st === 'PUBLISHED'
-        ? '<span class="badge ok" style="background:#ecfdf5;color:#047857;padding:5px 12px;border-radius:8px">🚀 Đã xuất bản</span>'
-        : st === 'APPROVED'
-        ? '<span class="badge ok" style="padding:5px 12px;border-radius:8px">✓ Đã duyệt</span>'
-        : st === 'SCHEDULED'
-        ? '<span class="badge run" style="padding:5px 12px;border-radius:8px">◷ Đã lên lịch</span>'
-        : st === 'FAILED'
-        ? '<span class="badge err" style="padding:5px 12px;border-radius:8px">❌ Lỗi đăng</span>'
-        : '<span class="badge wait" style="padding:5px 12px;border-radius:8px">⏳ Chờ duyệt</span>';
+    async function loadPosts() {
+      try {
+        const filterEl = document.getElementById('postStatusFilter');
+        const status = filterEl ? filterEl.value : '';
+        const path = status ? `/reports/posts?status=${status}` : '/reports/posts';
+        const posts = await request(path).then(extractList).catch(() => []);
+        const html = posts.length ? posts.map(p => {
+          const pageName = p.campaignPage?.facebookPage?.pageName || p.facebookPage?.pageName || p.pageName || (p.facebookPageId && p.facebookPageId !== 'undefined' ? p.facebookPageId : 'Facebook Page');
+          const st = p.status;
+          const statusBadge = st === 'PUBLISHED'
+            ? '<span class="badge ok" style="background:#ecfdf5;color:#047857;padding:5px 12px;border-radius:8px">🚀 Đã xuất bản</span>'
+            : st === 'APPROVED'
+              ? '<span class="badge ok" style="padding:5px 12px;border-radius:8px">✓ Đã duyệt</span>'
+              : st === 'SCHEDULED'
+                ? '<span class="badge run" style="padding:5px 12px;border-radius:8px">◷ Đã lên lịch</span>'
+                : st === 'FAILED'
+                  ? '<span class="badge err" style="padding:5px 12px;border-radius:8px">❌ Lỗi đăng</span>'
+                  : '<span class="badge wait" style="padding:5px 12px;border-radius:8px">⏳ Chờ duyệt</span>';
 
-      return `
+          return `
         <tr style="transition:background 0.2s ease">
           <td style="padding:14px 12px"><div style="max-height:55px;overflow:hidden;font-size:13px;line-height:1.5;color:var(--ink);font-weight:500">${p.content}</div></td>
           <td style="white-space:nowrap;padding:14px 12px">
@@ -1857,179 +2839,180 @@ async function loadPosts() {
           <td style="white-space:nowrap;padding:14px 12px;font-size:12px;color:var(--muted);font-weight:600">${new Date(p.scheduledAt).toLocaleString('vi-VN')}</td>
           <td style="white-space:nowrap;padding:14px 12px">
             <button class="small" style="background:linear-gradient(135deg,var(--pink),var(--dark));color:#fff;padding:7px 14px;border-radius:8px;font-weight:700;box-shadow:0 3px 10px rgba(244,91,154,0.25)" onclick="publishPostNow('${p.id}')">Đăng ngay 🚀</button>
-            ${p.status==='FAILED' ? `<button class="ghost small" style="color:var(--red);border-color:#fecdd3;margin-left:6px" onclick="retryPost('${p.id}')">Thử lại</button>` : ''}
+            ${p.status === 'FAILED' ? `<button class="ghost small" style="color:var(--red);border-color:#fecdd3;margin-left:6px" onclick="retryPost('${p.id}')">Thử lại</button>` : ''}
           </td>
         </tr>
       `;
-    }).join('') : '<tr><td colspan="5" class="empty">Chưa có bài viết nào</td></tr>';
-    setElHtml('postsTbody', html);
-  } catch(e) { console.error(e); }
-}
+        }).join('') : '<tr><td colspan="5" class="empty">Chưa có bài viết nào</td></tr>';
+        setElHtml('postsTbody', html);
+      } catch (e) { console.error(e); }
+    }
 
-async function publishPostNow(id) {
-  try {
-    await request(`/posts/${id}/publish-now`, { method: 'POST' });
-    alert('Đã đưa bài viết vào hàng đợi đăng ngay!');
-    loadPosts();
-  } catch(e) { alert('Lỗi: ' + (e.error?.message || e.message)); }
-}
+    async function publishPostNow(id) {
+      try {
+        await request(`/posts/${id}/publish-now`, { method: 'POST' });
+        alert('Đã đưa bài viết vào hàng đợi đăng ngay!');
+        loadPosts();
+      } catch (e) { alert('Lỗi: ' + (e.error?.message || e.message)); }
+    }
 
-async function retryPost(id) {
-  try {
-    await request(`/posts/${id}/retry`, { method: 'POST' });
-    alert('Đã đưa bài viết vào hàng đợi thử lại!');
-    loadPosts();
-  } catch(e) { alert('Lỗi: ' + (e.error?.message || e.message)); }
-}
+    async function retryPost(id) {
+      try {
+        await request(`/posts/${id}/retry`, { method: 'POST' });
+        alert('Đã đưa bài viết vào hàng đợi thử lại!');
+        loadPosts();
+      } catch (e) { alert('Lỗi: ' + (e.error?.message || e.message)); }
+    }
 
-async function addCustomSchedule() {
-  alert('Đã tạo khung lịch thủ công cho từng Facebook Page thành công!');
-}
+    async function addCustomSchedule() {
+      alert('Đã tạo khung lịch thủ công cho từng Facebook Page thành công!');
+    }
 
-async function shuffleMediaAllocation() {
-  if(!activeCampaignId) {
-    alert('Vui lòng chọn hoặc khởi tạo 1 chiến dịch trước khi phân bổ ngẫu nhiên!');
-    return;
-  }
-  try {
-    await request(`/media/campaigns/${activeCampaignId}/shuffle`, { method: 'POST' });
-    alert('Đã áp dụng thuật toán Fisher-Yates phân bổ 6 hình / 1 video ngẫu nhiên thành công!');
-  } catch(e) { alert('Lỗi phân bổ: ' + (e.error?.message || e.message)); }
-}
+    async function shuffleMediaAllocation() {
+      if (!activeCampaignId) {
+        alert('Vui lòng chọn hoặc khởi tạo 1 chiến dịch trước khi phân bổ ngẫu nhiên!');
+        return;
+      }
+      try {
+        await request(`/media/campaigns/${activeCampaignId}/shuffle`, { method: 'POST' });
+        alert('Đã áp dụng thuật toán Fisher-Yates phân bổ 6 hình / 1 video ngẫu nhiên thành công!');
+      } catch (e) { alert('Lỗi phân bổ: ' + (e.error?.message || e.message)); }
+    }
 
-async function uploadGlobalMedia(input) {
-  if(!input.files || input.files.length === 0) return;
-  alert(`Đã chọn ${input.files.length} media. Đang tải lên kho dùng chung...`);
-}
+    async function uploadGlobalMedia(input) {
+      if (!input.files || input.files.length === 0) return;
+      alert(`Đã chọn ${input.files.length} media. Đang tải lên kho dùng chung...`);
+    }
 
-async function loadSystemLogs() {
-  try {
-    const logs = await request('/logs').then(extractList).catch(()=>[]);
-    const text = logs.length
-      ? logs.map(l => `[${new Date(l.createdAt).toLocaleTimeString('vi-VN')}] [${l.queueName}] [${l.eventType}] ${l.message}`).join('\n')
-      : 'Chưa có nhật ký log hệ thống';
-    setElText('logDisplay', text);
-  } catch(e) { console.error(e); }
-}
+    async function loadSystemLogs() {
+      try {
+        const logs = await request('/logs').then(extractList).catch(() => []);
+        const text = logs.length
+          ? logs.map(l => `[${new Date(l.createdAt).toLocaleTimeString('vi-VN')}] [${l.queueName}] [${l.eventType}] ${l.message}`).join('\n')
+          : 'Chưa có nhật ký log hệ thống';
+        setElText('logDisplay', text);
+      } catch (e) { console.error(e); }
+    }
 
-function clearSystemLogs() {
-  setElText('logDisplay', 'Đã xóa log hiển thị cũ');
-}
+    function clearSystemLogs() {
+      setElText('logDisplay', 'Đã xóa log hiển thị cũ');
+    }
 
-async function saveBranding(e) {
-  e.preventDefault();
-  alert('Đã lưu tên hệ thống và cập nhật nhận diện thương hiệu thành công!');
-}
+    async function saveBranding(e) {
+      e.preventDefault();
+      alert('Đã lưu tên hệ thống và cập nhật nhận diện thương hiệu thành công!');
+    }
 
-async function saveSystemSettings(e) {
-  e.preventDefault();
-  alert('Đã lưu cấu hình khung giờ 08:00 - 22:00 và khoảng cách 15 phút thành công!');
-}
+    async function saveSystemSettings(e) {
+      e.preventDefault();
+      alert('Đã lưu cấu hình khung giờ 08:00 - 22:00 và khoảng cách 15 phút thành công!');
+    }
 
-async function loadAiSettings() {
-  try {
-    const res = await request('/settings/ai-config');
-    if (res && res.data) {
-      const cfg = res.data;
-      if (document.getElementById('aiProviderSelect')) document.getElementById('aiProviderSelect').value = cfg.provider || '9router';
-      if (document.getElementById('aiBaseUrlInput')) document.getElementById('aiBaseUrlInput').value = cfg.baseUrl || 'http://localhost:2000/v1';
-      if (document.getElementById('aiModelInput')) document.getElementById('aiModelInput').value = cfg.model || 'qwen2.5';
-      if (document.getElementById('aiApiKeyInput')) document.getElementById('aiApiKeyInput').value = cfg.apiKey || '';
+    async function loadAiSettings() {
+      try {
+        const res = await request('/settings/ai-config');
+        if (res && res.data) {
+          const cfg = res.data;
+          if (document.getElementById('aiProviderSelect')) document.getElementById('aiProviderSelect').value = cfg.provider || '9router';
+          if (document.getElementById('aiBaseUrlInput')) document.getElementById('aiBaseUrlInput').value = cfg.baseUrl || 'http://localhost:2000/v1';
+          if (document.getElementById('aiModelInput')) document.getElementById('aiModelInput').value = cfg.model || 'qwen2.5';
+          if (document.getElementById('aiApiKeyInput')) document.getElementById('aiApiKeyInput').value = cfg.apiKey || '';
 
-      const isAdmin = res.isAdmin;
-      const badge = document.getElementById('aiStatusBadge');
-      const formInputs = document.querySelectorAll('#aiConfigForm input, #aiConfigForm select, #aiConfigForm button');
+          const isAdmin = res.isAdmin;
+          const badge = document.getElementById('aiStatusBadge');
+          const formInputs = document.querySelectorAll('#aiConfigForm input, #aiConfigForm select, #aiConfigForm button');
 
-      if (!isAdmin) {
-        if (badge) {
-          badge.className = 'badge err';
-          badge.innerHTML = '🔒 Chỉ dành cho Admin';
+          if (!isAdmin) {
+            if (badge) {
+              badge.className = 'badge err';
+              badge.innerHTML = '🔒 Chỉ dành cho Admin';
+            }
+            formInputs.forEach(el => {
+              el.disabled = true;
+              el.style.opacity = '0.65';
+              el.style.cursor = 'not-allowed';
+            });
+          } else {
+            if (badge) {
+              badge.className = 'badge ok';
+              badge.innerHTML = '🟢 9router Ready (Admin)';
+            }
+            formInputs.forEach(el => {
+              el.disabled = false;
+              el.style.opacity = '1';
+              el.style.cursor = '';
+            });
+          }
         }
-        formInputs.forEach(el => {
-          el.disabled = true;
-          el.style.opacity = '0.65';
-          el.style.cursor = 'not-allowed';
-        });
-      } else {
-        if (badge) {
-          badge.className = 'badge ok';
-          badge.innerHTML = '🟢 9router Ready (Admin)';
-        }
-        formInputs.forEach(el => {
-          el.disabled = false;
-          el.style.opacity = '1';
-          el.style.cursor = '';
-        });
+      } catch (e) {
+        console.error('Lỗi tải cấu hình AI:', e);
       }
     }
-  } catch (e) {
-    console.error('Lỗi tải cấu hình AI:', e);
-  }
-}
 
-async function saveAiConfig(e) {
-  e.preventDefault();
-  const provider = document.getElementById('aiProviderSelect').value;
-  const baseUrl = document.getElementById('aiBaseUrlInput').value;
-  const model = document.getElementById('aiModelInput').value;
-  const apiKey = document.getElementById('aiApiKeyInput').value;
+    async function saveAiConfig(e) {
+      e.preventDefault();
+      const provider = document.getElementById('aiProviderSelect').value;
+      const baseUrl = document.getElementById('aiBaseUrlInput').value;
+      const model = document.getElementById('aiModelInput').value;
+      const apiKey = document.getElementById('aiApiKeyInput').value;
 
-  try {
-    await request('/settings', {
-      method: 'POST',
-      body: JSON.stringify({
-        key: 'ai_config',
-        valueJson: { provider, baseUrl, model, apiKey }
-      })
+      try {
+        await request('/settings', {
+          method: 'POST',
+          body: JSON.stringify({
+            key: 'ai_config',
+            valueJson: { provider, baseUrl, model, apiKey }
+          })
+        });
+        alert('✅ ĐÃ LƯU VÀO CODE (.ENV) & CSDL THÀNH CÔNG!\n\nCấu hình 9router AI đã được lưu trữ vĩnh viễn vào file .env và CSDL PostgreSQL. Mọi lần reload trang hoặc khởi động lại ứng dụng sẽ tự động tải lại cấu hình này.');
+        loadAiSettings();
+      } catch (err) {
+        alert('Lỗi lưu cấu hình: ' + (err.error?.message || err.message));
+      }
+    }
+
+    async function testAiConnection() {
+      const baseUrl = document.getElementById('aiBaseUrlInput').value;
+      const model = document.getElementById('aiModelInput').value;
+      const apiKey = document.getElementById('aiApiKeyInput').value;
+
+      alert(`⚡ Đang kết nối thử nghiệm tới 9router local tại ${baseUrl}...`);
+      try {
+        const res = await request('/settings/test-ai', {
+          method: 'POST',
+          body: JSON.stringify({ baseUrl, model, apiKey })
+        });
+        alert('🟢 KẾT NỐI THÀNH CÔNG: ' + (res.message || '9router Local AI đang hoạt động bình thường!'));
+      } catch (err) {
+        alert('🔴 THÔNG BÁO KẾT NỐI: ' + (err.error?.message || err.message || 'Không tìm thấy 9router server ở port local 2000. Bạn nhớ bật 9router trước khi sinh bài AI nhé.'));
+      }
+    }
+
+    async function shiftCampaignSchedule() {
+      if (!activeCampaignId) { alert('Vui lòng chọn hoặc tạo một chiến dịch trước!'); return; }
+      try {
+        await request(`/schedule/campaigns/${activeCampaignId}/schedule/shift`, { method: 'POST', body: JSON.stringify({ minutesShift: 30 }) });
+        alert('Đã dịch chuyển lịch đăng thêm 30 phút cho chiến dịch thành công');
+      } catch (e) { alert('Lỗi: ' + (e.error?.message || e.message)); }
+    }
+
+    async function exportReports() {
+      alert('Đã xuất báo cáo chi tiết ra file CSV!');
+    }
+
+    // Health status check
+    fetch('http://localhost:5000/health').then(r => r.json()).then(() => {
+      setElText('apiStatus', 'API Online');
+      const el = document.getElementById('apiStatus');
+      if (el) el.className = 'badge ok';
+    }).catch(() => {
+      setElText('apiStatus', 'API Offline');
+      const el = document.getElementById('apiStatus');
+      if (el) el.className = 'badge err';
     });
-    alert('✅ ĐÃ LƯU VÀO CODE (.ENV) & CSDL THÀNH CÔNG!\n\nCấu hình 9router AI đã được lưu trữ vĩnh viễn vào file .env và CSDL PostgreSQL. Mọi lần reload trang hoặc khởi động lại ứng dụng sẽ tự động tải lại cấu hình này.');
-    loadAiSettings();
-  } catch (err) {
-    alert('Lỗi lưu cấu hình: ' + (err.error?.message || err.message));
-  }
-}
 
-async function testAiConnection() {
-  const baseUrl = document.getElementById('aiBaseUrlInput').value;
-  const model = document.getElementById('aiModelInput').value;
-  const apiKey = document.getElementById('aiApiKeyInput').value;
-
-  alert(`⚡ Đang kết nối thử nghiệm tới 9router local tại ${baseUrl}...`);
-  try {
-    const res = await request('/settings/test-ai', {
-      method: 'POST',
-      body: JSON.stringify({ baseUrl, model, apiKey })
-    });
-    alert('🟢 KẾT NỐI THÀNH CÔNG: ' + (res.message || '9router Local AI đang hoạt động bình thường!'));
-  } catch (err) {
-    alert('🔴 THÔNG BÁO KẾT NỐI: ' + (err.error?.message || err.message || 'Không tìm thấy 9router server ở port local 2000. Bạn nhớ bật 9router trước khi sinh bài AI nhé.'));
-  }
-}
-
-async function shiftCampaignSchedule() {
-  if(!activeCampaignId) { alert('Vui lòng chọn hoặc tạo một chiến dịch trước!'); return; }
-  try {
-    await request(`/schedule/campaigns/${activeCampaignId}/schedule/shift`, { method: 'POST', body: JSON.stringify({ minutesShift: 30 }) });
-    alert('Đã dịch chuyển lịch đăng thêm 30 phút cho chiến dịch thành công');
-  } catch(e) { alert('Lỗi: ' + (e.error?.message || e.message)); }
-}
-
-async function exportReports() {
-  alert('Đã xuất báo cáo chi tiết ra file CSV!');
-}
-
-// Health status check
-fetch('http://localhost:5000/health').then(r=>r.json()).then(()=>{
-  setElText('apiStatus', 'API Online');
-  const el = document.getElementById('apiStatus');
-  if (el) el.className = 'badge ok';
-}).catch(()=>{
-  setElText('apiStatus', 'API Offline');
-  const el = document.getElementById('apiStatus');
-  if (el) el.className = 'badge err';
-});
-
-checkAuth();
-</script>
+    checkAuth();
+  </script>
 </body>
+
 </html>
