@@ -423,9 +423,11 @@ tr:hover td{background:#fff0f633}
 </div>
 
 <script>
-const apiBase = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+const RENDER_BACKEND = 'https://umbomilk-facebook-auto-post.onrender.com';
+const isLocalDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+const apiBase = isLocalDev
   ? `http://${window.location.hostname}:5000/api`
-  : `${window.location.protocol}//${window.location.hostname}/api`;
+  : `${RENDER_BACKEND}/api`;
 let token = localStorage.getItem('pinkflow_token');
 let currentUser = null;
 let activeCampaignId = null;
