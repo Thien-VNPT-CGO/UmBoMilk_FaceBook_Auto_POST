@@ -1050,20 +1050,19 @@ function openAddUserModal() {
       const password = document.getElementById('mUserPass').value;
       const roleName = document.getElementById('mUserRole').value;
 
-      // Get roles to find the right roleId
       let roleIds = [];
       try {
         const rolesRes = await request('/roles').catch(() => ({ data: [] }));
         const allRoles = extractList(rolesRes);
-        const matchedRole = allRoles.find(r => r.name.toUpperCase() === roleName.toUpperCase());
+        const matchedRole = allRoles.find(r => (r.name || '').toUpperCase().includes(roleName.toUpperCase()));
         if (matchedRole) roleIds = [matchedRole.id];
-      } catch(e) { /* continue without role */ }
+      } catch(e) { /* continue */ }
 
       await request('/users', {
         method: 'POST',
-        body: JSON.stringify({ name, email, username, password, roleIds })
+        body: JSON.stringify({ name, email, username, password, roleName: roleName.toUpperCase(), roleIds })
       });
-      alert('Đã tạo người dùng mới thành công! Nhớ cấp phép RBAC cho người dùng.');
+      alert('Đã tạo người dùng mới thành công!');
       loadData();
     }
   );

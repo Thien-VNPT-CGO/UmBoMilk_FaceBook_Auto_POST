@@ -14,6 +14,7 @@ const createSchema = z.object({
   phone: z.string().optional(),
   password: z.string().min(6),
   roleIds: z.array(z.string()).optional(),
+  roleName: z.string().optional(),
 });
 
 const updateSchema = z.object({
@@ -53,14 +54,39 @@ export const create = async (req: AuthenticatedRequest, res: Response, next: Nex
     if (!body.username) {
       body.username = body.email ? body.email.split('@')[0] : `user_${Date.now()}`;
     }
-    if (!body.roleIds || body.roleIds.length === 0) {
-      const defaultRole = await prisma.role.findFirst({ where: { name: { in: ['Viewer', 'Content Editor', 'Admin'] } } });
-      body.roleIds = defaultRole ? [defaultRole.id] : [];
+
+    const targetRoleName = String(body.roleName || body.role || '').toUpperCase();
+    let finalRoleIds: string[] = Array.isArray(body.roleIds) && body.roleIds.length ? body.roleIds : [];
+
+    if (finalRoleIds.length === 0 && targetRoleName) {
+      let role = await prisma.role.findFirst({
+        where: {
+          OR: [
+            { name: { equals: targetRoleName, mode: 'insensitive' } },
+            { name: { contains: targetRoleName, mode: 'insensitive' } },
+          ],
+        },
+      });
+
+      if (!role) {
+        role = await prisma.role.create({
+          data: { name: targetRoleName, description: `Vai trò ${targetRoleName}` },
+        });
+      }
+      finalRoleIds = [role.id];
     }
 
+    body.roleIds = finalRoleIds;
     const data = createSchema.parse(body);
-    const id = await usersService.create({ ...data, username: data.username!, roleIds: data.roleIds || [] }, req.user!.id, req.ip);
-    res.status(201).json({ success: true, data: { id } });
+    const userId = await usersService.create({
+      name: data.name,
+      email: data.email,
+      username: data.username || data.email.split('@')[0],
+      phone: data.phone,
+      password: data.password,
+      roleIds: finalRoleIds,
+    }, req.user!.id, req.ip);
+    res.status(201).json({ success: true, data: { id: userId } });
   } catch (e) {
     if (e instanceof z.ZodError) return next(new BadRequestError(e.errors[0].message));
     next(e);
