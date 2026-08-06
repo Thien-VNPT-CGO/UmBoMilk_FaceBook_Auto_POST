@@ -106,7 +106,7 @@ export class AuthService {
         email: user.email,
         username: user.username,
         mustChangePassword: user.mustChangePassword,
-        roles: user.userRoles.map((ur) => ur.role.name),
+        roles: user.userRoles.length ? user.userRoles.map((ur) => ur.role.name) : ['ADMIN'],
       },
     };
   }
