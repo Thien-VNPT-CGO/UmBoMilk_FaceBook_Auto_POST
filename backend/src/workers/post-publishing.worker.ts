@@ -180,9 +180,13 @@ export async function publishPost(postId: string) {
       },
     });
   } catch (err) {
-    const errorMsg = axios.isAxiosError(err)
+    let errorMsg = axios.isAxiosError(err)
       ? err.response?.data?.error?.message ?? err.message
       : (err as Error).message;
+
+    if (errorMsg.includes('283') || errorMsg.includes('pages_read_engagement')) {
+      errorMsg = `Mã Token của Page ${page.pageName} thiếu quyền 'pages_read_engagement'. Vui lòng tích chọn quyền 'pages_read_engagement' khi lấy Token tại Facebook Graph API Explorer và bấm nút '🔑 Cập nhật Token' để cập nhật!`;
+    }
 
     logger.error(`Lỗi đăng bài FB (Post ID ${post.id}): ${errorMsg}`);
 
