@@ -3080,8 +3080,11 @@
       try {
         const filterEl = document.getElementById('postStatusFilter');
         const status = filterEl ? filterEl.value : '';
-        const path = status ? `/reports/posts?status=${status}` : '/reports/posts';
-        const posts = await request(path).then(extractList).catch(() => []);
+        const path = status ? `/posts?status=${status}` : '/posts';
+        let posts = await request(path).then(extractList).catch(() => []);
+        if (status) {
+          posts = posts.filter(p => p.status === status);
+        }
         const html = posts.length ? posts.map(p => {
           const pageName = p.campaignPage?.facebookPage?.pageName || p.facebookPage?.pageName || p.pageName || (p.facebookPageId && p.facebookPageId !== 'undefined' ? p.facebookPageId : 'Facebook Page');
           const st = p.status;
@@ -3093,7 +3096,12 @@
                 ? '<span class="badge run" style="padding:5px 12px;border-radius:8px">◷ Đã lên lịch</span>'
                 : st === 'FAILED'
                   ? '<span class="badge err" style="padding:5px 12px;border-radius:8px">❌ Lỗi đăng</span>'
-                  : '<span class="badge wait" style="padding:5px 12px;border-radius:8px">⏳ Chờ duyệt</span>';
+                  : st === 'REJECTED' || st === 'CANCELLED'
+                    ? '<span class="badge err" style="padding:5px 12px;border-radius:8px;background:#fee2e2;color:#dc2626">⛔ Đã hủy</span>'
+                    : '<span class="badge wait" style="padding:5px 12px;border-radius:8px">⏳ Chờ duyệt</span>';
+
+          const canPublish = p.status !== 'PUBLISHED' && p.status !== 'REJECTED';
+          const canCancel = p.status !== 'PUBLISHED' && p.status !== 'REJECTED';
 
           return `
         <tr style="transition:background 0.2s ease">
@@ -3107,8 +3115,12 @@
           <td style="white-space:nowrap;padding:14px 12px">${statusBadge}</td>
           <td style="white-space:nowrap;padding:14px 12px;font-size:12px;color:var(--muted);font-weight:600">${new Date(p.scheduledAt).toLocaleString('vi-VN')}</td>
           <td style="white-space:nowrap;padding:14px 12px">
-            <button class="small" style="background:linear-gradient(135deg,var(--pink),var(--dark));color:#fff;padding:7px 14px;border-radius:8px;font-weight:700;box-shadow:0 3px 10px rgba(244,91,154,0.25)" onclick="publishPostNow('${p.id}')">Đăng ngay 🚀</button>
-            ${p.status === 'FAILED' ? `<button class="ghost small" style="color:var(--red);border-color:#fecdd3;margin-left:6px" onclick="retryPost('${p.id}')">Thử lại</button>` : ''}
+            <div style="display:flex;gap:6px;align-items:center">
+              ${canPublish ? `<button class="small" style="background:linear-gradient(135deg,var(--pink),var(--dark));color:#fff;padding:6px 12px;border-radius:8px;font-weight:700;box-shadow:0 3px 10px rgba(244,91,154,0.25)" onclick="publishPostNow('${p.id}')">Đăng ngay 🚀</button>` : ''}
+              ${canCancel ? `<button class="ghost small" style="color:var(--dark);border-color:#cbd5e1;padding:6px 10px;border-radius:8px;font-weight:700" onclick="cancelPost('${p.id}')">🚫 Hủy bài</button>` : ''}
+              ${p.status === 'FAILED' ? `<button class="ghost small" style="color:var(--red);border-color:#fecdd3;padding:6px 10px;border-radius:8px;font-weight:700" onclick="retryPost('${p.id}')">Thử lại</button>` : ''}
+              <button class="ghost small" style="color:var(--red);border-color:#fca5a5;padding:6px 10px;border-radius:8px;font-weight:700" onclick="deletePost('${p.id}')">🗑️ Xóa</button>
+            </div>
           </td>
         </tr>
       `;
@@ -3123,6 +3135,24 @@
         alert('Đã đưa bài viết vào hàng đợi đăng ngay!');
         loadPosts();
       } catch (e) { alert('Lỗi: ' + (e.error?.message || e.message)); }
+    }
+
+    async function cancelPost(id) {
+      if (!confirm('Bạn có chắc chắn muốn HỦY bài viết này?\n\nBài viết sẽ chuyển sang trạng thái ĐÃ HỦY và KHÔNG ĐƯỢC ĐĂNG lên Facebook Page nữa.')) return;
+      try {
+        const res = await request(`/posts/${id}/cancel`, { method: 'POST' });
+        alert(res.message || 'Đã hủy bài viết thành công!');
+        loadPosts();
+      } catch (e) { alert('Lỗi hủy bài viết: ' + (e.error?.message || e.message)); }
+    }
+
+    async function deletePost(id) {
+      if (!confirm('Bạn có chắc chắn muốn XÓA bài viết này?\n\n⚠️ Nếu bài viết đã đăng lên Facebook Page, hệ thống sẽ tự động gửi lệnh XÓA BÀI VIẾT TRÊN FACEBOOK PAGE.')) return;
+      try {
+        const res = await request(`/posts/${id}`, { method: 'DELETE' });
+        alert(res.message || 'Đã xóa bài viết thành công!');
+        loadPosts();
+      } catch (e) { alert('Lỗi xóa bài viết: ' + (e.error?.message || e.message)); }
     }
 
     async function retryPost(id) {
