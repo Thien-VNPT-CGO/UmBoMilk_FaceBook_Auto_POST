@@ -932,7 +932,7 @@
           <div>
             <h1 id="title">Tổng quan</h1>
             <p id="subtitle">Theo dõi toàn bộ hoạt động tự động hóa Facebook</p>
-          </div><button onclick="openPage('campaign')">＋ Tạo chiến dịch mới</button>
+          </div><button onclick="startNewCampaign()">＋ Tạo chiến dịch mới</button>
         </div>
 
         <!-- TAB 1: OVERVIEW -->
@@ -2941,6 +2941,11 @@
       } catch (e) {}
     }
 
+    function startNewCampaign() {
+      clearWizardState();
+      openPage('campaign');
+    }
+
     const steps = [
       {
         title: '1. Nội Dung & Chọn Page',
@@ -3489,7 +3494,12 @@
           <span style="font-size:12px;font-weight:800;color:var(--pink);text-transform:uppercase;letter-spacing:0.5px">Tiến trình thiết lập chiến dịch (${step + 1}/${totalSteps})</span>
           <h2 style="margin:4px 0 0;font-size:22px;font-weight:800;color:var(--ink)">Bước ${step + 1}: ${currentStepObj.title}</h2>
         </div>
-        <span class="badge ok" style="padding:6px 14px;border-radius:10px;font-size:12px;font-weight:800">${progressPercent}% Hoàn tất</span>
+        <div style="display:flex;align-items:center;gap:10px">
+          <button type="button" class="ghost small" style="color:var(--red);border-color:#fca5a5;font-weight:700;border-radius:10px;padding:6px 14px" onclick="if(confirm('Bạn có chắc chắn muốn làm mới form và xóa dữ liệu đang soạn?')) clearWizardState()">
+            🔄 Reset Form
+          </button>
+          <span class="badge ok" style="padding:6px 14px;border-radius:10px;font-size:12px;font-weight:800">${progressPercent}% Hoàn tất</span>
+        </div>
       </div>
       
       <div style="width:100%;height:6px;background:var(--pale);border-radius:10px;overflow:hidden;margin-bottom:26px">
