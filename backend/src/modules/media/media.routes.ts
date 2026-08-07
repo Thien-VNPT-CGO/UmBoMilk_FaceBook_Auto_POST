@@ -262,14 +262,8 @@ router.post('/import-drive', requireAuth, async (req, res, next) => {
 
     const activeTasks: { folderName: string; expectedType: 'IMAGE' | 'VIDEO'; driveUrl: string }[] = [];
     for (const folder of links) {
-      if (folder.url && folder.url.trim().length > 0) {
-        activeTasks.push({
-          folderName: folder.name || 'Drive',
-          expectedType: folder.type === 'VIDEO' ? 'VIDEO' : 'IMAGE',
-          driveUrl: folder.url.trim(),
-        });
-      }
-      if (Array.isArray(folder.children)) {
+      const hasChildren = Array.isArray(folder.children) && folder.children.length > 0;
+      if (hasChildren) {
         for (const child of folder.children) {
           if (child.url && child.url.trim().length > 0) {
             activeTasks.push({
@@ -279,6 +273,12 @@ router.post('/import-drive', requireAuth, async (req, res, next) => {
             });
           }
         }
+      } else if (folder.url && folder.url.trim().length > 0) {
+        activeTasks.push({
+          folderName: folder.name || 'Drive',
+          expectedType: folder.type === 'VIDEO' ? 'VIDEO' : 'IMAGE',
+          driveUrl: folder.url.trim(),
+        });
       }
     }
 
@@ -504,7 +504,9 @@ async function attachFolderCounts(links: any[]) {
     let parentCount = 0;
 
     const childrenWithCounts = [];
-    if (Array.isArray(f.children) && f.children.length > 0) {
+    const hasChildren = Array.isArray(f.children) && f.children.length > 0;
+
+    if (hasChildren) {
       for (const child of f.children) {
         const childTag = (child.name || '').toLowerCase().replace(/[^a-z0-9]+/g, '_');
         let childCount = 0;
@@ -519,16 +521,13 @@ async function attachFolderCounts(links: any[]) {
         childrenWithCounts.push({ ...child, count: childCount });
         parentCount += childCount;
       }
-    }
-
-    if (parentFolderTag) {
-      const selfCount = await prisma.mediaFile.count({
+    } else if (parentFolderTag) {
+      parentCount = await prisma.mediaFile.count({
         where: {
           status: 'ACTIVE',
           fileName: { contains: parentFolderTag }
         }
       });
-      parentCount += selfCount;
     }
 
     result.push({ ...f, count: parentCount, children: childrenWithCounts });

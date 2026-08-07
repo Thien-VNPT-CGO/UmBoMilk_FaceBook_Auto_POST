@@ -2559,12 +2559,18 @@
               <option value="VIDEO" ${f.type === 'VIDEO' ? 'selected' : ''}>🎥 Video</option>
             </select>
 
-            <input type="url" value="${(f.url || '').replace(/"/g, '&quot;')}" onchange="updateDriveFolder(${idx}, 'url', this.value);autoSaveDriveLinksDebounced()" oninput="updateDriveFolder(${idx}, 'url', this.value);autoSaveDriveLinksDebounced()" placeholder="https://drive.google.com/drive/folders/... (Link thư mục Mẹ)" style="flex:1;font-size:12.5px;padding:8px 12px;border-radius:8px;border:1px solid #d8b4fe;background:#fff">
+            ${hasChildren ? `
+              <div style="flex:1;background:#faf5ff;border:1.5px dashed #c084fc;padding:7px 12px;border-radius:8px;font-size:12px;font-weight:800;color:#6b21a8;display:flex;align-items:center;gap:6px">
+                📁 Nhóm Thư Mục Mẹ (Đã rẽ nhánh: <b>${f.children.length}</b> thư mục con bên dưới)
+              </div>
+            ` : `
+              <input type="url" value="${(f.url || '').replace(/"/g, '&quot;')}" onchange="updateDriveFolder(${idx}, 'url', this.value);autoSaveDriveLinksDebounced()" oninput="updateDriveFolder(${idx}, 'url', this.value);autoSaveDriveLinksDebounced()" placeholder="https://drive.google.com/drive/folders/... (Dán link thư mục Google Drive tại đây)" style="flex:1;font-size:12.5px;padding:8px 12px;border-radius:8px;border:1px solid #d8b4fe;background:#fff">
+            `}
 
             <button type="button" class="ghost small" onclick="addChildDriveFolderRow(${idx})" style="color:#7e22ce;border-radius:8px;padding:6px 12px;font-size:11.5px;border-color:#c084fc;font-weight:700;background:#faf5ff">🌿 ＋ Rẽ Nhánh Con</button>
 
-            <span class="badge ${f.count > 0 ? 'ok' : 'wait'}" style="font-size:11.5px;font-weight:800;padding:6px 12px;white-space:nowrap">
-              ${f.type === 'VIDEO' ? '🎥' : '📸'} ${f.count || 0} tệp realtime
+            <span class="badge ${f.count > 0 ? 'ok' : 'wait'}" style="font-size:11.5px;font-weight:800;padding:6px 12px;white-space:nowrap" title="Tổng tệp của tất cả các nhánh con cộng lại">
+              ${f.type === 'VIDEO' ? '🎥' : '📸'} ${f.count || 0} tệp tổng
             </span>
 
             <button type="button" class="ghost small" onclick="removeDriveFolderRow(${idx})" style="color:var(--red);border-radius:8px;padding:6px 10px;font-size:12px;border-color:#fca5a5">🗑️ Xóa</button>
