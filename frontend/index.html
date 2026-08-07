@@ -909,8 +909,7 @@
       <div class="nav-title">Hệ thống</div>
       <div class="nav">
         <button data-page="users">♙ <span>Người dùng</span></button><button data-page="logs">📋 <span>Nhật ký
-            log</span></button><button data-page="settings">⚙ <span>Cài đặt</span></button><button data-page="guide">?
-          <span>Hướng dẫn</span></button>
+            log</span></button><button data-page="settings">⚙ <span>Cài đặt</span></button>
       </div>
       <div class="footer">© 2026. All rights reserved.</div>
     </aside>
@@ -1523,25 +1522,6 @@
                 </button>
               </div>
             </div>
-          </div>
-        </div>
-
-        <!-- TAB 12: USER GUIDE -->
-        <div id="guide" class="panel">
-          <div class="card">
-            <h3>Trung tâm Hướng dẫn sử dụng</h3>
-            <div class="notice"><b>Quy trình 10 bước chuẩn:</b><br>1. Nhập thông tin chiến dịch → 2. Chọn Facebook Page
-              → 3. Nhập Prompt & thông tin bắt buộc → 4. Cấu hình AI → 5. Upload media → 6. Phân bổ ngẫu nhiên → 7. Xem
-              & chỉnh bài AI → 8. Đặt lịch riêng per Page → 9. Kiểm tra checklist → 10. Kích hoạt tự động hóa.</div>
-            <p><b>Quy tắc quan trọng:</b></p>
-            <ul>
-              <li><b>Mã hóa Token:</b> Page Access Token được mã hóa AES-256 trong CSDL và giải mã an toàn trong worker
-                khi gọi Facebook Graph API.</li>
-              <li><b>Phân bổ 6 ảnh:</b> Bài đăng hình ảnh lấy ngẫu nhiên đúng 6 ảnh không lặp lại trong 1 bài bằng thuật
-                toán Fisher-Yates.</li>
-              <li><b>Khung giờ vàng:</b> Hệ thống tự động dịch chuyển thời gian bài viết ra ngoài khung giờ 08:00 -
-                22:00 sang 08:00 ngày tiếp theo.</li>
-            </ul>
           </div>
         </div>
 
@@ -2359,7 +2339,7 @@
     }
 
     // Navigation Pages
-    const titles = { overview: ['Tổng quan', 'Theo dõi hoạt động hệ thống'], campaign: ['Chiến dịch', 'Thiết lập quy trình tự động hóa (10 bước)'], approval: ['Duyệt nội dung', 'Kiểm duyệt nội dung do AI sinh trước khi đăng'], calendar: ['Lịch đăng bài', 'Quản lý lịch riêng độc lập cho từng Page'], posts: ['Bài viết', 'Danh sách tất cả bài viết'], pages: ['Facebook Page', 'Quản lý kết nối Facebook Page'], media: ['Kho media', 'Quản lý hình ảnh và video'], reports: ['Báo cáo', 'Hiệu quả đăng bài'], users: ['Người dùng & Cấp Phép RBAC', 'Quản lý tài khoản & ma trận phân quyền hiện đại'], logs: ['Nhật ký log', 'Nhật ký sự kiện hệ thống'], settings: ['Cài đặt', 'Cấu hình hệ thống & Thương hiệu'], guide: ['Hướng dẫn', 'Quy trình sử dụng hệ thống'] };
+    const titles = { overview: ['Tổng quan', 'Theo dõi hoạt động hệ thống'], campaign: ['Chiến dịch', 'Thiết lập quy trình tự động hóa (10 bước)'], approval: ['Duyệt nội dung', 'Kiểm duyệt nội dung do AI sinh trước khi đăng'], calendar: ['Lịch đăng bài', 'Quản lý lịch riêng độc lập cho từng Page'], posts: ['Bài viết', 'Danh sách tất cả bài viết'], pages: ['Facebook Page', 'Quản lý kết nối Facebook Page'], media: ['Kho media', 'Quản lý hình ảnh và video'], reports: ['Báo cáo', 'Hiệu quả đăng bài'], users: ['Người dùng & Cấp Phép RBAC', 'Quản lý tài khoản & ma trận phân quyền hiện đại'], logs: ['Nhật ký log', 'Nhật ký sự kiện hệ thống'], settings: ['Cài đặt', 'Cấu hình hệ thống & Thương hiệu'] };
 
     function toggleMobileSidebar() {
       const sidebar = document.querySelector('.sidebar');
