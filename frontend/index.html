@@ -2000,22 +2000,22 @@
       } catch (err) { console.error(err); }
     }
 
-    async function approvePost(id) {
-      try {
+    async function approvePost(id, btnEl) {
+      await runWithButtonProgress(btnEl || event?.target, '✓ Duyệt', async () => {
         await request(`/posts/${id}/approve`, { method: 'POST', body: JSON.stringify({ note: 'Duyệt bài qua dashboard' }) });
         alert('Đã duyệt bài viết thành công');
         loadApprovalQueue();
-      } catch (err) { alert('Lỗi: ' + (err.error?.message || err.message)); }
+      }, 'Đang duyệt');
     }
 
-    async function rejectPost(id) {
+    async function rejectPost(id, btnEl) {
       const note = prompt('Nhập lý do từ chối bài viết:', 'Cần điều chỉnh lại văn phong');
       if (!note) return;
-      try {
+      await runWithButtonProgress(btnEl || event?.target, '✕ Từ chối', async () => {
         await request(`/posts/${id}/reject`, { method: 'POST', body: JSON.stringify({ note }) });
         alert('Đã từ chối bài viết');
         loadApprovalQueue();
-      } catch (err) { alert('Lỗi: ' + (err.error?.message || err.message)); }
+      }, 'Đang từ chối');
     }
 
     function openFetchUserPagesModal() {
@@ -2211,13 +2211,13 @@
       );
     }
 
-    async function deletePage(id) {
+    async function deletePage(id, btnEl) {
       if (!confirm('Bạn có chắc chắn muốn xóa Facebook Page này?')) return;
-      try {
+      await runWithButtonProgress(btnEl || event?.target, 'Xóa', async () => {
         await request(`/facebook-pages/${id}`, { method: 'DELETE' });
         alert('Đã xóa Facebook Page');
         loadData();
-      } catch (err) { alert('Lỗi: ' + (err.error?.message || err.message)); }
+      }, 'Đang xóa Page');
     }
 
     function openEditPageSettingsModal(pageId, pageName, currentPostCount = 10, currentIntervalMinutes = 15) {
@@ -2281,11 +2281,11 @@
       );
     }
 
-    async function testPageToken(id) {
-      try {
+    async function testPageToken(id, btnEl) {
+      await runWithButtonProgress(btnEl || event?.target, '🔍 Kiểm tra lại Token', async () => {
         const res = await request(`/facebook-pages/${id}/test`, { method: 'POST' }).catch(() => request(`/facebook-pages/${id}/check-token`, { method: 'POST' }));
         alert('🟢 KẾT NỐI FACEBOOK GRAPH API THÀNH CÔNG: ' + (res.message || 'Token Facebook Page hợp lệ!'));
-      } catch (err) { alert('🔴 LỖI TOKEN FACEBOOK: ' + (err.error?.message || err.message || 'Token không hợp lệ hoặc đã hết hạn')); }
+      }, 'Đang kiểm tra');
     }
 
     function openAddUserModal() {
@@ -2329,13 +2329,13 @@
       );
     }
 
-    async function deleteUser(id) {
+    async function deleteUser(id, btnEl) {
       if (!confirm('Xác nhận xóa tài khoản người dùng này?')) return;
-      try {
+      await runWithButtonProgress(btnEl || event?.target, 'Xóa', async () => {
         await request(`/users/${id}`, { method: 'DELETE' });
         alert('Đã xóa người dùng');
         loadData();
-      } catch (err) { alert('Lỗi: ' + (err.error?.message || err.message)); }
+      }, 'Đang xóa tài khoản');
     }
 
     // Navigation Pages
@@ -2938,25 +2938,21 @@
       }
     }
 
-    async function deleteMediaFile(id) {
+    async function deleteMediaFile(id, btnEl) {
       if (!confirm('Xác nhận xóa tệp media này khỏi kho?')) return;
-      try {
+      await runWithButtonProgress(btnEl || event?.target, 'Xóa', async () => {
         const res = await request(`/media/${id}`, { method: 'DELETE' });
         alert(res.message || 'Đã xóa tệp media');
         loadMedia();
-      } catch (err) {
-        alert('Lỗi: ' + (err.error?.message || err.message));
-      }
+      }, 'Đang xóa media');
     }
 
-    async function shuffleMediaAllocation() {
-      try {
+    async function shuffleMediaAllocation(btnEl) {
+      await runWithButtonProgress(btnEl || event?.target, '🎲 Phân bổ ngẫu nhiên', async () => {
         const res = await request('/media/shuffle', { method: 'POST' });
         alert('🎲 ' + (res.message || 'Đã phân bổ ngẫu nhiên media thành công!'));
         loadMedia();
-      } catch (err) {
-        alert('Lỗi: ' + (err.error?.message || err.message));
-      }
+      }, 'Đang phân bổ media');
     }
 
     // 3-STEP CAMPAIGN WIZARD DATA & RENDER
@@ -3527,32 +3523,19 @@
       }
     }
 
-    async function publishPostNowDirectly(id) {
+    async function publishPostNowDirectly(id, btnEl) {
       if (!id || String(id).startsWith('ai_draft_')) {
         alert('⚠️ Bài viết này đang ở chế độ xem thử. Vui lòng bấm "🚀 Kích hoạt chiến dịch ngay" ở Bước 10 để xuất bản bài viết lên Facebook Page!');
         return;
       }
 
-      const btn = event?.target;
-      if (btn) {
-        btn.disabled = true;
-        btn.textContent = '⏳ Đang đăng...';
-      }
-
-      try {
+      await runWithButtonProgress(btnEl || event?.target, '⚡ Đăng Ngay Lên FB', async () => {
         const res = await request(`/posts/${id}/publish-now`, { method: 'POST' });
         alert(res.message || '✅ Đã đăng bài thành công lên Facebook Page!');
         loadData();
         if (typeof loadApprovalQueue === 'function') loadApprovalQueue();
         if (typeof loadStep7Data === 'function') loadStep7Data();
-      } catch (err) {
-        alert('🔴 Lỗi đăng bài Facebook: ' + (err.error?.message || err.message || 'Lỗi kết nối Facebook Graph API'));
-      } finally {
-        if (btn) {
-          btn.disabled = false;
-          btn.textContent = '⚡ Đăng Ngay Lên FB';
-        }
-      }
+      }, 'Đang đăng bài');
     }
 
     function renderWizard() {
@@ -3628,7 +3611,25 @@
       renderWizard();
     }
 
-    async function submitCampaign() {
+    function toggleWizardMediaSelection(id) {
+      if (!wizardData.selectedMediaIds) wizardData.selectedMediaIds = [];
+      const isVid = wizardData.mediaMode === 'VIDEO';
+      if (isVid) {
+        // Video mode: pick 1 favorite video
+        wizardData.selectedMediaIds = [id];
+      } else {
+        // Image mode: pick 1 or multiple favorite images
+        const idx = wizardData.selectedMediaIds.indexOf(id);
+        if (idx > -1) {
+          wizardData.selectedMediaIds.splice(idx, 1);
+        } else {
+          wizardData.selectedMediaIds.push(id);
+        }
+      }
+      renderWizard();
+    }
+
+    async function submitCampaign(btnEl) {
       if (!wizardData.prompt || !wizardData.prompt.trim()) {
         alert('Vui lòng nhập Tên & Nội dung bài viết ở Bước 1!');
         step = 0; renderWizard(); return;
@@ -3670,34 +3671,14 @@
         selectedMediaIds: mediaIdsToSubmit,
       };
 
-    function toggleWizardMediaSelection(id) {
-      if (!wizardData.selectedMediaIds) wizardData.selectedMediaIds = [];
-      const isVid = wizardData.mediaMode === 'VIDEO';
-      if (isVid) {
-        // Video mode: pick 1 favorite video
-        wizardData.selectedMediaIds = [id];
-      } else {
-        // Image mode: pick 1 or multiple favorite images
-        const idx = wizardData.selectedMediaIds.indexOf(id);
-        if (idx > -1) {
-          wizardData.selectedMediaIds.splice(idx, 1);
-        } else {
-          wizardData.selectedMediaIds.push(id);
-        }
-      }
-      renderWizard();
-    }
-
-      try {
+      await runWithButtonProgress(btnEl || event?.target, '🚀 KÍCH HOẠT CHIẾN DỊCH TỰ ĐỘNG HÓA', async () => {
         const res = await request('/campaigns', { method: 'POST', body: JSON.stringify(payload) });
         activeCampaignId = res.data?.id || res.id;
         alert('Khởi tạo chiến dịch thành công! Nội dung AI đang được tạo trong nền và chờ Admin duyệt.');
         clearWizardState();
         openPage('overview');
         loadData();
-      } catch (e) {
-        alert('Lỗi tạo chiến dịch: ' + (e.error?.message || e.message || 'Có lỗi xảy ra'));
-      }
+      }, 'Đang khởi tạo chiến dịch');
     }
 
     async function openCampaignWizard(id) {
@@ -3705,15 +3686,13 @@
       openPage('campaign');
     }
 
-    async function deleteCampaign(id) {
+    async function deleteCampaign(id, btnEl) {
       if (!confirm('Bạn có chắc chắn muốn xóa chiến dịch này?')) return;
-      try {
+      await runWithButtonProgress(btnEl || event?.target, 'Xóa', async () => {
         await request(`/campaigns/${id}`, { method: 'DELETE' });
         alert('Đã xóa chiến dịch thành công');
         loadData();
-      } catch (err) {
-        alert('Lỗi xóa chiến dịch: ' + (err.error?.message || err.message));
-      }
+      }, 'Đang xóa chiến dịch');
     }
 
     async function loadPosts() {
@@ -3807,40 +3786,36 @@
       }
     }
 
-    async function bulkCancelPosts() {
+    async function bulkCancelPosts(btnEl) {
       const selectedIds = Array.from(document.querySelectorAll('.post-checkbox:checked')).map(cb => cb.value);
       if (!selectedIds.length) { alert('Vui lòng tích chọn ít nhất 1 bài viết!'); return; }
 
       if (!confirm(`Bạn có chắc chắn muốn HỦY ${selectedIds.length} bài viết đã chọn?\n\nCác bài viết này sẽ KHÔNG ĐƯỢC ĐĂNG lên Facebook Page.`)) return;
 
-      try {
+      await runWithButtonProgress(btnEl || event?.target, 'Hủy bài chọn', async () => {
         const res = await request('/posts/bulk-cancel', {
           method: 'POST',
           body: JSON.stringify({ postIds: selectedIds })
         });
         alert(res.message || 'Đã hủy thành công các bài viết đã chọn!');
         loadPosts();
-      } catch (e) {
-        alert('Lỗi hủy hàng loạt: ' + (e.error?.message || e.message));
-      }
+      }, 'Đang hủy bài');
     }
 
-    async function bulkDeletePosts() {
+    async function bulkDeletePosts(btnEl) {
       const selectedIds = Array.from(document.querySelectorAll('.post-checkbox:checked')).map(cb => cb.value);
       if (!selectedIds.length) { alert('Vui lòng tích chọn ít nhất 1 bài viết!'); return; }
 
       if (!confirm(`⚠️ CẢNH BÁO XÓA HÀNG LOẠT:\n\nBạn có chắc chắn muốn XÓA ${selectedIds.length} bài viết đã chọn?\n\nNếu có bài viết đã đăng trên Facebook Page, hệ thống sẽ gửi lệnh XÓA BÀI VIẾT TRỰC TIẾP TRÊN FACEBOOK.`)) return;
 
-      try {
+      await runWithButtonProgress(btnEl || event?.target, 'Xóa bài chọn', async () => {
         const res = await request('/posts/bulk-delete', {
           method: 'POST',
           body: JSON.stringify({ postIds: selectedIds })
         });
         alert(res.message || 'Đã xóa thành công các bài viết đã chọn!');
         loadPosts();
-      } catch (e) {
-        alert('Lỗi xóa hàng loạt: ' + (e.error?.message || e.message));
-      }
+      }, 'Đang xóa bài');
     }
 
     async function publishPostNow(id, btnEl) {
@@ -3885,30 +3860,30 @@
       }
     }
 
-    async function cancelPost(id) {
+    async function cancelPost(id, btnEl) {
       if (!confirm('Bạn có chắc chắn muốn HỦY bài viết này?\n\nBài viết sẽ chuyển sang trạng thái ĐÃ HỦY và KHÔNG ĐƯỢC ĐĂNG lên Facebook Page nữa.')) return;
-      try {
+      await runWithButtonProgress(btnEl || event?.target, '🚫 Hủy bài', async () => {
         const res = await request(`/posts/${id}/cancel`, { method: 'POST' });
         alert(res.message || 'Đã hủy bài viết thành công!');
         loadPosts();
-      } catch (e) { alert('Lỗi hủy bài viết: ' + (e.error?.message || e.message)); }
+      }, 'Đang hủy bài');
     }
 
-    async function deletePost(id) {
+    async function deletePost(id, btnEl) {
       if (!confirm('Bạn có chắc chắn muốn XÓA bài viết này?\n\n⚠️ Nếu bài viết đã đăng lên Facebook Page, hệ thống sẽ tự động gửi lệnh XÓA BÀI VIẾT TRÊN FACEBOOK PAGE.')) return;
-      try {
+      await runWithButtonProgress(btnEl || event?.target, '🗑️ Xóa', async () => {
         const res = await request(`/posts/${id}`, { method: 'DELETE' });
         alert(res.message || 'Đã xóa bài viết thành công!');
         loadPosts();
-      } catch (e) { alert('Lỗi xóa bài viết: ' + (e.error?.message || e.message)); }
+      }, 'Đang xóa bài');
     }
 
-    async function retryPost(id) {
-      try {
+    async function retryPost(id, btnEl) {
+      await runWithButtonProgress(btnEl || event?.target, 'Thử lại', async () => {
         await request(`/posts/${id}/retry`, { method: 'POST' });
         alert('Đã đưa bài viết vào hàng đợi thử lại!');
         loadPosts();
-      } catch (e) { alert('Lỗi: ' + (e.error?.message || e.message)); }
+      }, 'Đang thử lại');
     }
 
     async function addCustomSchedule() {
