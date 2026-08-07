@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import axios from 'axios';
 import { requireAuth, AuthenticatedRequest } from '../../common/guards/auth.guard';
 import { requirePermission } from '../../common/guards/rbac.guard';
 import { prisma } from '../../common/database/prisma';
@@ -379,6 +380,84 @@ router.post('/:id/change-media', requireAuth, requirePermission('media.assign'),
     }
 
     res.json({ message: 'Đã thay đổi media cho bài viết' });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// 11. Delete post (Also deletes live post on Facebook Page if already published)
+router.delete('/:id', requireAuth, requirePermission('content.edit'), async (req, res, next) => {
+  try {
+    const post = await prisma.generatedPost.findUnique({
+      where: { id: req.params.id },
+      include: {
+        campaignPage: { include: { facebookPage: true } },
+      },
+    });
+
+    if (!post) throw new NotFoundError('Không tìm thấy bài viết');
+
+    let deletedOnFb = false;
+
+    // If post has been published to Facebook, call Graph API DELETE /v19.0/{facebookPostId}
+    if (post.facebookPostId && post.campaignPage?.facebookPage) {
+      try {
+        const page = post.campaignPage.facebookPage;
+        const { decryptString } = await import('../../common/encryption/crypto');
+        const token = decryptString(page.encryptedPageAccessToken);
+        if (token) {
+          await axios.delete(`https://graph.facebook.com/v19.0/${post.facebookPostId}`, {
+            params: { access_token: token }
+          });
+          deletedOnFb = true;
+          console.log(`[FB Graph API] Đã xóa bài viết ${post.facebookPostId} thành công trên Facebook Page ${page.pageName}`);
+        }
+      } catch (fbErr: any) {
+        console.warn(`[FB Graph API Delete Warning] Lỗi xóa trên FB Page:`, fbErr.response?.data || fbErr.message);
+      }
+    }
+
+    // Clean up DB relations
+    await prisma.postMedia.deleteMany({ where: { generatedPostId: post.id } });
+    await prisma.contentRevision.deleteMany({ where: { generatedPostId: post.id } });
+    await prisma.approvalHistory.deleteMany({ where: { generatedPostId: post.id } });
+    await prisma.generatedPost.delete({ where: { id: post.id } });
+
+    res.json({
+      success: true,
+      message: `Đã xóa bài viết khỏi hệ thống${deletedOnFb ? ' và đã xóa bài viết trực tiếp trên Facebook Page!' : '.'}`,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// 12. Cancel post (Prevents post from being published to Facebook Page)
+router.post('/:id/cancel', requireAuth, requirePermission('content.edit'), async (req, res, next) => {
+  try {
+    const post = await prisma.generatedPost.findUnique({ where: { id: req.params.id } });
+    if (!post) throw new NotFoundError('Không tìm thấy bài viết');
+
+    const updated = await prisma.generatedPost.update({
+      where: { id: post.id },
+      data: { status: 'REJECTED' },
+    });
+
+    const authReq = req as AuthenticatedRequest;
+    await prisma.approvalHistory.create({
+      data: {
+        generatedPostId: post.id,
+        performedByUserId: authReq.user!.id,
+        action: 'REJECTED',
+        note: 'Đã hủy bài viết - Không cho phép đăng lên Facebook Page',
+      },
+    });
+
+    res.json({
+      success: true,
+      message: '🚫 Đã hủy bài viết thành công. Bài viết sẽ không được đăng lên Facebook Page.',
+      data: updated,
+    });
   } catch (err) {
     next(err);
   }
