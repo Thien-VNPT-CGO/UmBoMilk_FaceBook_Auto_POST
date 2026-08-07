@@ -8,6 +8,72 @@ import { facebookPublishingQueue } from '../../common/queue/queues';
 
 const router = Router();
 
+// 0. Get all posts across campaigns for reports & analytics
+router.get('/', requireAuth, requirePermission('post.view'), async (_req, res, next) => {
+  try {
+    const posts = await prisma.generatedPost.findMany({
+      include: {
+        campaign: true,
+        campaignPage: { include: { facebookPage: true } },
+        postMedias: { include: { mediaFile: true }, orderBy: { sortOrder: 'asc' } },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+    res.json({ success: true, data: posts });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// 0.1 Real-time Reports Summary Endpoint
+router.get('/reports/summary', requireAuth, async (_req, res, next) => {
+  try {
+    const posts = await prisma.generatedPost.findMany({
+      include: {
+        campaignPage: { include: { facebookPage: true } },
+      },
+    });
+
+    const pages = await prisma.facebookPage.findMany();
+
+    const publishedCount = posts.filter(p => p.status === 'PUBLISHED').length;
+    const failedCount = posts.filter(p => p.status === 'FAILED').length;
+    const totalProcessed = publishedCount + failedCount;
+    const successRate = totalProcessed > 0 ? Math.round((publishedCount / totalProcessed) * 100) : 100;
+
+    const pageStats = pages.map(page => {
+      const pagePosts = posts.filter(p => p.campaignPage?.facebookPageId === page.facebookPageId || p.campaignPage?.facebookPage?.id === page.id);
+      const pub = pagePosts.filter(p => p.status === 'PUBLISHED').length;
+      const fail = pagePosts.filter(p => p.status === 'FAILED').length;
+      const tot = pagePosts.length;
+      const proc = pub + fail;
+      const rate = proc > 0 ? Math.round((pub / proc) * 100) : (tot > 0 ? 100 : 0);
+
+      return {
+        id: page.id,
+        pageName: page.pageName,
+        facebookPageId: page.facebookPageId,
+        totalPosts: tot,
+        publishedCount: pub,
+        failedCount: fail,
+        successRate: rate,
+      };
+    });
+
+    res.json({
+      success: true,
+      data: {
+        publishedCount,
+        failedCount,
+        successRate,
+        pageStats,
+      }
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // 1. Get list of posts for a campaign
 router.get('/campaigns/:campaignId/posts', requireAuth, requirePermission('post.view'), async (req, res, next) => {
   try {

@@ -2182,16 +2182,23 @@
       const p = document.getElementById(page);
       if (p) p.classList.add('active');
       document.querySelectorAll('.nav button').forEach(x => x.classList.toggle('active', x.dataset.page === page));
-      setElText('title', titles[page][0]);
-      setElText('subtitle', titles[page][1]);
-      setElText('crumb', titles[page][0]);
 
+      if (titles[page]) {
+        setElText('title', titles[page][0]);
+        setElText('subtitle', titles[page][1]);
+        setElText('crumb', titles[page][0]);
+      }
+
+      // Silent background reload for real-time data on every menu click
+      loadData();
       if (page === 'campaign') renderWizard();
       if (page === 'approval') loadApprovalQueue();
       if (page === 'logs') loadSystemLogs();
       if (page === 'posts') loadPosts();
       if (page === 'settings') loadAiSettings();
       if (page === 'media') loadMedia();
+      if (page === 'reports') loadReportsData();
+      if (page === 'calendar') loadPosts();
     }
     document.querySelectorAll('.nav button').forEach(x => x.onclick = () => openPage(x.dataset.page));
 
@@ -3294,9 +3301,81 @@
       } catch (e) { alert('Lỗi: ' + (e.error?.message || e.message)); }
     }
 
-    async function exportReports() {
-      alert('Đã xuất báo cáo chi tiết ra file CSV!');
+    async function loadReportsData() {
+      try {
+        const res = await request('/posts/reports/summary').catch(() => null);
+        if (res && res.data) {
+          const { publishedCount, failedCount, successRate, pageStats } = res.data;
+
+          setElText('publishedCount', publishedCount);
+          setElText('failedCount', failedCount);
+          setElText('successRate', successRate + '%');
+
+          const tbody = document.getElementById('reportsTbody');
+          if (tbody) {
+            if (!pageStats || !pageStats.length) {
+              tbody.innerHTML = '<tr><td colspan="5" class="empty">Chưa có dữ liệu báo cáo</td></tr>';
+            } else {
+              tbody.innerHTML = pageStats.map(p => `
+                <tr>
+                  <td><b>${p.pageName}</b></td>
+                  <td>${p.totalPosts} bài</td>
+                  <td><b style="color:var(--green)">${p.publishedCount}</b></td>
+                  <td><b style="color:var(--red)">${p.failedCount}</b></td>
+                  <td><span class="badge ${p.successRate >= 80 ? 'ok' : 'wait'}">${p.successRate}%</span></td>
+                </tr>
+              `).join('');
+            }
+          }
+        }
+      } catch (err) {
+        console.error('Lỗi nạp báo cáo:', err);
+      }
     }
+
+    async function exportReports() {
+      try {
+        const res = await request('/posts').catch(() => null);
+        const posts = extractList(res);
+
+        if (!posts || !posts.length) {
+          alert('Chưa có bài viết nào để xuất báo cáo!');
+          return;
+        }
+
+        let csvContent = 'data:text/csv;charset=utf-8,\uFEFF';
+        csvContent += 'STT,Facebook Page,Nội dung bài viết,Trạng thái,Thời gian lên lịch,Facebook Post ID\n';
+
+        posts.forEach((p, idx) => {
+          const pageName = (p.campaignPage?.facebookPage?.pageName || p.campaignPage?.facebookPage?.name || 'FB Page').replace(/,/g, ' ');
+          const content = (p.content || '').replace(/[\r\n]+/g, ' ').replace(/"/g, '""');
+          const status = p.status;
+          const scheduledAt = p.scheduledAt ? new Date(p.scheduledAt).toLocaleString('vi-VN') : 'N/A';
+          const fbId = p.facebookPostId || 'N/A';
+
+          csvContent += `"${idx + 1}","${pageName}","${content}","${status}","${scheduledAt}","${fbId}"\n`;
+        });
+
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement('a');
+        link.setAttribute('href', encodedUri);
+        link.setAttribute('download', `Bao_Cao_Dang_Bai_FB_${new Date().toISOString().slice(0,10)}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } catch (err) {
+        alert('Lỗi xuất báo cáo CSV: ' + (err.error?.message || err.message));
+      }
+    }
+
+    // Automatic silent background polling timer every 15 seconds
+    setInterval(() => {
+      loadData();
+      const activeTab = document.querySelector('.panel.active')?.id;
+      if (activeTab === 'approval') loadApprovalQueue();
+      if (activeTab === 'posts') loadPosts();
+      if (activeTab === 'reports') loadReportsData();
+    }, 15000);
 
     // Health status check
     fetch('/health').then(r => r.json()).then(() => {
