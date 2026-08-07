@@ -180,4 +180,62 @@ router.post('/test-ai', requireAuth, async (req, res, next) => {
   }
 });
 
+// POST /settings/reset-system-data - Reset ALL data EXCEPT users and facebook pages (Admin only)
+router.post('/reset-system-data', requireAuth, async (req: AuthenticatedRequest, res, next) => {
+  try {
+    const authReq = req as AuthenticatedRequest;
+
+    // Verify Admin role strictly
+    const userRoles = await prisma.userRole.findMany({
+      where: { userId: authReq.user!.id },
+      include: { role: true },
+    });
+    const isAdmin = userRoles.some(ur => ur.role.name.toUpperCase().includes('ADMIN'));
+
+    if (!isAdmin) {
+      throw new ForbiddenError('⛔ Chỉ có tài khoản Quản Trị Viên (Admin) mới có quyền Reset dữ liệu hệ thống!');
+    }
+
+    // Delete data in correct relational dependency order:
+    // 1. Approval History & Content Revision & Post Media
+    await prisma.approvalHistory.deleteMany({}).catch(() => {});
+    await prisma.contentRevision.deleteMany({}).catch(() => {});
+    await prisma.postMedia.deleteMany({}).catch(() => {});
+    // 2. Generated Posts
+    await prisma.generatedPost.deleteMany({}).catch(() => {});
+    // 3. Campaign Pages
+    await prisma.campaignPage.deleteMany({}).catch(() => {});
+    // 4. Campaigns
+    await prisma.campaign.deleteMany({}).catch(() => {});
+    // 5. Media Files
+    await prisma.mediaFile.deleteMany({}).catch(() => {});
+    // 6. Job Logs & Audit Logs
+    await prisma.jobLog.deleteMany({}).catch(() => {});
+    await prisma.auditLog.deleteMany({}).catch(() => {});
+
+    // Empty BullMQ queues
+    try {
+      const { postSchedulingQueue, contentGenerationQueue } = await import('../../common/queue/queues');
+      await postSchedulingQueue.drain().catch(() => {});
+      await contentGenerationQueue.drain().catch(() => {});
+    } catch (e) {}
+
+    // Audit log entry for data reset
+    await prisma.auditLog.create({
+      data: {
+        userId: authReq.user!.id,
+        action: 'SYSTEM_RESET',
+        entityType: 'DATABASE',
+      },
+    }).catch(() => {});
+
+    res.json({
+      success: true,
+      message: '🧹 ĐÃ RESET TOÀN BỘ DỮ LIỆU THÀNH CÔNG! Tất cả bài viết, chiến dịch, kho media và nhật ký log đã được dọn dẹp sạch sẽ (Tài khoản & Facebook Page được giữ nguyên).',
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
 export default router;
