@@ -92,3 +92,35 @@ export const changePassword = async (req: AuthenticatedRequest, res: Response, n
     next(error);
   }
 };
+
+export const getMe = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) throw new BadRequestError('Không tìm thấy thông tin tài khoản đăng nhập');
+    const { prisma } = await import('../../common/database/prisma');
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        userRoles: { include: { role: true } }
+      }
+    });
+
+    if (!user) throw new BadRequestError('Không tìm thấy người dùng');
+
+    const roles = user.userRoles.map(ur => ur.role.name);
+
+    res.json({
+      success: true,
+      data: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        username: user.username,
+        status: user.status,
+        roles: roles.length ? roles : ['ADMIN'],
+      }
+    });
+  } catch (err) {
+    next(err);
+  }
+};

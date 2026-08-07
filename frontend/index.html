@@ -1505,15 +1505,53 @@
       return [];
     }
 
+    function updateUserDisplayUI() {
+      if (!currentUser) return;
+      const displayName = currentUser.name || currentUser.username || currentUser.email || 'Người dùng';
+      setElText('userNameDisplay', displayName);
+
+      const avatarEl = document.querySelector('.user-info .avatar');
+      if (avatarEl) {
+        avatarEl.textContent = displayName[0].toUpperCase();
+      }
+    }
+
     async function checkAuth() {
       const loginScreen = document.getElementById('loginScreen');
       const appLayout = document.getElementById('appLayout');
+
       if (!token) {
         if (loginScreen) loginScreen.style.display = 'flex';
         if (appLayout) appLayout.style.display = 'none';
       } else {
         if (loginScreen) loginScreen.style.display = 'none';
         if (appLayout) appLayout.style.display = 'flex';
+
+        // 1. Restore local user info for immediate display
+        const savedUserStr = localStorage.getItem('pinkflow_user');
+        if (savedUserStr) {
+          try {
+            currentUser = JSON.parse(savedUserStr);
+            updateUserDisplayUI();
+          } catch (e) {}
+        }
+
+        // 2. Fetch fresh user profile from backend GET /auth/me
+        try {
+          const res = await request('/auth/me');
+          if (res && res.data) {
+            currentUser = res.data;
+            localStorage.setItem('pinkflow_user', JSON.stringify(currentUser));
+            updateUserDisplayUI();
+          }
+        } catch (err) {
+          console.warn('Lỗi nạp thông tin phiên đăng nhập:', err);
+          if (err && (err.statusCode === 401 || err.status === 401)) {
+            logout();
+            return;
+          }
+        }
+
         loadData();
         loadAiSettings();
       }
@@ -1532,8 +1570,11 @@
         });
         token = data.accessToken || data.data?.accessToken;
         currentUser = data.user || data.data?.user;
-        if (currentUser) setElText('userNameDisplay', currentUser.name || currentUser.email);
         if (token) localStorage.setItem('pinkflow_token', token);
+        if (currentUser) {
+          localStorage.setItem('pinkflow_user', JSON.stringify(currentUser));
+          updateUserDisplayUI();
+        }
         checkAuth();
       } catch (err) {
         if (errEl) {
@@ -1547,6 +1588,8 @@
       token = null;
       currentUser = null;
       localStorage.removeItem('pinkflow_token');
+      localStorage.removeItem('pinkflow_user');
+      setElText('userNameDisplay', 'Chưa đăng nhập');
       checkAuth();
     }
 
