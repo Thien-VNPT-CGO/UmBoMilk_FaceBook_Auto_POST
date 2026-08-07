@@ -307,34 +307,148 @@ router.post('/:id/submit-for-approval', requireAuth, requirePermission('content.
   }
 });
 
-// 6. Approve post
+// 6. Approve post (Guarantees minimum 15-minute gap between posts)
 router.post('/:id/approve', requireAuth, requirePermission('content.approve'), async (req, res, next) => {
   try {
     const authReq = req as AuthenticatedRequest;
-    const post = await prisma.generatedPost.findUnique({ where: { id: req.params.id } });
+    const post = await prisma.generatedPost.findUnique({
+      where: { id: req.params.id },
+      include: { campaignPage: true },
+    });
     if (!post) throw new NotFoundError('Không tìm thấy bài viết');
 
     const now = new Date();
-    const updateData: any = { status: 'APPROVED', approvedAt: now };
-    if (post.scheduledAt && post.scheduledAt.getTime() < now.getTime()) {
-      updateData.scheduledAt = now;
+    const intervalMinutes = post.campaignPage?.intervalMinutes || 15;
+    const intervalMs = intervalMinutes * 60 * 1000;
+
+    // Find latest approved/scheduled/published post for the same page/campaign to enforce 15-min gap
+    const lastApprovedPost = await prisma.generatedPost.findFirst({
+      where: {
+        campaignPageId: post.campaignPageId,
+        status: { in: ['APPROVED', 'SCHEDULED', 'PUBLISHED'] },
+        id: { not: post.id },
+      },
+      orderBy: { scheduledAt: 'desc' },
+    });
+
+    let targetScheduledAt = now;
+    if (lastApprovedPost && lastApprovedPost.scheduledAt) {
+      const minNextTime = new Date(lastApprovedPost.scheduledAt.getTime() + intervalMs);
+      if (minNextTime.getTime() > now.getTime()) {
+        targetScheduledAt = minNextTime;
+      }
+    } else if (post.scheduledAt && post.scheduledAt.getTime() > now.getTime()) {
+      targetScheduledAt = post.scheduledAt;
     }
 
     const updated = await prisma.generatedPost.update({
       where: { id: post.id },
-      data: updateData,
+      data: {
+        status: 'APPROVED',
+        approvedAt: now,
+        scheduledAt: targetScheduledAt,
+      },
     });
+
+    // Enqueue delayed publication job
+    const delay = Math.max(0, targetScheduledAt.getTime() - now.getTime());
+    const { postSchedulingQueue } = await import('../../common/queue/queues');
+    await postSchedulingQueue.add(
+      'schedule-post',
+      { postId: post.id },
+      {
+        delay,
+        jobId: `sched-${post.id}-${Date.now()}`,
+        removeOnComplete: true,
+      }
+    ).catch(() => {});
 
     await prisma.approvalHistory.create({
       data: {
         generatedPostId: post.id,
         action: 'APPROVED',
-        note: req.body.note || 'Đã duyệt nội dung',
+        note: req.body.note || `Đã duyệt bài đăng (Lên lịch: ${targetScheduledAt.toLocaleTimeString('vi-VN')} - Tự động giãn cách 15 phút)`,
         performedByUserId: authReq.user!.id,
       },
     });
 
-    res.json({ message: 'Đã duyệt bài viết', data: updated });
+    res.json({
+      success: true,
+      message: `🎉 Đã duyệt bài viết thành công! Thời gian lên lịch đăng: ${targetScheduledAt.toLocaleTimeString('vi-VN')} (Tự động giãn cách 15 phút).`,
+      data: updated
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// 6.1 Bulk Approve Posts (Auto-spacing 15 minutes apart)
+router.post('/bulk-approve', requireAuth, requirePermission('content.approve'), async (req, res, next) => {
+  try {
+    const authReq = req as AuthenticatedRequest;
+    const { postIds } = req.body;
+    if (!Array.isArray(postIds) || !postIds.length) {
+      throw new BadRequestError('Danh sách postIds không hợp lệ');
+    }
+
+    const posts = await prisma.generatedPost.findMany({
+      where: { id: { in: postIds } },
+      include: { campaignPage: true },
+      orderBy: { sequenceNumber: 'asc' },
+    });
+
+    const now = new Date();
+    const approvedPosts = [];
+
+    for (const post of posts) {
+      const intervalMinutes = post.campaignPage?.intervalMinutes || 15;
+      const intervalMs = intervalMinutes * 60 * 1000;
+
+      const lastApprovedPost = await prisma.generatedPost.findFirst({
+        where: {
+          campaignPageId: post.campaignPageId,
+          status: { in: ['APPROVED', 'SCHEDULED', 'PUBLISHED'] },
+          id: { not: post.id },
+        },
+        orderBy: { scheduledAt: 'desc' },
+      });
+
+      let targetScheduledAt = now;
+      if (lastApprovedPost && lastApprovedPost.scheduledAt) {
+        const minNextTime = new Date(lastApprovedPost.scheduledAt.getTime() + intervalMs);
+        if (minNextTime.getTime() > now.getTime()) {
+          targetScheduledAt = minNextTime;
+        }
+      }
+
+      const updated = await prisma.generatedPost.update({
+        where: { id: post.id },
+        data: {
+          status: 'APPROVED',
+          approvedAt: now,
+          scheduledAt: targetScheduledAt,
+        },
+      });
+      approvedPosts.push(updated);
+
+      const delay = Math.max(0, targetScheduledAt.getTime() - now.getTime());
+      const { postSchedulingQueue } = await import('../../common/queue/queues');
+      await postSchedulingQueue.add(
+        'schedule-post',
+        { postId: post.id },
+        {
+          delay,
+          jobId: `sched-${post.id}-${Date.now()}`,
+          removeOnComplete: true,
+        }
+      ).catch(() => {});
+    }
+
+    res.json({
+      success: true,
+      message: `🎉 Đã duyệt hàng loạt ${approvedPosts.length} bài viết! Các bài tự động giãn cách 15 phút.`,
+      data: approvedPosts,
+    });
   } catch (err) {
     next(err);
   }
