@@ -126,6 +126,29 @@ function getPublicMediaUrl(rawUrl: string): string {
 }
 
 export async function publishPost(postId: string) {
+  // ATOMIC LOCK: Atomically update status to 'PUBLISHING' to prevent concurrent duplicate publishing
+  const lockResult = await prisma.generatedPost.updateMany({
+    where: {
+      id: postId,
+      status: { in: ['APPROVED', 'SCHEDULED', 'RETRYING', 'PENDING', 'PENDING_APPROVAL'] },
+    },
+    data: {
+      status: 'PUBLISHING',
+    },
+  });
+
+  if (lockResult.count === 0) {
+    const existing = await prisma.generatedPost.findUnique({ where: { id: postId } });
+    if (existing?.status === 'PUBLISHED') {
+      logger.info(`[Publish Lock] Post ${postId} is already PUBLISHED. Skipping duplicate execution.`);
+      return;
+    }
+    if (existing?.status === 'PUBLISHING') {
+      logger.info(`[Publish Lock] Post ${postId} is currently being published by another worker. Skipping duplicate execution.`);
+      return;
+    }
+  }
+
   const post = await prisma.generatedPost.findUnique({
     where: { id: postId },
     include: {
