@@ -66,6 +66,16 @@ async function cleanDuplicateMediaFiles(): Promise<number> {
     for (const m of allMedia) {
       let isDup = false;
 
+      // 1. Purge records with invalid local storage paths missing from disk
+      if (m.storageUrl && m.storageUrl.startsWith('/uploads/')) {
+        const localPath = path.join(uploadDir, path.basename(m.storageUrl));
+        const driveIdMatch = (m.fileName + ' ' + m.storageUrl).match(/([a-zA-Z0-9_-]{25,40})/);
+        if (!fs.existsSync(localPath) && !driveIdMatch) {
+          isDup = true;
+        }
+      }
+
+      // 2. Deduplicate by MD5 checksum
       if (m.checksum) {
         if (seenChecksums.has(m.checksum)) {
           isDup = true;
@@ -74,6 +84,7 @@ async function cleanDuplicateMediaFiles(): Promise<number> {
         }
       }
 
+      // 3. Deduplicate by Google Drive File ID
       const driveMatch = (m.fileName + ' ' + m.storageUrl).match(/([a-zA-Z0-9_-]{25,40})/);
       if (driveMatch) {
         const driveId = driveMatch[1];
@@ -96,7 +107,7 @@ async function cleanDuplicateMediaFiles(): Promise<number> {
       await prisma.mediaFile.deleteMany({
         where: { id: { in: duplicateIdsToDelete } },
       });
-      console.log(`[Media Deduplication Cleanup] Đã tự động xóa ${duplicateIdsToDelete.length} tệp trùng lặp trong Kho Media.`);
+      console.log(`[Media Deduplication Cleanup] Đã tự động xóa ${duplicateIdsToDelete.length} tệp hỏng/trùng lặp trong Kho Media.`);
     }
 
     return duplicateIdsToDelete.length;
@@ -142,7 +153,7 @@ async function downloadAndSaveDriveFile(fileIdOrUrl: string, expectedType: 'IMAG
   }
 
   const ext = expectedType === 'VIDEO' ? 'mp4' : 'jpg';
-  const filename = `drive-${Date.now()}-${crypto.randomBytes(4).toString('hex')}.${ext}`;
+  const filename = `drive-${driveId || Date.now()}.${ext}`;
   const filePath = path.join(uploadDir, filename);
 
   const response = await axios.get(downloadUrl, {
@@ -172,10 +183,11 @@ async function downloadAndSaveDriveFile(fileIdOrUrl: string, expectedType: 'IMAG
   }
 
   const storageUrlFinal = directDriveUrl || `/uploads/${filename}`;
+  const savedFileName = driveId ? `gdrive_${expectedType.toLowerCase()}_${driveId}.${ext}` : `gdrive_${expectedType.toLowerCase()}_${filename}`;
 
   const media = await prisma.mediaFile.create({
     data: {
-      fileName: `gdrive_${expectedType.toLowerCase()}_${filename}`,
+      fileName: savedFileName,
       storageUrl: storageUrlFinal,
       mimeType: contentType,
       fileSize: buffer.length,
