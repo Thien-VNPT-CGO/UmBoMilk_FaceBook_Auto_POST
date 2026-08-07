@@ -1619,6 +1619,14 @@
 
         loadData();
         loadAiSettings();
+        if (typeof loadWizardState === 'function') loadWizardState();
+
+        const savedPage = localStorage.getItem('pinkflow_active_page');
+        if (savedPage && document.getElementById(savedPage)) {
+          openPage(savedPage);
+        } else {
+          openPage('overview');
+        }
       }
     }
 
@@ -2254,6 +2262,9 @@
         setElText('crumb', titles[page][0]);
       }
 
+      // Save active page to localStorage for reload persistence
+      localStorage.setItem('pinkflow_active_page', page);
+
       // Silent background reload for real-time data on every menu click
       loadData();
       if (page === 'campaign') renderWizard();
@@ -2572,6 +2583,63 @@
     let selectedPageIds = [];
     let step = 0;
 
+    function saveWizardState() {
+      try {
+        const uid = currentUser?.id || 'guest';
+        const payload = { wizardData, selectedPageIds, step, savedAt: Date.now() };
+        localStorage.setItem(`pinkflow_wizard_draft_${uid}`, JSON.stringify(payload));
+      } catch (e) {}
+    }
+
+    function loadWizardState() {
+      try {
+        const uid = currentUser?.id || 'guest';
+        const saved = localStorage.getItem(`pinkflow_wizard_draft_${uid}`);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed.wizardData) wizardData = { ...wizardData, ...parsed.wizardData };
+          if (Array.isArray(parsed.selectedPageIds)) selectedPageIds = parsed.selectedPageIds;
+          if (typeof parsed.step === 'number' && parsed.step >= 0 && parsed.step < 3) step = parsed.step;
+        }
+      } catch (e) {}
+    }
+
+    function clearWizardState() {
+      try {
+        const uid = currentUser?.id || 'guest';
+        localStorage.removeItem(`pinkflow_wizard_draft_${uid}`);
+        wizardData = {
+          name: 'Chiến dịch đăng bài Facebook Page',
+          description: 'Tự động hóa đăng bài viết lên Facebook Page',
+          contentMode: 'SHARED',
+          mediaMode: 'IMAGE',
+          defaultPostCount: 10,
+          defaultIntervalMinutes: 15,
+          prompt: '',
+          productName: '',
+          brandName: '',
+          productPrice: '',
+          discountPrice: '',
+          sku: '',
+          mandatoryKeywords: '',
+          bannedKeywords: '',
+          tone: 'Thân thiện, Hấp dẫn',
+          allowEmoji: true,
+          allowHashtag: true,
+          ctaRequired: '',
+          startDate: new Date().toISOString(),
+          allowedStartTime: '08:00',
+          allowedEndTime: '22:00',
+          allowMediaReuse: true,
+          selectedMediaIds: [],
+          mediaSourceMode: 'AUTO',
+        };
+        selectedPageIds = [];
+        step = 0;
+        renderWizard();
+      } catch (e) {}
+    }
+
     const steps = [
       {
         title: '1. Nội Dung & Chọn Page',
@@ -2820,6 +2888,7 @@
       if (badge && window.loadedPages) {
         badge.textContent = `Đã chọn: ${selectedPageIds.length} / ${window.loadedPages.length} Page`;
       }
+      saveWizardState();
     }
 
     function selectAllWizardPages(select) {
@@ -2829,6 +2898,7 @@
       } else {
         selectedPageIds = [];
       }
+      saveWizardState();
       renderWizard();
     }
 
@@ -3119,10 +3189,12 @@
       if (step === 2) {
         setTimeout(loadStep7Data, 50);
       }
+      saveWizardState();
     }
 
     function gotoWizardStep(targetStep) {
       step = Math.max(0, Math.min(targetStep, steps.length - 1));
+      saveWizardState();
       renderWizard();
     }
 
@@ -3190,7 +3262,7 @@
         const res = await request('/campaigns', { method: 'POST', body: JSON.stringify(payload) });
         activeCampaignId = res.data?.id || res.id;
         alert('Khởi tạo chiến dịch thành công! Nội dung AI đang được tạo trong nền và chờ Admin duyệt.');
-        step = 0;
+        clearWizardState();
         openPage('overview');
         loadData();
       } catch (e) {
