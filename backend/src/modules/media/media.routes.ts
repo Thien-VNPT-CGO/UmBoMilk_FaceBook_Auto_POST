@@ -117,11 +117,13 @@ async function cleanDuplicateMediaFiles(): Promise<number> {
   }
 }
 
-async function downloadAndSaveDriveFile(fileIdOrUrl: string, expectedType: 'IMAGE' | 'VIDEO'): Promise<any> {
+async function downloadAndSaveDriveFile(fileIdOrUrl: string, expectedType: 'IMAGE' | 'VIDEO', folderName?: string): Promise<any> {
   const driveIds = extractDriveFileIds(fileIdOrUrl);
   const driveId = driveIds[0] || (fileIdOrUrl.length >= 25 ? fileIdOrUrl : null);
   const isDirectUrl = fileIdOrUrl.startsWith('http://') || fileIdOrUrl.startsWith('https://');
   const directDriveUrl = driveIds.length > 0 ? `https://lh3.googleusercontent.com/d/${driveIds[0]}` : (isDirectUrl ? fileIdOrUrl : null);
+
+  const folderTag = folderName ? folderName.toLowerCase().replace(/[^a-z0-9]+/g, '_') : 'gdrive';
 
   // Check 1: Pre-check DB for existing media by Drive ID or storageUrl
   if (directDriveUrl || driveId) {
@@ -183,7 +185,9 @@ async function downloadAndSaveDriveFile(fileIdOrUrl: string, expectedType: 'IMAG
   }
 
   const storageUrlFinal = directDriveUrl || `/uploads/${filename}`;
-  const savedFileName = driveId ? `gdrive_${expectedType.toLowerCase()}_${driveId}.${ext}` : `gdrive_${expectedType.toLowerCase()}_${filename}`;
+  const savedFileName = driveId
+    ? `gdrive_${folderTag}_${expectedType.toLowerCase()}_${driveId}.${ext}`
+    : `gdrive_${folderTag}_${expectedType.toLowerCase()}_${filename}`;
 
   const media = await prisma.mediaFile.create({
     data: {
@@ -199,75 +203,70 @@ async function downloadAndSaveDriveFile(fileIdOrUrl: string, expectedType: 'IMAG
   return media;
 }
 
+const DEFAULT_DRIVE_FOLDERS = [
+  { id: '1', name: 'Hình ảnh Bối Bối', type: 'IMAGE', url: '' },
+  { id: '2', name: 'Hình ảnh KenStore', type: 'IMAGE', url: '' },
+  { id: '3', name: 'Hình ảnh Mốt lab', type: 'IMAGE', url: '' },
+  { id: '4', name: 'Hình ảnh Ụm Bò Milk', type: 'IMAGE', url: '' },
+  { id: '5', name: 'Video Ụm Bò Milk', type: 'VIDEO', url: '' },
+];
+
 // POST /api/media/import-drive - Sync/Import media files from Google Drive URLs
 router.post('/import-drive', requireAuth, async (req, res, next) => {
   try {
-    let { imageLink, videoLink } = req.body;
-
-    if (!imageLink && !videoLink) {
-      const imgSetting = await prisma.systemSetting.findUnique({ where: { key: 'gdrive_image_url' } });
-      const vidSetting = await prisma.systemSetting.findUnique({ where: { key: 'gdrive_video_url' } });
-      imageLink = imgSetting?.valueEncrypted || '';
-      videoLink = vidSetting?.valueEncrypted || '';
+    let links = req.body.links;
+    if (!Array.isArray(links) || !links.length) {
+      const setting = await prisma.systemSetting.findUnique({ where: { key: 'gdrive_folder_links' } });
+      if (setting?.valueEncrypted) {
+        try { links = JSON.parse(setting.valueEncrypted); } catch (e) {}
+      }
+    }
+    if (!Array.isArray(links) || !links.length) {
+      links = DEFAULT_DRIVE_FOLDERS;
     }
 
-    if (!imageLink && !videoLink) {
-      throw new BadRequestError('Vui lòng nhập ít nhất 1 liên kết Google Drive cho Hình ảnh hoặc Video');
+    if (req.body.imageLink || req.body.videoLink) {
+      links = [
+        { id: 'legacy-img', name: 'Hình ảnh Google Drive', type: 'IMAGE', url: req.body.imageLink },
+        { id: 'legacy-vid', name: 'Video Google Drive', type: 'VIDEO', url: req.body.videoLink },
+      ];
     }
 
-    // Clean up any existing duplicates first
+    const activeLinks = links.filter((l: any) => l.url && l.url.trim().length > 0);
+    if (!activeLinks.length) {
+      throw new BadRequestError('Vui lòng dán ít nhất 1 liên kết Google Drive cho các thư mục media!');
+    }
+
     await cleanDuplicateMediaFiles();
 
     const importedMedia: any[] = [];
     let skippedCount = 0;
     const errors: string[] = [];
 
-    // Process Image Link
-    if (imageLink) {
-      let imgIds = extractDriveFileIds(imageLink);
-      if (imgIds.length === 0 && imageLink.includes('/folders/')) {
-        imgIds = await extractFileIdsFromFolderUrl(imageLink);
+    for (const folder of activeLinks) {
+      const folderName = folder.name || 'Drive';
+      const expectedType = folder.type === 'VIDEO' ? 'VIDEO' : 'IMAGE';
+      const driveUrl = folder.url.trim();
+
+      let fileIds = extractDriveFileIds(driveUrl);
+      if (fileIds.length === 0 && driveUrl.includes('/folders/')) {
+        fileIds = await extractFileIdsFromFolderUrl(driveUrl);
       }
-      if (imgIds.length === 0 && imageLink.startsWith('http')) {
-        imgIds = [imageLink];
+      if (fileIds.length === 0 && driveUrl.startsWith('http')) {
+        fileIds = [driveUrl];
       }
 
-      for (const idOrUrl of imgIds) {
+      for (const idOrUrl of fileIds) {
         try {
-          const media = await downloadAndSaveDriveFile(idOrUrl, 'IMAGE');
+          const media = await downloadAndSaveDriveFile(idOrUrl, expectedType, folderName);
           if (media?.isDuplicate) {
             skippedCount++;
           } else {
             importedMedia.push(media);
           }
         } catch (err: any) {
-          console.error(`[Drive Import] Lỗi tải hình ảnh (${idOrUrl}):`, err.message);
-          errors.push(`Ảnh (${idOrUrl}): ${err.message}`);
-        }
-      }
-    }
-
-    // Process Video Link
-    if (videoLink) {
-      let vidIds = extractDriveFileIds(videoLink);
-      if (vidIds.length === 0 && videoLink.includes('/folders/')) {
-        vidIds = await extractFileIdsFromFolderUrl(videoLink);
-      }
-      if (vidIds.length === 0 && videoLink.startsWith('http')) {
-        vidIds = [videoLink];
-      }
-
-      for (const idOrUrl of vidIds) {
-        try {
-          const media = await downloadAndSaveDriveFile(idOrUrl, 'VIDEO');
-          if (media?.isDuplicate) {
-            skippedCount++;
-          } else {
-            importedMedia.push(media);
-          }
-        } catch (err: any) {
-          console.error(`[Drive Import] Lỗi tải video (${idOrUrl}):`, err.message);
-          errors.push(`Video (${idOrUrl}): ${err.message}`);
+          console.error(`[Drive Import] Lỗi nạp (${folderName} - ${idOrUrl}):`, err.message);
+          errors.push(`${folderName}: ${err.message}`);
         }
       }
     }
@@ -276,17 +275,10 @@ router.post('/import-drive', requireAuth, async (req, res, next) => {
       throw new BadRequestError(`Không thể tải media từ Google Drive: ${errors.join('; ')}`);
     }
 
-    let msg = `🎉 Đã đồng bộ thành công ${importedMedia.length} tệp mới từ Google Drive vào kho media!`;
-    if (skippedCount > 0) {
-      msg += ` (Đã tự động bỏ qua ${skippedCount} tệp trùng lặp).`;
-    }
-
     res.json({
       success: true,
-      message: msg,
-      data: importedMedia,
-      skippedCount,
-      errors: errors.length > 0 ? errors : undefined,
+      message: `🎉 Đã đồng bộ hoàn tất! Tải mới: ${importedMedia.length} tệp, Trùng lặp bỏ qua: ${skippedCount} tệp.`,
+      data: { importedMedia, skippedCount, errors },
     });
   } catch (err) {
     next(err);
@@ -413,14 +405,19 @@ router.delete('/:id', requireAuth, async (req, res, next) => {
 // GET /api/media/drive-links - Fetch saved Google Drive links
 router.get('/drive-links', requireAuth, async (_req, res, next) => {
   try {
-    const imgSetting = await prisma.systemSetting.findUnique({ where: { key: 'gdrive_image_url' } });
-    const vidSetting = await prisma.systemSetting.findUnique({ where: { key: 'gdrive_video_url' } });
+    const setting = await prisma.systemSetting.findUnique({ where: { key: 'gdrive_folder_links' } });
+    let links = DEFAULT_DRIVE_FOLDERS;
+    if (setting?.valueEncrypted) {
+      try {
+        const parsed = JSON.parse(setting.valueEncrypted);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          links = parsed;
+        }
+      } catch (e) {}
+    }
     res.json({
       success: true,
-      data: {
-        imageLink: imgSetting?.valueEncrypted || '',
-        videoLink: vidSetting?.valueEncrypted || '',
-      },
+      data: links,
     });
   } catch (err) {
     next(err);
@@ -430,18 +427,14 @@ router.get('/drive-links', requireAuth, async (_req, res, next) => {
 // POST /api/media/drive-links - Save Google Drive links
 router.post('/drive-links', requireAuth, async (req, res, next) => {
   try {
-    const { imageLink, videoLink } = req.body;
+    const { links } = req.body;
+    if (!Array.isArray(links)) throw new BadRequestError('Dữ liệu links phải là mảng');
     await prisma.systemSetting.upsert({
-      where: { key: 'gdrive_image_url' },
-      update: { valueEncrypted: imageLink || '' },
-      create: { key: 'gdrive_image_url', valueEncrypted: imageLink || '' },
+      where: { key: 'gdrive_folder_links' },
+      update: { valueEncrypted: JSON.stringify(links) },
+      create: { key: 'gdrive_folder_links', valueEncrypted: JSON.stringify(links) },
     });
-    await prisma.systemSetting.upsert({
-      where: { key: 'gdrive_video_url' },
-      update: { valueEncrypted: videoLink || '' },
-      create: { key: 'gdrive_video_url', valueEncrypted: videoLink || '' },
-    });
-    res.json({ success: true, message: '✅ Đã lưu liên kết Google Drive thành công!' });
+    res.json({ success: true, message: '✅ Đã lưu danh sách liên kết Google Drive thành công!' });
   } catch (err) {
     next(err);
   }

@@ -51,6 +51,26 @@ export class MediaService {
 
       const favVideos = videoFiles.filter((m) => favIds.includes(m.id));
       if (favVideos.length > 0) videoFiles = favVideos;
+    } else {
+      // Smart Brand Matching based on campaign.brandName, campaign.productName, or campaign.originalContent
+      const brandText = `${campaign.brandName || ''} ${campaign.productName || ''} ${campaign.originalContent || ''}`.toLowerCase();
+
+      if (brandText.includes('bối bối') || brandText.includes('boiboi') || brandText.includes('bối')) {
+        const brandImgs = imageFiles.filter(m => m.fileName.toLowerCase().includes('b_i') || m.fileName.toLowerCase().includes('boiboi'));
+        if (brandImgs.length > 0) imageFiles = brandImgs;
+      } else if (brandText.includes('kenstore') || brandText.includes('ken store') || brandText.includes('ken')) {
+        const brandImgs = imageFiles.filter(m => m.fileName.toLowerCase().includes('ken'));
+        if (brandImgs.length > 0) imageFiles = brandImgs;
+      } else if (brandText.includes('mốt lab') || brandText.includes('mot lab') || brandText.includes('motlab') || brandText.includes('mốt')) {
+        const brandImgs = imageFiles.filter(m => m.fileName.toLowerCase().includes('m_t') || m.fileName.toLowerCase().includes('motlab'));
+        if (brandImgs.length > 0) imageFiles = brandImgs;
+      } else if (brandText.includes('ụm bò') || brandText.includes('umbo') || brandText.includes('váng sữa')) {
+        const brandImgs = imageFiles.filter(m => m.fileName.toLowerCase().includes('u_m') || m.fileName.toLowerCase().includes('umbo'));
+        if (brandImgs.length > 0) imageFiles = brandImgs;
+
+        const brandVids = videoFiles.filter(m => m.fileName.toLowerCase().includes('u_m') || m.fileName.toLowerCase().includes('umbo'));
+        if (brandVids.length > 0) videoFiles = brandVids;
+      }
     }
 
     const posts = campaign.generatedPosts;

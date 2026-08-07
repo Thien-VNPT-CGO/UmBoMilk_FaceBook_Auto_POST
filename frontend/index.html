@@ -1136,19 +1136,24 @@
               </div>
 
               <div style="padding-top:16px;border-top:1.5px dashed var(--line)">
-                <h4 style="font-size:14.5px;font-weight:800;color:var(--dark);margin-bottom:8px;display:flex;align-items:center;gap:6px">
-                  🌐 Liên Kết Google Drive Kho Media
-                </h4>
-                <div style="background:linear-gradient(135deg,#f8fafc,#f1f5f9);padding:16px;border-radius:14px;border:1px solid #cbd5e1">
-                  <label style="font-size:12px;font-weight:700;display:block;margin-bottom:6px;color:var(--dark)">🖼️ Link Google Drive chứa HÌNH ẢNH:</label>
-                  <input id="gdriveImageLink" type="url" placeholder="https://drive.google.com/drive/folders/... (Folder/Link Ảnh)" style="width:100%;font-size:12px;padding:10px 12px;border-radius:8px;border:1px solid #cbd5e1;margin-bottom:12px;background:#fff">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+                  <h4 style="font-size:14.5px;font-weight:800;color:var(--dark);margin:0;display:flex;align-items:center;gap:6px">
+                    🌐 Liên Kết Thư Mục Google Drive Theo Thương Hiệu
+                  </h4>
+                  <button type="button" class="ghost small" onclick="addDriveFolderRow()" style="border-radius:8px;padding:4px 10px;font-size:11.5px;font-weight:700">＋ Thêm Thư Mục</button>
+                </div>
+                <div style="background:linear-gradient(135deg,#f8fafc,#f1f5f9);padding:14px;border-radius:14px;border:1px solid #cbd5e1">
+                  <div style="font-size:11.5px;color:var(--muted);margin-bottom:10px">
+                    💡 Chỉ cần chia sẻ link Google Drive (quyền Chỉnh sửa hoặc Xem), AI tool sẽ tự động phân loại hình ảnh & video tương thích để tự động tạo bài & đăng bài!
+                  </div>
 
-                  <label style="font-size:12px;font-weight:700;display:block;margin-bottom:6px;color:var(--dark)">🎥 Link Google Drive chứa VIDEO:</label>
-                  <input id="gdriveVideoLink" type="url" placeholder="https://drive.google.com/drive/folders/... (Folder/Link Video)" style="width:100%;font-size:12px;padding:10px 12px;border-radius:8px;border:1px solid #cbd5e1;margin-bottom:16px;background:#fff">
+                  <div id="driveFoldersContainer" style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px">
+                    <!-- Dynamic Folder rows will be rendered here -->
+                  </div>
 
-                  <div style="display:flex;gap:8px;justify-content:flex-end">
-                    <button type="button" class="ghost small" onclick="saveDriveLinks()" style="border-radius:8px;padding:8px 12px;font-weight:700">💾 Lưu Link</button>
-                    <button type="button" class="small" onclick="importFromGoogleDrive()" style="background:linear-gradient(135deg,#0284c7,#0369a1);color:#fff;border-radius:8px;border:none;padding:8px 14px;font-weight:700;box-shadow:0 3px 10px rgba(2,132,199,0.25)">📥 Đồng bộ từ Drive</button>
+                  <div style="display:flex;gap:8px;justify-content:flex-end;border-top:1px solid #cbd5e1;padding-top:10px">
+                    <button type="button" class="ghost small" onclick="saveDriveLinks()" style="border-radius:8px;padding:8px 12px;font-weight:700">💾 Lưu Tất Cả Link</button>
+                    <button type="button" class="small" onclick="importFromGoogleDrive()" style="background:linear-gradient(135deg,#0284c7,#0369a1);color:#fff;border-radius:8px;border:none;padding:8px 14px;font-weight:700;box-shadow:0 3px 10px rgba(2,132,199,0.25)">📥 Đồng bộ tất cả từ Drive</button>
                   </div>
                 </div>
               </div>
@@ -2335,52 +2340,99 @@
       }
     }
 
+    let currentDriveFolders = [
+      { id: '1', name: 'Hình ảnh Bối Bối', type: 'IMAGE', url: '' },
+      { id: '2', name: 'Hình ảnh KenStore', type: 'IMAGE', url: '' },
+      { id: '3', name: 'Hình ảnh Mốt lab', type: 'IMAGE', url: '' },
+      { id: '4', name: 'Hình ảnh Ụm Bò Milk', type: 'IMAGE', url: '' },
+      { id: '5', name: 'Video Ụm Bò Milk', type: 'VIDEO', url: '' },
+    ];
+
     async function loadDriveLinks() {
       try {
-        const res = await request('/media/drive-links').catch(() => ({ data: {} }));
-        if (res && res.data) {
-          const imgInp = document.getElementById('gdriveImageLink');
-          const vidInp = document.getElementById('gdriveVideoLink');
-          if (imgInp && res.data.imageLink) imgInp.value = res.data.imageLink;
-          if (vidInp && res.data.videoLink) vidInp.value = res.data.videoLink;
+        const res = await request('/media/drive-links').catch(() => null);
+        if (res && Array.isArray(res.data) && res.data.length > 0) {
+          currentDriveFolders = res.data;
         }
+        renderDriveFolderRows();
       } catch (err) {
         console.error('Lỗi nạp link Drive:', err);
       }
     }
 
+    function renderDriveFolderRows() {
+      const container = document.getElementById('driveFoldersContainer');
+      if (!container) return;
+
+      container.innerHTML = currentDriveFolders.map((f, idx) => `
+        <div style="display:flex;gap:8px;align-items:center;background:#fff;padding:8px 12px;border-radius:10px;border:1px solid #e2e8f0;box-shadow:0 1px 3px rgba(0,0,0,0.03)">
+          <input type="text" value="${(f.name || '').replace(/"/g, '&quot;')}" onchange="updateDriveFolder(${idx}, 'name', this.value)" placeholder="Thương hiệu / Tên thư mục" style="width:160px;font-size:12px;font-weight:700;padding:6px 10px;border-radius:6px;border:1px solid #cbd5e1;background:#f8fafc">
+          
+          <select onchange="updateDriveFolder(${idx}, 'type', this.value)" style="width:95px;font-size:12px;font-weight:700;padding:6px 6px;border-radius:6px;border:1px solid #cbd5e1;background:#fff">
+            <option value="IMAGE" ${f.type === 'IMAGE' ? 'selected' : ''}>🖼️ Ảnh</option>
+            <option value="VIDEO" ${f.type === 'VIDEO' ? 'selected' : ''}>🎥 Video</option>
+          </select>
+
+          <input type="url" value="${(f.url || '').replace(/"/g, '&quot;')}" onchange="updateDriveFolder(${idx}, 'url', this.value)" placeholder="https://drive.google.com/drive/folders/... (Link được chia sẻ quyền xem/sửa)" style="flex:1;font-size:12px;padding:6px 10px;border-radius:6px;border:1px solid #cbd5e1">
+
+          <button type="button" class="ghost small" onclick="removeDriveFolderRow(${idx})" style="color:var(--red);border-radius:6px;padding:4px 8px;font-size:11px">🗑️</button>
+        </div>
+      `).join('');
+    }
+
+    function updateDriveFolder(idx, field, val) {
+      if (currentDriveFolders[idx]) {
+        currentDriveFolders[idx][field] = val;
+      }
+    }
+
+    function addDriveFolderRow() {
+      currentDriveFolders.push({
+        id: Date.now().toString(),
+        name: `Thư mục ${currentDriveFolders.length + 1}`,
+        type: 'IMAGE',
+        url: '',
+      });
+      renderDriveFolderRows();
+    }
+
+    function removeDriveFolderRow(idx) {
+      if (currentDriveFolders.length <= 1) {
+        alert('Cần giữ ít nhất 1 dòng thư mục Google Drive!');
+        return;
+      }
+      currentDriveFolders.splice(idx, 1);
+      renderDriveFolderRows();
+    }
+
     async function saveDriveLinks() {
-      const imageLink = document.getElementById('gdriveImageLink')?.value || '';
-      const videoLink = document.getElementById('gdriveVideoLink')?.value || '';
       try {
         const res = await request('/media/drive-links', {
           method: 'POST',
-          body: JSON.stringify({ imageLink, videoLink })
+          body: JSON.stringify({ links: currentDriveFolders })
         });
-        alert(res.message || '✅ Đã lưu liên kết Google Drive thành công!');
+        alert(res.message || '✅ Đã lưu danh sách liên kết Google Drive thành công!');
       } catch (err) {
         alert('🔴 Lỗi lưu link Google Drive: ' + err.message);
       }
     }
 
     async function importFromGoogleDrive() {
-      const imageLink = document.getElementById('gdriveImageLink')?.value || '';
-      const videoLink = document.getElementById('gdriveVideoLink')?.value || '';
-
-      if (!imageLink && !videoLink) {
-        alert('⚠️ Vui lòng nhập link Google Drive cho Hình ảnh hoặc Video trước khi đồng bộ!');
+      const activeLinks = currentDriveFolders.filter(f => f.url && f.url.trim().length > 0);
+      if (!activeLinks.length) {
+        alert('⚠️ Vui lòng dán ít nhất 1 link Google Drive cho các thư mục media!');
         return;
       }
 
       const grid = document.getElementById('mediaGridDisplay');
       if (grid) {
-        grid.innerHTML = '<p style="color:var(--pink);grid-column:1/-1;padding:30px;text-align:center;font-weight:700">⏳ Đang tự động quét và đồng bộ hình ảnh/video từ Google Drive về kho...</p>';
+        grid.innerHTML = '<p style="color:var(--pink);grid-column:1/-1;padding:30px;text-align:center;font-weight:700">⏳ Đang tự động quét và tải hình ảnh/video từ các link Google Drive về kho media...</p>';
       }
 
       try {
         const res = await request('/media/import-drive', {
           method: 'POST',
-          body: JSON.stringify({ imageLink, videoLink })
+          body: JSON.stringify({ links: currentDriveFolders })
         });
         alert(res.message || '🎉 Đã đồng bộ media từ Google Drive thành công!');
         loadMedia();
