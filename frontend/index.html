@@ -2314,8 +2314,6 @@
         const images = mediaList.filter(m => m.mimeType?.startsWith('image') || m.mediaType === 'IMAGE');
         const videos = mediaList.filter(m => m.mimeType?.startsWith('video') || m.mediaType === 'VIDEO');
 
-        setElText('totalImagesCount', images.length);
-        setElText('totalVideosCount', videos.length);
         setElText('rawMediaCount', mediaList.length);
 
         const statusBadge = document.getElementById('mediaStatusBadge');
@@ -2422,6 +2420,16 @@
       },
     ];
 
+    try {
+      const cachedFolders = localStorage.getItem('pinkflow_drive_folders_cache');
+      if (cachedFolders) {
+        const parsed = JSON.parse(cachedFolders);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          currentDriveFolders = parsed;
+        }
+      }
+    } catch (e) {}
+
     function addChildDriveFolderRow(parentIdx) {
       if (isDriveSyncingActive) return;
       if (!currentDriveFolders[parentIdx].children) {
@@ -2456,6 +2464,9 @@
         const res = await request('/media/drive-links').catch(() => null);
         if (res && Array.isArray(res.data) && res.data.length > 0) {
           currentDriveFolders = res.data;
+          try {
+            localStorage.setItem('pinkflow_drive_folders_cache', JSON.stringify(currentDriveFolders));
+          } catch (e) {}
         }
         renderDriveFolderRows();
       } catch (err) {
@@ -2468,9 +2479,16 @@
       const breakdownContainer = document.getElementById('realtimeFolderBreakdownGrid');
       setElText('totalDriveFoldersCount', currentDriveFolders.length);
 
-      // Compute exact real total images and videos from Google Drive folders
-      const realTotalImages = currentDriveFolders.filter(f => f.type === 'IMAGE').reduce((sum, f) => sum + (f.count || 0), 0);
-      const realTotalVideos = currentDriveFolders.filter(f => f.type === 'VIDEO').reduce((sum, f) => sum + (f.count || 0), 0);
+      // Compute exact real total images and videos from all parent & child Google Drive folders
+      let realTotalImages = 0;
+      let realTotalVideos = 0;
+      (currentDriveFolders || []).forEach(f => {
+        if (f.type === 'VIDEO') {
+          realTotalVideos += (f.count || 0);
+        } else {
+          realTotalImages += (f.count || 0);
+        }
+      });
 
       setElText('totalImagesCount', realTotalImages);
       setElText('totalVideosCount', realTotalVideos);
