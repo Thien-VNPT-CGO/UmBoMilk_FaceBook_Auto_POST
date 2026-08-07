@@ -1160,38 +1160,66 @@
         <div id="reports" class="panel">
           <div class="card c12">
             <div class="section-title">
-              <h3>Báo cáo hiệu quả đăng bài</h3><button class="ghost small" onclick="exportReports()">📥 Xuất báo cáo
-                CSV</button>
+              <h3>Báo cáo hiệu quả & Lịch sử Hủy / Xóa bài viết</h3><button class="ghost small" onclick="exportReports()">📥 Xuất báo cáo CSV</button>
             </div>
-            <div class="grid" style="margin-bottom:20px">
-              <div class="card c4 stat">
-                <div><small>Đăng thành công</small><strong id="publishedCount" style="color:var(--green)">0</strong>
-                </div>
+            <div class="grid" style="margin-bottom:20px;grid-template-columns:repeat(5,1fr);gap:12px">
+              <div class="card stat" style="padding:16px">
+                <div><small>Đăng thành công</small><strong id="publishedCount" style="color:var(--green)">0</strong></div>
               </div>
-              <div class="card c4 stat">
+              <div class="card stat" style="padding:16px">
                 <div><small>Đăng thất bại</small><strong id="failedCount" style="color:var(--red)">0</strong></div>
               </div>
-              <div class="card c4 stat">
-                <div><small>Tỷ lệ thành công</small><strong id="successRate" style="color:var(--blue)">100%</strong>
-                </div>
+              <div class="card stat" style="padding:16px">
+                <div><small>Bài viết đã hủy</small><strong id="cancelledCount" style="color:var(--dark)">0</strong></div>
+              </div>
+              <div class="card stat" style="padding:16px">
+                <div><small>Bài viết đã xóa</small><strong id="deletedCount" style="color:var(--pink)">0</strong></div>
+              </div>
+              <div class="card stat" style="padding:16px">
+                <div><small>Tỷ lệ thành công</small><strong id="successRate" style="color:var(--blue)">100%</strong></div>
               </div>
             </div>
             <table>
               <thead>
                 <tr>
-                  <th>Page</th>
+                  <th>Facebook Page</th>
                   <th>Tổng bài</th>
                   <th>Thành công</th>
                   <th>Thất bại</th>
+                  <th>Đã hủy</th>
+                  <th>Đã xóa</th>
                   <th>Tỷ lệ</th>
                 </tr>
               </thead>
               <tbody id="reportsTbody">
                 <tr>
-                  <td colspan="5" class="empty">Chưa có dữ liệu báo cáo</td>
+                  <td colspan="7" class="empty">Chưa có dữ liệu báo cáo</td>
                 </tr>
               </tbody>
             </table>
+
+            <div style="margin-top:28px">
+              <h4 style="font-weight:800;font-size:16px;color:var(--ink);margin-bottom:12px;display:flex;align-items:center;gap:8px">
+                ⏱️ Lịch sử Hủy & Xóa bài viết (Chi tiết thời gian & Người thực hiện)
+              </h4>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Hành động</th>
+                    <th>Nội dung bài viết</th>
+                    <th>Facebook Page</th>
+                    <th>Thời gian thực hiện</th>
+                    <th>Người thực hiện</th>
+                    <th>Ghi chú / Trạng thái FB</th>
+                  </tr>
+                </thead>
+                <tbody id="detailedLogsTbody">
+                  <tr>
+                    <td colspan="6" class="empty">Chưa có lịch sử Hủy hoặc Xóa bài viết</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
 
@@ -3414,16 +3442,18 @@
       try {
         const res = await request('/posts/reports/summary').catch(() => null);
         if (res && res.data) {
-          const { publishedCount, failedCount, successRate, pageStats } = res.data;
+          const { publishedCount, failedCount, cancelledCount, deletedCount, successRate, pageStats, detailedLogs } = res.data;
 
           setElText('publishedCount', publishedCount);
           setElText('failedCount', failedCount);
+          setElText('cancelledCount', cancelledCount || 0);
+          setElText('deletedCount', deletedCount || 0);
           setElText('successRate', successRate + '%');
 
           const tbody = document.getElementById('reportsTbody');
           if (tbody) {
             if (!pageStats || !pageStats.length) {
-              tbody.innerHTML = '<tr><td colspan="5" class="empty">Chưa có dữ liệu báo cáo</td></tr>';
+              tbody.innerHTML = '<tr><td colspan="7" class="empty">Chưa có dữ liệu báo cáo</td></tr>';
             } else {
               tbody.innerHTML = pageStats.map(p => `
                 <tr>
@@ -3431,11 +3461,33 @@
                   <td>${p.totalPosts} bài</td>
                   <td><b style="color:var(--green)">${p.publishedCount}</b></td>
                   <td><b style="color:var(--red)">${p.failedCount}</b></td>
+                  <td><b style="color:var(--dark)">${p.cancelledCount || 0}</b></td>
+                  <td><b style="color:var(--pink)">${p.deletedCount || 0}</b></td>
                   <td><span class="badge ${p.successRate >= 80 ? 'ok' : 'wait'}">${p.successRate}%</span></td>
                 </tr>
               `).join('');
             }
           }
+
+          const logsTbody = document.getElementById('detailedLogsTbody');
+          if (logsTbody) {
+            if (!detailedLogs || !detailedLogs.length) {
+              logsTbody.innerHTML = '<tr><td colspan="6" class="empty">Chưa có lịch sử Hủy hoặc Xóa bài viết</td></tr>';
+            } else {
+              logsTbody.innerHTML = detailedLogs.map(l => `
+                <tr>
+                  <td><span class="badge ${l.actionType === 'DELETE' ? 'err' : 'wait'}" style="font-weight:700">${l.actionLabel}</span></td>
+                  <td style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${l.contentPreview.replace(/"/g, '&quot;')}">${l.contentPreview}</td>
+                  <td><b>${l.pageName}</b></td>
+                  <td style="font-size:12px;font-weight:700;color:var(--dark)">⏱ ${l.timestamp}</td>
+                  <td><span style="font-size:12px;font-weight:600;color:var(--ink)">👤 ${l.performedBy}</span></td>
+                  <td style="font-size:12px;color:var(--muted)">${l.note}</td>
+                </tr>
+              `).join('');
+            }
+          }
+
+          window.lastReportsData = res.data;
         }
       } catch (err) {
         console.error('Lỗi nạp báo cáo:', err);
@@ -3444,15 +3496,16 @@
 
     async function exportReports() {
       try {
-        const res = await request('/posts').catch(() => null);
-        const posts = extractList(res);
-
-        if (!posts || !posts.length) {
-          alert('Chưa có bài viết nào để xuất báo cáo!');
-          return;
-        }
+        const postsRes = await request('/posts').catch(() => null);
+        const posts = extractList(postsRes);
+        const reportsData = window.lastReportsData || {};
+        const detailedLogs = reportsData.detailedLogs || [];
 
         let csvContent = 'data:text/csv;charset=utf-8,\uFEFF';
+        csvContent += '=== BÁO CÁO TỔNG QUAN BÀI VIẾT ===\n';
+        csvContent += `Đăng thành công: ${reportsData.publishedCount || 0}, Đăng thất bại: ${reportsData.failedCount || 0}, Đã hủy: ${reportsData.cancelledCount || 0}, Đã xóa: ${reportsData.deletedCount || 0}, Tỷ lệ thành công: ${reportsData.successRate || 100}%\n\n`;
+
+        csvContent += '=== DANH SÁCH BÀI VIẾT TẠO / ĐĂNG ===\n';
         csvContent += 'STT,Facebook Page,Nội dung bài viết,Trạng thái,Thời gian lên lịch,Facebook Post ID\n';
 
         posts.forEach((p, idx) => {
@@ -3465,10 +3518,19 @@
           csvContent += `"${idx + 1}","${pageName}","${content}","${status}","${scheduledAt}","${fbId}"\n`;
         });
 
+        if (detailedLogs.length > 0) {
+          csvContent += '\n=== LỊCH SỬ CHI TIẾT HỦY VÀ XÓA BÀI VIẾT ===\n';
+          csvContent += 'STT,Hành động,Nội dung bài viết,Facebook Page,Thời gian thực hiện,Người thực hiện,Ghi chú\n';
+          detailedLogs.forEach((l, idx) => {
+            const content = (l.contentPreview || '').replace(/[\r\n]+/g, ' ').replace(/"/g, '""');
+            csvContent += `"${idx + 1}","${l.actionLabel}","${content}","${l.pageName}","${l.timestamp}","${l.performedBy}","${l.note}"\n`;
+          });
+        }
+
         const encodedUri = encodeURI(csvContent);
         const link = document.createElement('a');
         link.setAttribute('href', encodedUri);
-        link.setAttribute('download', `Bao_Cao_Dang_Bai_FB_${new Date().toISOString().slice(0,10)}.csv`);
+        link.setAttribute('download', `Bao_Cao_Chi_Tiet_Dang_Huy_Xoa_FB_${new Date().toISOString().slice(0,10)}.csv`);
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);

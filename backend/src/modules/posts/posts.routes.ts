@@ -37,8 +37,20 @@ router.get('/reports/summary', requireAuth, async (_req, res, next) => {
 
     const pages = await prisma.facebookPage.findMany();
 
+    const auditLogs = await prisma.auditLog.findMany({
+      where: {
+        action: { in: ['DELETE_POST', 'BULK_DELETE_POST', 'CANCEL_POST', 'BULK_CANCEL_POST'] }
+      },
+      include: { user: true },
+      orderBy: { createdAt: 'desc' },
+      take: 100,
+    });
+
     const publishedCount = posts.filter(p => p.status === 'PUBLISHED').length;
     const failedCount = posts.filter(p => p.status === 'FAILED').length;
+    const cancelledCount = posts.filter(p => p.status === 'REJECTED' || p.status === 'CANCELLED').length;
+    const deletedCount = auditLogs.filter(l => l.action.includes('DELETE')).length;
+
     const totalProcessed = publishedCount + failedCount;
     const successRate = totalProcessed > 0 ? Math.round((publishedCount / totalProcessed) * 100) : 100;
 
@@ -46,6 +58,13 @@ router.get('/reports/summary', requireAuth, async (_req, res, next) => {
       const pagePosts = posts.filter(p => p.campaignPage?.facebookPageId === page.facebookPageId || p.campaignPage?.facebookPage?.id === page.id);
       const pub = pagePosts.filter(p => p.status === 'PUBLISHED').length;
       const fail = pagePosts.filter(p => p.status === 'FAILED').length;
+      const canc = pagePosts.filter(p => p.status === 'REJECTED' || p.status === 'CANCELLED').length;
+
+      const pageDeletedLogs = auditLogs.filter(l => {
+        const val = (l.oldValue || l.newValue) as any;
+        return l.action.includes('DELETE') && (val?.pageName === page.pageName || val?.facebookPageId === page.facebookPageId);
+      });
+
       const tot = pagePosts.length;
       const proc = pub + fail;
       const rate = proc > 0 ? Math.round((pub / proc) * 100) : (tot > 0 ? 100 : 0);
@@ -57,7 +76,27 @@ router.get('/reports/summary', requireAuth, async (_req, res, next) => {
         totalPosts: tot,
         publishedCount: pub,
         failedCount: fail,
+        cancelledCount: canc,
+        deletedCount: pageDeletedLogs.length,
         successRate: rate,
+      };
+    });
+
+    // Detailed cancellation & deletion timeline logs
+    const detailedLogs = auditLogs.map(log => {
+      const val = (log.oldValue || log.newValue) as any;
+      const isDelete = log.action.includes('DELETE');
+      return {
+        id: log.id,
+        actionType: isDelete ? 'DELETE' : 'CANCEL',
+        actionLabel: isDelete ? '🗑️ Xóa bài viết' : '🚫 Hủy bài viết',
+        contentPreview: val?.content || 'Nội dung bài viết',
+        pageName: val?.pageName || 'Facebook Page',
+        performedBy: log.user?.name || log.user?.username || log.user?.email || 'Quản trị viên',
+        timestamp: new Date(log.createdAt).toLocaleString('vi-VN'),
+        note: isDelete
+          ? (val?.deletedOnFb ? 'Đã xóa bài viết khỏi hệ thống và xóa trên Facebook Page' : 'Đã xóa bài viết khỏi hệ thống')
+          : 'Đã hủy bài viết - Không cho phép đăng',
       };
     });
 
@@ -66,8 +105,11 @@ router.get('/reports/summary', requireAuth, async (_req, res, next) => {
       data: {
         publishedCount,
         failedCount,
+        cancelledCount,
+        deletedCount,
         successRate,
         pageStats,
+        detailedLogs,
       }
     });
   } catch (err) {
@@ -410,12 +452,28 @@ router.delete('/:id', requireAuth, requirePermission('content.edit'), async (req
             params: { access_token: token }
           });
           deletedOnFb = true;
-          console.log(`[FB Graph API] Đã xóa bài viết ${post.facebookPostId} thành công trên Facebook Page ${page.pageName}`);
         }
       } catch (fbErr: any) {
         console.warn(`[FB Graph API Delete Warning] Lỗi xóa trên FB Page:`, fbErr.response?.data || fbErr.message);
       }
     }
+
+    // Record AuditLog before deletion
+    const authReq = req as AuthenticatedRequest;
+    await prisma.auditLog.create({
+      data: {
+        userId: authReq.user?.id,
+        action: 'DELETE_POST',
+        entityType: 'GENERATED_POST',
+        entityId: post.id,
+        oldValue: {
+          content: post.content ? post.content.substring(0, 120) : '',
+          pageName: post.campaignPage?.facebookPage?.pageName,
+          facebookPostId: post.facebookPostId,
+          deletedOnFb,
+        },
+      },
+    }).catch(() => {});
 
     // Clean up DB relations
     await prisma.postMedia.deleteMany({ where: { generatedPostId: post.id } });
@@ -435,7 +493,10 @@ router.delete('/:id', requireAuth, requirePermission('content.edit'), async (req
 // 12. Cancel post (Prevents post from being published to Facebook Page)
 router.post('/:id/cancel', requireAuth, requirePermission('content.edit'), async (req, res, next) => {
   try {
-    const post = await prisma.generatedPost.findUnique({ where: { id: req.params.id } });
+    const post = await prisma.generatedPost.findUnique({
+      where: { id: req.params.id },
+      include: { campaignPage: { include: { facebookPage: true } } },
+    });
     if (!post) throw new NotFoundError('Không tìm thấy bài viết');
 
     const updated = await prisma.generatedPost.update({
@@ -452,6 +513,20 @@ router.post('/:id/cancel', requireAuth, requirePermission('content.edit'), async
         note: 'Đã hủy bài viết - Không cho phép đăng lên Facebook Page',
       },
     });
+
+    await prisma.auditLog.create({
+      data: {
+        userId: authReq.user?.id,
+        action: 'CANCEL_POST',
+        entityType: 'GENERATED_POST',
+        entityId: post.id,
+        newValue: {
+          content: post.content ? post.content.substring(0, 120) : '',
+          pageName: post.campaignPage?.facebookPage?.pageName,
+          status: 'REJECTED',
+        },
+      },
+    }).catch(() => {});
 
     res.json({
       success: true,
@@ -471,6 +546,11 @@ router.post('/bulk-cancel', requireAuth, requirePermission('content.edit'), asyn
       throw new BadRequestError('Danh sách postIds không hợp lệ');
     }
 
+    const posts = await prisma.generatedPost.findMany({
+      where: { id: { in: postIds } },
+      include: { campaignPage: { include: { facebookPage: true } } },
+    });
+
     const updated = await prisma.generatedPost.updateMany({
       where: { id: { in: postIds } },
       data: { status: 'REJECTED' },
@@ -485,6 +565,22 @@ router.post('/bulk-cancel', requireAuth, requirePermission('content.edit'), asyn
         note: 'Hủy hàng loạt bài viết bởi người dùng',
       })),
     });
+
+    for (const p of posts) {
+      await prisma.auditLog.create({
+        data: {
+          userId: authReq.user?.id,
+          action: 'BULK_CANCEL_POST',
+          entityType: 'GENERATED_POST',
+          entityId: p.id,
+          newValue: {
+            content: p.content ? p.content.substring(0, 120) : '',
+            pageName: p.campaignPage?.facebookPage?.pageName,
+            status: 'REJECTED',
+          },
+        },
+      }).catch(() => {});
+    }
 
     res.json({
       success: true,
@@ -508,9 +604,11 @@ router.post('/bulk-delete', requireAuth, requirePermission('content.edit'), asyn
       include: { campaignPage: { include: { facebookPage: true } } },
     });
 
+    const authReq = req as AuthenticatedRequest;
     let fbDeletedCount = 0;
 
     for (const p of posts) {
+      let deletedOnFb = false;
       if (p.facebookPostId && p.campaignPage?.facebookPage) {
         try {
           const page = p.campaignPage.facebookPage;
@@ -521,11 +619,27 @@ router.post('/bulk-delete', requireAuth, requirePermission('content.edit'), asyn
               params: { access_token: token }
             });
             fbDeletedCount++;
+            deletedOnFb = true;
           }
         } catch (e: any) {
           console.warn(`[Bulk Delete FB Warning] Post ${p.facebookPostId}:`, e.message);
         }
       }
+
+      await prisma.auditLog.create({
+        data: {
+          userId: authReq.user?.id,
+          action: 'BULK_DELETE_POST',
+          entityType: 'GENERATED_POST',
+          entityId: p.id,
+          oldValue: {
+            content: p.content ? p.content.substring(0, 120) : '',
+            pageName: p.campaignPage?.facebookPage?.pageName,
+            facebookPostId: p.facebookPostId,
+            deletedOnFb,
+          },
+        },
+      }).catch(() => {});
     }
 
     await prisma.postMedia.deleteMany({ where: { generatedPostId: { in: postIds } } });
