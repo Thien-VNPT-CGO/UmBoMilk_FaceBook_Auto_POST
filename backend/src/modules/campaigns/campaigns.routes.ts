@@ -35,6 +35,7 @@ const createSchema = z.object({
   discountPrice: z.string().optional(),
   sku: z.string().optional(),
   allowMediaReuse: z.boolean().default(false),
+  selectedMediaIds: z.array(z.string()).default([]),
   facebookPageIds: z.array(z.string().uuid()).min(1),
 });
 
@@ -82,6 +83,7 @@ router.post(
           discountPrice: data.discountPrice,
           sku: data.sku,
           allowMediaReuse: data.allowMediaReuse,
+          selectedMediaIds: data.selectedMediaIds || [],
           status: 'PENDING_APPROVAL',
           campaignPages: {
             create: data.facebookPageIds.map((facebookPageId) => ({

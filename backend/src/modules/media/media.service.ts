@@ -28,7 +28,7 @@ export class MediaService {
     if (!campaign) throw new BadRequestError('Không tìm thấy chiến dịch');
 
     // Get active media files: both campaign-specific AND global active media (from Kho Media)
-    const mediaFiles = await prisma.mediaFile.findMany({
+    let mediaFiles = await prisma.mediaFile.findMany({
       where: {
         status: 'ACTIVE',
         OR: [
@@ -39,8 +39,19 @@ export class MediaService {
       orderBy: { createdAt: 'desc' },
     });
 
-    const imageFiles = mediaFiles.filter((m) => m.mediaType === 'IMAGE');
-    const videoFiles = mediaFiles.filter((m) => m.mediaType === 'VIDEO');
+    const favIds = campaign.selectedMediaIds || [];
+
+    // Filter image & video files based on selected favorite media IDs if specified
+    let imageFiles = mediaFiles.filter((m) => m.mediaType === 'IMAGE');
+    let videoFiles = mediaFiles.filter((m) => m.mediaType === 'VIDEO');
+
+    if (favIds.length > 0) {
+      const favImages = imageFiles.filter((m) => favIds.includes(m.id));
+      if (favImages.length > 0) imageFiles = favImages;
+
+      const favVideos = videoFiles.filter((m) => favIds.includes(m.id));
+      if (favVideos.length > 0) videoFiles = favVideos;
+    }
 
     const posts = campaign.generatedPosts;
 
@@ -56,10 +67,11 @@ export class MediaService {
         continue;
       }
 
-      const shouldAssignVideo = (post.mediaType === 'VIDEO' && hasVideos) || (!hasImages && hasVideos);
+      const isVideoMode = campaign.mediaMode === 'VIDEO' || post.mediaType === 'VIDEO';
+      const shouldAssignVideo = (isVideoMode && hasVideos) || (!hasImages && hasVideos);
 
       if (shouldAssignVideo) {
-        // Pick 1 video
+        // Pick 1 video (from favorite selected video or random available video)
         const shuffled = this.shuffleArray(videoFiles);
         const selectedVideo = shuffled[0];
 
@@ -71,7 +83,7 @@ export class MediaService {
           },
         });
       } else {
-        // Pick 6 photos (or available photos with wrap-around reuse)
+        // Pick 6 photos (from favorite selected images or random available images)
         let selected: typeof imageFiles = [];
         const shuffled = this.shuffleArray(imageFiles);
 

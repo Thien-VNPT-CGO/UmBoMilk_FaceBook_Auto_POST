@@ -2321,6 +2321,8 @@
       allowedStartTime: '08:00',
       allowedEndTime: '22:00',
       allowMediaReuse: true,
+      selectedMediaIds: [],
+      mediaSourceMode: 'AUTO',
     };
     let selectedPageIds = [];
     let step = 0;
@@ -2390,36 +2392,100 @@
         title: '2. Cấu Hinh Lịch & Media',
         getHtml: () => {
           const mediaList = window.loadedMedia || [];
-          const imageCount = mediaList.filter(m => m.mimeType?.startsWith('image') || m.type === 'IMAGE').length;
-          const videoCount = mediaList.filter(m => m.mimeType?.startsWith('video') || m.type === 'VIDEO').length;
+          const imageCount = mediaList.filter(m => m.mimeType?.startsWith('image') || m.mediaType === 'IMAGE').length;
+          const videoCount = mediaList.filter(m => m.mimeType?.startsWith('video') || m.mediaType === 'VIDEO').length;
+
+          const isSelectedMode = wizardData.mediaSourceMode === 'SELECTED';
+          const isVideoMode = wizardData.mediaMode === 'VIDEO';
+
+          const filteredMedia = mediaList.filter(m => {
+            const isVid = m.mimeType?.startsWith('video') || m.mediaType === 'VIDEO';
+            return isVideoMode ? isVid : !isVid;
+          });
+
+          const selectedIds = wizardData.selectedMediaIds || [];
+
+          let mediaSelectionGrid = '';
+          if (isSelectedMode) {
+            if (!filteredMedia.length) {
+              mediaSelectionGrid = `<p style="color:var(--red);padding:10px;font-size:12.5px;grid-column:1/-1">🔴 Không có tệp ${isVideoMode ? 'video' : 'hình ảnh'} nào trong Kho Media để chọn. Vui lòng tải thêm media hoặc chuyển sang chế độ tự động.</p>`;
+            } else {
+              mediaSelectionGrid = filteredMedia.map(m => {
+                const isChecked = selectedIds.includes(m.id);
+                const isVid = m.mimeType?.startsWith('video') || m.mediaType === 'VIDEO';
+                return `
+                  <div onclick="toggleWizardMediaSelection('${m.id}')" style="cursor:pointer;border:2px solid ${isChecked ? 'var(--pink)' : 'var(--line)'};background:${isChecked ? '#fff0f6' : '#fff'};border-radius:12px;padding:8px;position:relative;display:flex;align-items:center;gap:10px">
+                    <input type="${isVideoMode ? 'radio' : 'checkbox'}" ${isChecked ? 'checked' : ''} style="width:18px;height:18px;cursor:pointer" onclick="event.stopPropagation();toggleWizardMediaSelection('${m.id}')">
+                    <div style="width:50px;height:50px;border-radius:8px;overflow:hidden;background:#eee;flex-shrink:0">
+                      ${isVid ? `<video src="${m.storageUrl}" style="width:100%;height:100%;object-fit:cover"></video>` : `<img src="${m.storageUrl}" style="width:100%;height:100%;object-fit:cover">`}
+                    </div>
+                    <div style="overflow:hidden">
+                      <div style="font-weight:700;font-size:12px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${m.fileName}">${m.fileName}</div>
+                      <div style="font-size:11px;color:var(--muted)">${isVid ? '🎥 Video' : '📸 Hình ảnh'}</div>
+                    </div>
+                  </div>
+                `;
+              }).join('');
+            }
+          }
 
           return `
         <div style="display:flex;flex-direction:column;gap:18px">
           <div class="row" style="gap:16px">
             <div style="flex:1">
-              <label style="font-weight:800">Loại bài viết</label>
-              <select onchange="wizardData.mediaMode=this.value">
-                <option value="IMAGE" ${wizardData.mediaMode === 'IMAGE' ? 'selected' : ''}>📸 Bài viết Hình ảnh (Tự chọn đúng 6 hình/bài)</option>
-                <option value="VIDEO" ${wizardData.mediaMode === 'VIDEO' ? 'selected' : ''}>🎥 Bài viết Video (Tự chọn đúng 1 video/bài)</option>
+              <label style="font-weight:800;color:var(--dark)">Loại bài viết (Hình ảnh hay Video)</label>
+              <select onchange="wizardData.mediaMode=this.value;renderWizard()">
+                <option value="IMAGE" ${wizardData.mediaMode === 'IMAGE' ? 'selected' : ''}>📸 Đăng HÌNH ẢNH (AI sẽ lấy Hình ảnh đăng lên)</option>
+                <option value="VIDEO" ${wizardData.mediaMode === 'VIDEO' ? 'selected' : ''}>🎥 Đăng VIDEO (AI sẽ lấy Video đăng lên)</option>
               </select>
             </div>
             <div style="flex:1">
-              <label style="font-weight:800">Chế độ phân bổ AI</label>
+              <label style="font-weight:800;color:var(--dark)">Chế độ chọn Media</label>
+              <select onchange="wizardData.mediaSourceMode=this.value;renderWizard()">
+                <option value="AUTO" ${wizardData.mediaSourceMode !== 'SELECTED' ? 'selected' : ''}>🎲 Tự động chọn ngẫu nhiên từ Kho Media (6 ảnh / 1 video)</option>
+                <option value="SELECTED" ${wizardData.mediaSourceMode === 'SELECTED' ? 'selected' : ''}>⭐ Chỉ định Hình ảnh / Video Yêu thích (Admin/Manager tự tích chọn)</option>
+              </select>
+            </div>
+          </div>
+
+          ${isSelectedMode ? `
+          <div style="background:#fff0f6;border:1.5px solid var(--pink);border-radius:14px;padding:16px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+              <span style="font-weight:800;font-size:13.5px;color:var(--dark)">⭐ Tích chọn ${isVideoMode ? '1 Video Yêu Thích' : '1 hoặc nhiều Hình Ảnh Yêu Thích'} (Đã chọn: <b style="color:var(--pink)">${selectedIds.length}</b> tệp)</span>
+              <button type="button" class="ghost small" style="padding:2px 8px;font-size:11px" onclick="wizardData.selectedMediaIds=[];renderWizard()">Bỏ chọn tất cả</button>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(220px, 1fr));gap:10px;max-height:220px;overflow-y:auto">
+              ${mediaSelectionGrid}
+            </div>
+          </div>
+          ` : ''}
+
+          <div class="row" style="gap:16px">
+            <div style="flex:1">
+              <label style="font-weight:800">Chế độ phân bổ bài viết AI</label>
               <select onchange="wizardData.contentMode=this.value">
                 <option value="SHARED" ${wizardData.contentMode === 'SHARED' ? 'selected' : ''}>Dùng chung (1 bộ bài cho tất cả Page)</option>
                 <option value="INDIVIDUAL" ${wizardData.contentMode === 'INDIVIDUAL' ? 'selected' : ''}>Dùng riêng (Mỗi Page 1 bộ bài AI riêng)</option>
               </select>
             </div>
-          </div>
-
-          <div class="row" style="gap:16px">
             <div style="flex:1">
               <label style="font-weight:800">Số bài viết cho mỗi Page</label>
               <input type="number" min="1" max="500" value="${wizardData.defaultPostCount}" onchange="wizardData.defaultPostCount=parseInt(this.value)">
             </div>
+          </div>
+
+          <div class="row" style="gap:16px">
             <div style="flex:1">
               <label style="font-weight:800">Khoảng cách giữa các bài (phút)</label>
               <input type="number" min="1" max="720" value="${wizardData.defaultIntervalMinutes}" onchange="wizardData.defaultIntervalMinutes=parseInt(this.value)">
+            </div>
+            <div style="flex:1">
+              <label style="font-weight:800">Giọng văn AI</label>
+              <select onchange="wizardData.tone=this.value">
+                <option ${wizardData.tone === 'Thân thiện, Hấp dẫn' ? 'selected' : ''}>Thân thiện, Hấp dẫn</option>
+                <option ${wizardData.tone === 'Chuyên nghiệp, Uy tín' ? 'selected' : ''}>Chuyên nghiệp, Uy tín</option>
+                <option ${wizardData.tone === 'Sôi nổi, Hào hứng' ? 'selected' : ''}>Sôi nổi, Hào hứng</option>
+              </select>
             </div>
           </div>
 
@@ -2434,28 +2500,10 @@
             </div>
           </div>
 
-          <div class="row" style="gap:16px">
-            <div style="flex:1">
-              <label style="font-weight:800">Giọng văn AI</label>
-              <select onchange="wizardData.tone=this.value">
-                <option ${wizardData.tone === 'Thân thiện, Hấp dẫn' ? 'selected' : ''}>Thân thiện, Hấp dẫn</option>
-                <option ${wizardData.tone === 'Chuyên nghiệp, Uy tín' ? 'selected' : ''}>Chuyên nghiệp, Uy tín</option>
-                <option ${wizardData.tone === 'Sôi nổi, Hào hứng' ? 'selected' : ''}>Sôi nổi, Hào hứng</option>
-              </select>
-            </div>
-            <div style="flex:1">
-              <label style="font-weight:800">Tái sử dụng Media</label>
-              <select onchange="wizardData.allowMediaReuse=this.value==='true'">
-                <option value="true" ${wizardData.allowMediaReuse ? 'selected' : ''}>Cho phép xoay vòng media ngẫu nhiên</option>
-                <option value="false" ${!wizardData.allowMediaReuse ? 'selected' : ''}>Không xoay vòng (Không trùng tệp)</option>
-              </select>
-            </div>
-          </div>
-
           <div style="background:#f8fafc;border:1.5px solid var(--line);border-radius:14px;padding:16px;display:flex;align-items:center;justify-content:space-between">
             <div>
               <div style="font-weight:800;font-size:13.5px;color:var(--ink)">Kho Media Khả Dụng: 📸 ${imageCount} tệp ảnh | 🎥 ${videoCount} tệp video</div>
-              <div style="font-size:12px;color:var(--muted);margin-top:2px">Thuật toán Fisher-Yates sẽ tự động chọn 6 ảnh ngẫu nhiên cho mỗi bài viết.</div>
+              <div style="font-size:12px;color:var(--muted);margin-top:2px">${isSelectedMode ? `Đang chỉ định ${selectedIds.length} tệp media yêu thích do Admin/Manager lựa chọn.` : 'Thuật toán Fisher-Yates sẽ tự động chọn 6 ảnh ngẫu nhiên hoặc 1 video cho mỗi bài viết.'}</div>
             </div>
             <button type="button" class="ghost small" onclick="openPage('media')">🖼️ Quản Lý Media</button>
           </div>
@@ -2862,7 +2910,26 @@
         allowHashtag: wizardData.allowHashtag,
         ctaRequired: wizardData.ctaRequired,
         allowMediaReuse: wizardData.allowMediaReuse,
+        selectedMediaIds: wizardData.selectedMediaIds || [],
       };
+
+    function toggleWizardMediaSelection(id) {
+      if (!wizardData.selectedMediaIds) wizardData.selectedMediaIds = [];
+      const isVid = wizardData.mediaMode === 'VIDEO';
+      if (isVid) {
+        // Video mode: pick 1 favorite video
+        wizardData.selectedMediaIds = [id];
+      } else {
+        // Image mode: pick 1 or multiple favorite images
+        const idx = wizardData.selectedMediaIds.indexOf(id);
+        if (idx > -1) {
+          wizardData.selectedMediaIds.splice(idx, 1);
+        } else {
+          wizardData.selectedMediaIds.push(id);
+        }
+      }
+      renderWizard();
+    }
 
       try {
         const res = await request('/campaigns', { method: 'POST', body: JSON.stringify(payload) });
