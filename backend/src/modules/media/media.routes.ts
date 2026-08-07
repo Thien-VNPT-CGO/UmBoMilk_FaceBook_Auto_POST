@@ -402,7 +402,26 @@ router.delete('/:id', requireAuth, async (req, res, next) => {
   }
 });
 
-// GET /api/media/drive-links - Fetch saved Google Drive links
+// Helper to attach realtime media file count per drive folder
+async function attachFolderCounts(links: any[]) {
+  const result = [];
+  for (const f of links) {
+    const folderTag = (f.name || '').toLowerCase().replace(/[^a-z0-9]+/g, '_');
+    let count = 0;
+    if (folderTag) {
+      count = await prisma.mediaFile.count({
+        where: {
+          status: 'ACTIVE',
+          fileName: { contains: folderTag }
+        }
+      });
+    }
+    result.push({ ...f, count });
+  }
+  return result;
+}
+
+// GET /api/media/drive-links - Fetch saved Google Drive links with realtime count
 router.get('/drive-links', requireAuth, async (_req, res, next) => {
   try {
     const setting = await prisma.systemSetting.findUnique({ where: { key: 'gdrive_folder_links' } });
@@ -415,16 +434,17 @@ router.get('/drive-links', requireAuth, async (_req, res, next) => {
         }
       } catch (e) {}
     }
+    const linksWithCounts = await attachFolderCounts(links);
     res.json({
       success: true,
-      data: links,
+      data: linksWithCounts,
     });
   } catch (err) {
     next(err);
   }
 });
 
-// POST /api/media/drive-links - Save Google Drive links
+// POST /api/media/drive-links - Save Google Drive links & auto trigger realtime sync
 router.post('/drive-links', requireAuth, async (req, res, next) => {
   try {
     const { links } = req.body;
@@ -434,7 +454,38 @@ router.post('/drive-links', requireAuth, async (req, res, next) => {
       update: { valueEncrypted: JSON.stringify(links) },
       create: { key: 'gdrive_folder_links', valueEncrypted: JSON.stringify(links) },
     });
-    res.json({ success: true, message: '✅ Đã lưu danh sách liên kết Google Drive thành công!' });
+
+    // Auto-trigger background sync for active links with non-empty URL
+    const activeLinks = links.filter((l: any) => l.url && l.url.trim().length > 0);
+    if (activeLinks.length > 0) {
+      (async () => {
+        try {
+          await cleanDuplicateMediaFiles();
+          for (const folder of activeLinks) {
+            const folderName = folder.name || 'Drive';
+            const expectedType = folder.type === 'VIDEO' ? 'VIDEO' : 'IMAGE';
+            const driveUrl = folder.url.trim();
+            let fileIds = extractDriveFileIds(driveUrl);
+            if (fileIds.length === 0 && driveUrl.includes('/folders/')) {
+              fileIds = await extractFileIdsFromFolderUrl(driveUrl);
+            }
+            if (fileIds.length === 0 && driveUrl.startsWith('http')) {
+              fileIds = [driveUrl];
+            }
+            for (const idOrUrl of fileIds) {
+              try {
+                await downloadAndSaveDriveFile(idOrUrl, expectedType, folderName);
+              } catch (e) {}
+            }
+          }
+        } catch (bgErr) {
+          console.error('[AutoDriveSync] Background error:', bgErr);
+        }
+      })();
+    }
+
+    const linksWithCounts = await attachFolderCounts(links);
+    res.json({ success: true, message: '✅ Đã lưu và đang tự động đồng bộ Google Drive trong nền!', data: linksWithCounts });
   } catch (err) {
     next(err);
   }

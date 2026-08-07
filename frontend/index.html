@@ -1110,12 +1110,11 @@
                   ↑ Upload Tệp Media <input type="file" id="globalMediaUpload" multiple accept="image/*,video/*" style="display:none" onchange="uploadGlobalMedia(this)">
                 </label>
                 <button class="ghost small" style="border-radius:10px;padding:9px 14px;font-weight:700;font-size:12.5px" onclick="shuffleMediaAllocation()">🎲 Phân bổ ngẫu nhiên</button>
-                <button type="button" class="small" onclick="importFromGoogleDrive()" style="background:linear-gradient(135deg,#0284c7,#0369a1);color:#fff;border-radius:10px;border:none;padding:9px 16px;font-weight:700;box-shadow:0 4px 12px rgba(2,132,199,0.3);font-size:13px">📥 Đồng bộ tất cả từ Drive</button>
               </div>
             </div>
 
             <!-- STATS CARDS BAR -->
-            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px">
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:20px">
               <div style="background:linear-gradient(135deg,#f8fafc,#f1f5f9);border:1px solid #e2e8f0;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:4px">
                 <span style="font-size:12px;font-weight:700;color:var(--muted)">📸 HÌNH ẢNH ĐÃ NẠP</span>
                 <div style="display:flex;justify-content:space-between;align-items:baseline">
@@ -1148,6 +1147,16 @@
               </div>
             </div>
 
+            <!-- REALTIME FOLDER BREAKDOWN CARDS -->
+            <div style="margin-bottom:24px;background:#fcfaff;border:1px solid #f3e8ff;border-radius:16px;padding:16px">
+              <div style="font-size:13px;font-weight:800;color:#6b21a8;margin-bottom:12px;display:flex;align-items:center;gap:6px">
+                📊 Thống Kê Số Lượng Media Khả Dụng Realtime Theo Từng Thư Mục Google Drive:
+              </div>
+              <div id="realtimeFolderBreakdownGrid" style="display:grid;grid-template-columns:repeat(auto-fill, minmax(220px, 1fr));gap:12px">
+                <!-- Dynamic folder stat cards rendered here -->
+              </div>
+            </div>
+
             <!-- MAIN GOOGLE DRIVE BRAND FOLDERS SECTION -->
             <div style="background:linear-gradient(135deg,#faf5ff,#f3e8ff);padding:20px;border-radius:16px;border:1px solid #e9d5ff">
               <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
@@ -1156,7 +1165,7 @@
                     🌐 Danh Sách Thư Mục Google Drive Theo Thương Hiệu & Sản Phẩm
                   </h4>
                   <div style="font-size:12px;color:#7e22ce;margin-top:2px">
-                    Chỉ cần dán link Google Drive (quyền Xem/Sửa). AI Tool sẽ tự động quét và phân loại hình ảnh & video bài viết theo tên thương hiệu!
+                    Chỉ cần dán link Google Drive (quyền Xem/Sửa). Hệ thống sẽ tự động quét và phân loại hình ảnh & video bài viết theo tên thương hiệu realtime!
                   </div>
                 </div>
                 <button type="button" class="button small" onclick="addDriveFolderRow()" style="background:#7e22ce;color:#fff;border-radius:10px;padding:6px 14px;font-size:12px;font-weight:700;box-shadow:0 3px 10px rgba(126,34,206,0.25)">
@@ -1169,20 +1178,8 @@
               </div>
 
               <div style="display:flex;gap:10px;justify-content:flex-end;border-top:1px dashed #d8b4fe;padding-top:14px">
-                <button type="button" class="ghost small" onclick="saveDriveLinks()" style="border-radius:10px;padding:9px 16px;font-weight:700;background:#fff;border:1px solid #c084fc;color:#6b21a8">💾 Lưu Tất Cả Link</button>
-                <button type="button" class="small" onclick="importFromGoogleDrive()" style="background:linear-gradient(135deg,#0284c7,#0369a1);color:#fff;border-radius:10px;border:none;padding:9px 18px;font-weight:700;box-shadow:0 4px 12px rgba(2,132,199,0.3)">📥 Đồng bộ tất cả từ Drive</button>
+                <button type="button" class="ghost small" onclick="saveDriveLinks(true)" style="border-radius:10px;padding:9px 18px;font-weight:700;background:#fff;border:1.5px solid #c084fc;color:#6b21a8">💾 Lưu Tất Cả Link & Cập Nhật Realtime</button>
               </div>
-            </div>
-
-            <!-- COLLAPSIBLE RAW MEDIA FILES DISPLAY (HIDDEN BY DEFAULT) -->
-            <div style="margin-top:20px;padding-top:16px;border-top:1px dashed var(--line)">
-              <div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer" onclick="toggleRawMediaGrid()">
-                <span style="font-size:13px;font-weight:700;color:var(--dark);display:flex;align-items:center;gap:6px">
-                  📂 Danh sách tệp media trong bộ nhớ hệ thống (<span id="rawMediaCount">0</span> tệp)
-                </span>
-                <span id="toggleRawMediaBtn" style="font-size:12px;font-weight:700;color:var(--blue)">▼ Hiển thị tệp</span>
-              </div>
-              <div id="mediaGridDisplay" class="media-grid" style="display:none;margin-top:16px"></div>
             </div>
 
           </div>
@@ -2393,11 +2390,11 @@
     }
 
     let currentDriveFolders = [
-      { id: '1', name: 'Hình ảnh Bối Bối', type: 'IMAGE', url: '' },
-      { id: '2', name: 'Hình ảnh KenStore', type: 'IMAGE', url: '' },
-      { id: '3', name: 'Hình ảnh Mốt lab', type: 'IMAGE', url: '' },
-      { id: '4', name: 'Hình ảnh Ụm Bò Milk', type: 'IMAGE', url: '' },
-      { id: '5', name: 'Video Ụm Bò Milk', type: 'VIDEO', url: '' },
+      { id: '1', name: 'Hình ảnh Bối Bối', type: 'IMAGE', url: '', count: 0 },
+      { id: '2', name: 'Hình ảnh KenStore', type: 'IMAGE', url: '', count: 0 },
+      { id: '3', name: 'Hình ảnh Mốt lab', type: 'IMAGE', url: '', count: 0 },
+      { id: '4', name: 'Hình ảnh Ụm Bò Milk', type: 'IMAGE', url: '', count: 0 },
+      { id: '5', name: 'Video Ụm Bò Milk', type: 'VIDEO', url: '', count: 0 },
     ];
 
     async function loadDriveLinks() {
@@ -2414,7 +2411,33 @@
 
     function renderDriveFolderRows() {
       const container = document.getElementById('driveFoldersContainer');
+      const breakdownContainer = document.getElementById('realtimeFolderBreakdownGrid');
       setElText('totalDriveFoldersCount', currentDriveFolders.length);
+
+      if (breakdownContainer) {
+        breakdownContainer.innerHTML = currentDriveFolders.map(f => {
+          const isVid = f.type === 'VIDEO';
+          const icon = isVid ? '🎥' : '🖼️';
+          const count = f.count || 0;
+          return `
+            <div style="background:#fff;border:1.5px solid ${count > 0 ? '#c084fc' : '#e2e8f0'};border-radius:14px;padding:12px 14px;box-shadow:0 3px 10px rgba(126,34,206,0.03);display:flex;flex-direction:column;gap:6px">
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <span style="font-size:12.5px;font-weight:800;color:#581c87;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${(f.name || '').replace(/"/g, '&quot;')}">${icon} ${f.name}</span>
+                <span class="badge ${count > 0 ? 'ok' : 'wait'}" style="font-size:10px;font-weight:800;padding:2px 8px">${isVid ? 'Video' : 'Ảnh'}</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:2px">
+                <div>
+                  <strong style="font-size:22px;font-weight:900;color:${count > 0 ? 'var(--pink)' : 'var(--dark)'}">${count}</strong>
+                  <span style="font-size:11px;color:var(--muted);font-weight:600"> tệp</span>
+                </div>
+                <span style="font-size:11px;font-weight:700;color:${count > 0 ? '#047857' : (f.url ? '#d97706' : 'var(--muted)')}">
+                  ${count > 0 ? '🟢 Realtime Active' : (f.url ? '⚡ Đang đồng bộ...' : '⚪ Chưa có link')}
+                </span>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
 
       if (!container) return;
 
@@ -2422,12 +2445,16 @@
         <div style="display:flex;gap:10px;align-items:center;background:#fff;padding:10px 14px;border-radius:12px;border:1px solid #e9d5ff;box-shadow:0 2px 6px rgba(126,34,206,0.04)">
           <input type="text" value="${(f.name || '').replace(/"/g, '&quot;')}" onchange="updateDriveFolder(${idx}, 'name', this.value)" placeholder="Thương hiệu / Tên thư mục" style="width:180px;font-size:12.5px;font-weight:700;padding:8px 12px;border-radius:8px;border:1px solid #d8b4fe;background:#faf5ff;color:#581c87">
           
-          <select onchange="updateDriveFolder(${idx}, 'type', this.value)" style="width:105px;font-size:12px;font-weight:700;padding:8px 8px;border-radius:8px;border:1px solid #d8b4fe;background:#fff;color:#581c87">
+          <select onchange="updateDriveFolder(${idx}, 'type', this.value);autoSaveDriveLinksDebounced()" style="width:105px;font-size:12px;font-weight:700;padding:8px 8px;border-radius:8px;border:1px solid #d8b4fe;background:#fff;color:#581c87">
             <option value="IMAGE" ${f.type === 'IMAGE' ? 'selected' : ''}>🖼️ Ảnh</option>
             <option value="VIDEO" ${f.type === 'VIDEO' ? 'selected' : ''}>🎥 Video</option>
           </select>
 
-          <input type="url" value="${(f.url || '').replace(/"/g, '&quot;')}" onchange="updateDriveFolder(${idx}, 'url', this.value)" placeholder="https://drive.google.com/drive/folders/... (Link được chia sẻ quyền xem/sửa)" style="flex:1;font-size:12.5px;padding:8px 12px;border-radius:8px;border:1px solid #d8b4fe;background:#fff">
+          <input type="url" value="${(f.url || '').replace(/"/g, '&quot;')}" onchange="updateDriveFolder(${idx}, 'url', this.value);autoSaveDriveLinksDebounced()" oninput="updateDriveFolder(${idx}, 'url', this.value);autoSaveDriveLinksDebounced()" placeholder="https://drive.google.com/drive/folders/... (Link được chia sẻ quyền xem/sửa)" style="flex:1;font-size:12.5px;padding:8px 12px;border-radius:8px;border:1px solid #d8b4fe;background:#fff">
+
+          <span class="badge ${f.count > 0 ? 'ok' : 'wait'}" style="font-size:11.5px;font-weight:800;padding:6px 12px;white-space:nowrap">
+            ${f.type === 'VIDEO' ? '🎥' : '📸'} ${f.count || 0} tệp realtime
+          </span>
 
           <button type="button" class="ghost small" onclick="removeDriveFolderRow(${idx})" style="color:var(--red);border-radius:8px;padding:6px 10px;font-size:12px;border-color:#fca5a5">🗑️ Xóa</button>
         </div>
@@ -2440,12 +2467,21 @@
       }
     }
 
+    let driveSaveTimeout = null;
+    function autoSaveDriveLinksDebounced() {
+      if (driveSaveTimeout) clearTimeout(driveSaveTimeout);
+      driveSaveTimeout = setTimeout(() => {
+        saveDriveLinks(false);
+      }, 700);
+    }
+
     function addDriveFolderRow() {
       currentDriveFolders.push({
         id: Date.now().toString(),
         name: `Thư mục ${currentDriveFolders.length + 1}`,
         type: 'IMAGE',
         url: '',
+        count: 0
       });
       renderDriveFolderRows();
     }
@@ -2456,18 +2492,26 @@
         return;
       }
       currentDriveFolders.splice(idx, 1);
-      renderDriveFolderRows();
+      saveDriveLinks(false);
     }
 
-    async function saveDriveLinks() {
+    async function saveDriveLinks(showAlert = true) {
       try {
         const res = await request('/media/drive-links', {
           method: 'POST',
           body: JSON.stringify({ links: currentDriveFolders })
         });
-        alert(res.message || '✅ Đã lưu danh sách liên kết Google Drive thành công!');
+        if (res && Array.isArray(res.data)) {
+          currentDriveFolders = res.data;
+          renderDriveFolderRows();
+        }
+        if (showAlert) {
+          alert(res.message || '✅ Đã lưu và tự động đồng bộ liên kết Google Drive realtime!');
+        }
       } catch (err) {
-        alert('🔴 Lỗi lưu link Google Drive: ' + err.message);
+        if (showAlert) {
+          alert('🔴 Lỗi lưu link Google Drive: ' + err.message);
+        }
       }
     }
 
