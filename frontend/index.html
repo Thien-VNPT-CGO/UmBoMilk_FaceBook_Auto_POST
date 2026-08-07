@@ -518,9 +518,25 @@
 
     .media-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-      gap: 10px;
-      margin-top: 10px
+      grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+      gap: 16px;
+      margin-top: 14px;
+    }
+
+    .media-card {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.03);
+      transition: all 0.25s ease;
+      position: relative;
+    }
+
+    .media-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 26px rgba(236, 72, 153, 0.16);
+      border-color: var(--pink);
     }
 
     .media-thumb {
@@ -1072,40 +1088,62 @@
         <!-- TAB 7: MEDIA STORE -->
         <div id="media" class="panel">
           <div class="grid">
-            <div class="card c8">
-              <div class="section-title">
-                <h3>Kho hình ảnh và video</h3>
-                <div class="row"><label class="button"
-                    style="cursor:pointer;display:inline-block;padding:9px 15px;background:var(--pink);color:#fff;border-radius:9px;font-weight:700">↑
-                    Tải media lên <input type="file" id="globalMediaUpload" multiple accept="image/*,video/*"
-                      style="display:none" onchange="uploadGlobalMedia(this)"></label><button class="ghost small"
-                    onclick="shuffleMediaAllocation()">🎲 Phân bổ ngẫu nhiên</button></div>
+            <div class="card c8" style="background:#fff;border-radius:16px;box-shadow:0 4px 16px rgba(0,0,0,0.03);padding:20px">
+              <div class="section-title" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+                <div>
+                  <h3 style="font-size:18px;font-weight:800;color:var(--dark);margin:0">🖼️ Kho hình ảnh & video</h3>
+                  <div style="font-size:12.5px;color:var(--muted);margin-top:2px">Quản lý tập trung tất cả hình ảnh/video dùng chung cho các chiến dịch tự động.</div>
+                </div>
+                <div class="row" style="gap:10px">
+                  <label class="button" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;padding:9px 16px;background:linear-gradient(135deg,var(--pink),#db2777);color:#fff;border-radius:10px;font-weight:700;box-shadow:0 4px 12px rgba(236,72,153,0.3)">
+                    ↑ Tải media lên <input type="file" id="globalMediaUpload" multiple accept="image/*,video/*" style="display:none" onchange="uploadGlobalMedia(this)">
+                  </label>
+                  <button class="ghost small" style="border-radius:10px;padding:8px 14px;font-weight:700" onclick="shuffleMediaAllocation()">🎲 Phân bổ ngẫu nhiên</button>
+                </div>
               </div>
-              <div class="notice">Bài hình ảnh cần <b>đúng 6 hình</b> ngẫu nhiên (Fisher-Yates shuffle). Bài video cần
-                <b>đúng 1 video</b>.</div>
+
+              <div class="notice" style="background:linear-gradient(135deg,#fff0f6,#fff7fb);border:1px solid #f6d2e4;border-radius:12px;padding:12px 16px;font-size:12.5px;color:var(--dark);line-height:1.5">
+                • 📸 Bài viết Hình ảnh: AI tự động lấy <b>đúng 6 hình ảnh</b> (Fisher-Yates shuffle) hoặc theo danh sách ảnh được Admin/Manager chỉ định.<br>
+                • 🎥 Bài viết Video: AI tự động lấy <b>đúng 1 video</b> hoặc theo video được Admin/Manager chỉ định.
+              </div>
+
               <div id="mediaGridDisplay" class="media-grid"></div>
             </div>
-            <div class="card c4">
-              <h3>Kiểm tra phân bổ tài nguyên</h3>
-              <div class="notice">Thống kê dung lượng kho media dùng chung giữa các chiến dịch.</div>
-              <p>Tổng hình ảnh khả dụng: <b id="totalImagesCount">0</b></p>
-              <p>Tổng video khả dụng: <b id="totalVideosCount">0</b></p><span id="mediaStatusBadge" class="badge ok">Đủ
-                tài nguyên</span>
 
-              <div style="margin-top:20px;padding-top:16px;border-top:1px dashed var(--line)">
-                <h4 style="font-size:14px;color:var(--ink);margin-bottom:8px;display:flex;align-items:center;gap:6px">
+            <div class="card c4" style="background:#fff;border-radius:16px;box-shadow:0 4px 16px rgba(0,0,0,0.03);padding:20px;display:flex;flex-direction:column;gap:16px">
+              <div>
+                <h3 style="font-size:16px;font-weight:800;color:var(--dark);margin-bottom:4px">📊 Kiểm tra tài nguyên</h3>
+                <div style="font-size:12px;color:var(--muted);margin-bottom:12px">Thống kê dung lượng media khả dụng dùng chung.</div>
+                
+                <div style="background:#f8fafc;border:1px solid var(--line);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:8px">
+                  <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--ink)">
+                    <span>📸 Tổng hình ảnh khả dụng:</span>
+                    <b id="totalImagesCount" style="font-size:15px;color:var(--dark)">0</b>
+                  </div>
+                  <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--ink)">
+                    <span>🎥 Tổng video khả dụng:</span>
+                    <b id="totalVideosCount" style="font-size:15px;color:var(--dark)">0</b>
+                  </div>
+                  <div style="margin-top:4px">
+                    <span id="mediaStatusBadge" class="badge ok" style="display:inline-block;padding:4px 10px;border-radius:8px;font-weight:800;font-size:11.5px">Đủ tài nguyên</span>
+                  </div>
+                </div>
+              </div>
+
+              <div style="padding-top:16px;border-top:1.5px dashed var(--line)">
+                <h4 style="font-size:14.5px;font-weight:800;color:var(--dark);margin-bottom:8px;display:flex;align-items:center;gap:6px">
                   🌐 Liên Kết Google Drive Kho Media
                 </h4>
-                <div style="background:#f8fafc;padding:14px;border-radius:10px;border:1px solid var(--line)">
-                  <label style="font-size:12px;font-weight:700;display:block;margin-bottom:4px;color:var(--ink)">🖼️ Link Google Drive chứa HÌNH ẢNH:</label>
-                  <input id="gdriveImageLink" type="url" placeholder="https://drive.google.com/drive/folders/... (Folder/Link Ảnh)" style="width:100%;font-size:12px;padding:8px;border-radius:6px;border:1px solid #cbd5e1;margin-bottom:12px">
+                <div style="background:linear-gradient(135deg,#f8fafc,#f1f5f9);padding:16px;border-radius:14px;border:1px solid #cbd5e1">
+                  <label style="font-size:12px;font-weight:700;display:block;margin-bottom:6px;color:var(--dark)">🖼️ Link Google Drive chứa HÌNH ẢNH:</label>
+                  <input id="gdriveImageLink" type="url" placeholder="https://drive.google.com/drive/folders/... (Folder/Link Ảnh)" style="width:100%;font-size:12px;padding:10px 12px;border-radius:8px;border:1px solid #cbd5e1;margin-bottom:12px;background:#fff">
 
-                  <label style="font-size:12px;font-weight:700;display:block;margin-bottom:4px;color:var(--ink)">🎥 Link Google Drive chứa VIDEO:</label>
-                  <input id="gdriveVideoLink" type="url" placeholder="https://drive.google.com/drive/folders/... (Folder/Link Video)" style="width:100%;font-size:12px;padding:8px;border-radius:6px;border:1px solid #cbd5e1;margin-bottom:14px">
+                  <label style="font-size:12px;font-weight:700;display:block;margin-bottom:6px;color:var(--dark)">🎥 Link Google Drive chứa VIDEO:</label>
+                  <input id="gdriveVideoLink" type="url" placeholder="https://drive.google.com/drive/folders/... (Folder/Link Video)" style="width:100%;font-size:12px;padding:10px 12px;border-radius:8px;border:1px solid #cbd5e1;margin-bottom:16px;background:#fff">
 
-                  <div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap">
-                    <button type="button" class="ghost small" onclick="saveDriveLinks()" style="border-radius:8px">💾 Lưu Link</button>
-                    <button type="button" class="small" onclick="importFromGoogleDrive()" style="background:linear-gradient(135deg,#0284c7,#0369a1);color:#fff;border-radius:8px;border:none;padding:7px 12px;font-weight:700">📥 Đồng bộ từ Drive</button>
+                  <div style="display:flex;gap:8px;justify-content:flex-end">
+                    <button type="button" class="ghost small" onclick="saveDriveLinks()" style="border-radius:8px;padding:8px 12px;font-weight:700">💾 Lưu Link</button>
+                    <button type="button" class="small" onclick="importFromGoogleDrive()" style="background:linear-gradient(135deg,#0284c7,#0369a1);color:#fff;border-radius:8px;border:none;padding:8px 14px;font-weight:700;box-shadow:0 3px 10px rgba(2,132,199,0.25)">📥 Đồng bộ từ Drive</button>
                   </div>
                 </div>
               </div>
@@ -2150,29 +2188,43 @@
         }
 
         if (!mediaList.length) {
-          grid.innerHTML = '<p class="empty" style="grid-column:1/-1;text-align:center;padding:40px;color:var(--muted)">Chưa có tệp media nào trong kho. Bấm nút <b>↑ Tải media lên</b> để tải hình ảnh/video đầu tiên!</p>';
+          grid.innerHTML = '<p class="empty" style="grid-column:1/-1;text-align:center;padding:40px;color:var(--muted)">Chưa có tệp media nào trong kho. Bấm nút <b>↑ Tải media lên</b> hoặc <b>📥 Đồng bộ từ Drive</b> để thêm media!</p>';
           return;
         }
 
         grid.innerHTML = mediaList.map(m => {
           const isVideo = m.mimeType?.startsWith('video') || m.mediaType === 'VIDEO';
-          const url = m.storageUrl;
+          let url = m.storageUrl;
+
+          // Auto-resolve Google Drive CDN URL if local upload path was cleaned or missing
+          if ((!url || url.startsWith('/uploads/') || !url.startsWith('http')) && (m.fileName + ' ' + url).match(/([a-zA-Z0-9_-]{25,40})/)) {
+            const match = (m.fileName + ' ' + url).match(/([a-zA-Z0-9_-]{25,40})/);
+            if (match) {
+              url = `https://lh3.googleusercontent.com/d/${match[1]}`;
+            }
+          }
+
           const sizeMb = (m.fileSize / (1024 * 1024)).toFixed(2);
+          let displayName = m.fileName;
+          if (displayName.length > 22) {
+            displayName = displayName.substring(0, 10) + '...' + displayName.substring(displayName.length - 8);
+          }
+
           return `
-        <div style="background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.03);position:relative">
-          <div style="height:140px;background:#f5e8ef;display:grid;place-items:center;overflow:hidden;position:relative">
+        <div class="media-card">
+          <div style="height:150px;background:linear-gradient(135deg,#fff0f6,#fce7f3);display:grid;place-items:center;overflow:hidden;position:relative">
             ${isVideo ? `
               <video src="${url}" style="width:100%;height:100%;object-fit:cover" controls></video>
             ` : `
-              <img src="${url}" style="width:100%;height:100%;object-fit:cover" alt="${m.fileName}">
+              <img src="${url}" style="width:100%;height:100%;object-fit:cover" alt="${m.fileName}" onerror="handleMediaImageError(this, '${m.fileName.replace(/'/g, "\\'")}', '${url}')">
             `}
-            <span class="badge ${isVideo ? 'run' : 'ok'}" style="position:absolute;top:8px;right:8px;font-size:10px;font-weight:800;padding:2px 8px;border-radius:6px">${isVideo ? 'VIDEO' : 'IMAGE'}</span>
+            <span class="badge ${isVideo ? 'run' : 'ok'}" style="position:absolute;top:8px;right:8px;font-size:10px;font-weight:800;padding:3px 10px;border-radius:8px;box-shadow:0 2px 6px rgba(0,0,0,0.15)">${isVideo ? '🎥 VIDEO' : '📸 IMAGE'}</span>
           </div>
-          <div style="padding:10px 12px">
-            <div style="font-weight:700;font-size:12.5px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${m.fileName}">${m.fileName}</div>
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
-              <span style="font-size:11px;color:var(--muted)">${sizeMb} MB</span>
-              <button type="button" class="ghost small" style="color:var(--red);border-color:var(--red);padding:2px 8px;font-size:11px" onclick="deleteMediaFile('${m.id}')">🗑️ Xóa</button>
+          <div style="padding:12px">
+            <div style="font-weight:700;font-size:12px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${m.fileName}">${displayName}</div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px">
+              <span style="font-size:11px;color:var(--muted);font-weight:600">💾 ${sizeMb} MB</span>
+              <button type="button" class="ghost small" style="color:var(--red);border-color:#fca5a5;padding:3px 10px;font-size:11px;border-radius:8px;font-weight:700" onclick="deleteMediaFile('${m.id}')">🗑️ Xóa</button>
             </div>
           </div>
         </div>
@@ -2182,6 +2234,30 @@
         grid.innerHTML = `<p style="color:var(--red);grid-column:1/-1">🔴 Lỗi tải kho media: ${err.message}</p>`;
       } finally {
         loadDriveLinks();
+      }
+    }
+
+    function handleMediaImageError(img, fileName, originalUrl) {
+      if (img.dataset.triedFallback) {
+        img.onerror = null;
+        img.style.display = 'none';
+        if (img.parentElement) {
+          img.parentElement.innerHTML = `
+            <div style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(135deg,#fff0f6,#fce7f3);color:#e11d48;padding:12px;text-align:center">
+              <div style="font-size:28px;margin-bottom:4px">🖼️</div>
+              <div style="font-size:11.5px;font-weight:800;color:var(--dark);word-break:break-all;line-height:1.2">Ảnh Google Drive</div>
+              <div style="font-size:10px;color:var(--muted);margin-top:4px">Đã sẵn sàng đính kèm</div>
+            </div>
+          `;
+        }
+        return;
+      }
+      img.dataset.triedFallback = 'true';
+      const match = (fileName + ' ' + originalUrl).match(/([a-zA-Z0-9_-]{25,40})/);
+      if (match) {
+        img.src = `https://lh3.googleusercontent.com/d/${match[1]}`;
+      } else if (originalUrl && !originalUrl.startsWith('http')) {
+        img.src = `${window.location.origin}${originalUrl.startsWith('/') ? '' : '/'}${originalUrl}`;
       }
     }
 

@@ -294,10 +294,13 @@ async function downloadAndSaveDriveFile(fileIdOrUrl: string, expectedType: 'IMAG
   const mediaType = contentType.startsWith('video/') ? 'VIDEO' : expectedType;
   const checksum = crypto.createHash('md5').update(buffer).digest('hex');
 
+  const driveIds = extractDriveFileIds(fileIdOrUrl);
+  const directDriveUrl = driveIds.length > 0 ? `https://lh3.googleusercontent.com/d/${driveIds[0]}` : (isDirectUrl ? fileIdOrUrl : `/uploads/${filename}`);
+
   const media = await prisma.mediaFile.create({
     data: {
       fileName: `gdrive_${expectedType.toLowerCase()}_${filename}`,
-      storageUrl: `/uploads/${filename}`,
+      storageUrl: directDriveUrl,
       mimeType: contentType,
       fileSize: buffer.length,
       mediaType,
