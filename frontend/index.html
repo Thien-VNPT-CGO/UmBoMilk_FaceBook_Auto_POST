@@ -1092,72 +1092,99 @@
 
         <!-- TAB 7: MEDIA STORE -->
         <div id="media" class="panel">
-          <div class="grid">
-            <div class="card c8" style="background:#fff;border-radius:16px;box-shadow:0 4px 16px rgba(0,0,0,0.03);padding:20px">
-              <div class="section-title" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-                <div>
-                  <h3 style="font-size:18px;font-weight:800;color:var(--dark);margin:0">🖼️ Kho hình ảnh & video</h3>
-                  <div style="font-size:12.5px;color:var(--muted);margin-top:2px">Quản lý tập trung tất cả hình ảnh/video dùng chung cho các chiến dịch tự động.</div>
-                </div>
-                <div class="row" style="gap:10px">
-                  <label class="button" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;padding:9px 16px;background:linear-gradient(135deg,var(--pink),#db2777);color:#fff;border-radius:10px;font-weight:700;box-shadow:0 4px 12px rgba(236,72,153,0.3)">
-                    ↑ Tải media lên <input type="file" id="globalMediaUpload" multiple accept="image/*,video/*" style="display:none" onchange="uploadGlobalMedia(this)">
-                  </label>
-                  <button class="ghost small" style="border-radius:10px;padding:8px 14px;font-weight:700" onclick="shuffleMediaAllocation()">🎲 Phân bổ ngẫu nhiên</button>
-                </div>
-              </div>
-
-              <div class="notice" style="background:linear-gradient(135deg,#fff0f6,#fff7fb);border:1px solid #f6d2e4;border-radius:12px;padding:12px 16px;font-size:12.5px;color:var(--dark);line-height:1.5">
-                • 📸 Bài viết Hình ảnh: AI tự động lấy <b>đúng 6 hình ảnh</b> (Fisher-Yates shuffle) hoặc theo danh sách ảnh được Admin/Manager chỉ định.<br>
-                • 🎥 Bài viết Video: AI tự động lấy <b>đúng 1 video</b> hoặc theo video được Admin/Manager chỉ định.
-              </div>
-
-              <div id="mediaGridDisplay" class="media-grid"></div>
-            </div>
-
-            <div class="card c4" style="background:#fff;border-radius:16px;box-shadow:0 4px 16px rgba(0,0,0,0.03);padding:20px;display:flex;flex-direction:column;gap:16px">
+          <div class="card c12" style="background:#fff;border-radius:18px;box-shadow:0 6px 24px rgba(0,0,0,0.04);padding:24px">
+            
+            <!-- SECTION HEADER BANNER -->
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;padding-bottom:16px;border-bottom:1.5px solid #f1f5f9;flex-wrap:wrap;gap:12px">
               <div>
-                <h3 style="font-size:16px;font-weight:800;color:var(--dark);margin-bottom:4px">📊 Kiểm tra tài nguyên</h3>
-                <div style="font-size:12px;color:var(--muted);margin-bottom:12px">Thống kê dung lượng media khả dụng dùng chung.</div>
-                
-                <div style="background:#f8fafc;border:1px solid var(--line);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:8px">
-                  <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--ink)">
-                    <span>📸 Tổng hình ảnh khả dụng:</span>
-                    <b id="totalImagesCount" style="font-size:15px;color:var(--dark)">0</b>
-                  </div>
-                  <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--ink)">
-                    <span>🎥 Tổng video khả dụng:</span>
-                    <b id="totalVideosCount" style="font-size:15px;color:var(--dark)">0</b>
-                  </div>
-                  <div style="margin-top:4px">
-                    <span id="mediaStatusBadge" class="badge ok" style="display:inline-block;padding:4px 10px;border-radius:8px;font-weight:800;font-size:11.5px">Đủ tài nguyên</span>
-                  </div>
+                <h3 style="font-size:20px;font-weight:800;color:var(--dark);margin:0;display:flex;align-items:center;gap:8px">
+                  🖼️ Kho Media & Thư Mục Google Drive AI
+                </h3>
+                <div style="font-size:13px;color:var(--muted);margin-top:4px">
+                  Quản lý tập trung các liên kết Google Drive thương hiệu (Bối Bối, KenStore, Mốt lab, Ụm Bò Milk...) để AI tự động quét & đăng media tương thích lên bài viết.
+                </div>
+              </div>
+              
+              <div style="display:flex;gap:10px;align-items:center">
+                <label class="button" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;padding:9px 16px;background:linear-gradient(135deg,var(--pink),#db2777);color:#fff;border-radius:10px;font-weight:700;box-shadow:0 4px 12px rgba(236,72,153,0.3);font-size:13px">
+                  ↑ Upload Tệp Media <input type="file" id="globalMediaUpload" multiple accept="image/*,video/*" style="display:none" onchange="uploadGlobalMedia(this)">
+                </label>
+                <button class="ghost small" style="border-radius:10px;padding:9px 14px;font-weight:700;font-size:12.5px" onclick="shuffleMediaAllocation()">🎲 Phân bổ ngẫu nhiên</button>
+                <button type="button" class="small" onclick="importFromGoogleDrive()" style="background:linear-gradient(135deg,#0284c7,#0369a1);color:#fff;border-radius:10px;border:none;padding:9px 16px;font-weight:700;box-shadow:0 4px 12px rgba(2,132,199,0.3);font-size:13px">📥 Đồng bộ tất cả từ Drive</button>
+              </div>
+            </div>
+
+            <!-- STATS CARDS BAR -->
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px">
+              <div style="background:linear-gradient(135deg,#f8fafc,#f1f5f9);border:1px solid #e2e8f0;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:4px">
+                <span style="font-size:12px;font-weight:700;color:var(--muted)">📸 HÌNH ẢNH ĐÃ NẠP</span>
+                <div style="display:flex;justify-content:space-between;align-items:baseline">
+                  <strong id="totalImagesCount" style="font-size:24px;font-weight:900;color:var(--dark)">0</strong>
+                  <small style="color:var(--muted);font-weight:600">Khả dụng</small>
                 </div>
               </div>
 
-              <div style="padding-top:16px;border-top:1.5px dashed var(--line)">
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-                  <h4 style="font-size:14.5px;font-weight:800;color:var(--dark);margin:0;display:flex;align-items:center;gap:6px">
-                    🌐 Liên Kết Thư Mục Google Drive Theo Thương Hiệu
-                  </h4>
-                  <button type="button" class="ghost small" onclick="addDriveFolderRow()" style="border-radius:8px;padding:4px 10px;font-size:11.5px;font-weight:700">＋ Thêm Thư Mục</button>
+              <div style="background:linear-gradient(135deg,#f8fafc,#f1f5f9);border:1px solid #e2e8f0;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:4px">
+                <span style="font-size:12px;font-weight:700;color:var(--muted)">🎥 VIDEO ĐÃ NẠP</span>
+                <div style="display:flex;justify-content:space-between;align-items:baseline">
+                  <strong id="totalVideosCount" style="font-size:24px;font-weight:900;color:var(--dark)">0</strong>
+                  <small style="color:var(--muted);font-weight:600">Khả dụng</small>
                 </div>
-                <div style="background:linear-gradient(135deg,#f8fafc,#f1f5f9);padding:14px;border-radius:14px;border:1px solid #cbd5e1">
-                  <div style="font-size:11.5px;color:var(--muted);margin-bottom:10px">
-                    💡 Chỉ cần chia sẻ link Google Drive (quyền Chỉnh sửa hoặc Xem), AI tool sẽ tự động phân loại hình ảnh & video tương thích để tự động tạo bài & đăng bài!
-                  </div>
+              </div>
 
-                  <div id="driveFoldersContainer" style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px">
-                    <!-- Dynamic Folder rows will be rendered here -->
-                  </div>
+              <div style="background:linear-gradient(135deg,#f8fafc,#f1f5f9);border:1px solid #e2e8f0;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:4px">
+                <span style="font-size:12px;font-weight:700;color:var(--muted)">🌐 THƯ MỤC DRIVE CẤU HÌNH</span>
+                <div style="display:flex;justify-content:space-between;align-items:baseline">
+                  <strong id="totalDriveFoldersCount" style="font-size:24px;font-weight:900;color:var(--blue)">5</strong>
+                  <small style="color:var(--muted);font-weight:600">Đã thiết lập</small>
+                </div>
+              </div>
 
-                  <div style="display:flex;gap:8px;justify-content:flex-end;border-top:1px solid #cbd5e1;padding-top:10px">
-                    <button type="button" class="ghost small" onclick="saveDriveLinks()" style="border-radius:8px;padding:8px 12px;font-weight:700">💾 Lưu Tất Cả Link</button>
-                    <button type="button" class="small" onclick="importFromGoogleDrive()" style="background:linear-gradient(135deg,#0284c7,#0369a1);color:#fff;border-radius:8px;border:none;padding:8px 14px;font-weight:700;box-shadow:0 3px 10px rgba(2,132,199,0.25)">📥 Đồng bộ tất cả từ Drive</button>
-                  </div>
+              <div style="background:linear-gradient(135deg,#f8fafc,#f1f5f9);border:1px solid #e2e8f0;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:4px">
+                <span style="font-size:12px;font-weight:700;color:var(--muted)">⚡ TRẠNG THÁI TÀI NGUYÊN</span>
+                <div style="margin-top:6px">
+                  <span id="mediaStatusBadge" class="badge ok" style="display:inline-block;padding:5px 12px;border-radius:8px;font-weight:800;font-size:12px">Đủ tài nguyên</span>
                 </div>
               </div>
             </div>
+
+            <!-- MAIN GOOGLE DRIVE BRAND FOLDERS SECTION -->
+            <div style="background:linear-gradient(135deg,#faf5ff,#f3e8ff);padding:20px;border-radius:16px;border:1px solid #e9d5ff">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+                <div>
+                  <h4 style="font-size:16px;font-weight:800;color:#581c87;margin:0;display:flex;align-items:center;gap:8px">
+                    🌐 Danh Sách Thư Mục Google Drive Theo Thương Hiệu & Sản Phẩm
+                  </h4>
+                  <div style="font-size:12px;color:#7e22ce;margin-top:2px">
+                    Chỉ cần dán link Google Drive (quyền Xem/Sửa). AI Tool sẽ tự động quét và phân loại hình ảnh & video bài viết theo tên thương hiệu!
+                  </div>
+                </div>
+                <button type="button" class="button small" onclick="addDriveFolderRow()" style="background:#7e22ce;color:#fff;border-radius:10px;padding:6px 14px;font-size:12px;font-weight:700;box-shadow:0 3px 10px rgba(126,34,206,0.25)">
+                  ＋ Thêm Thư Mục Mới
+                </button>
+              </div>
+
+              <div id="driveFoldersContainer" style="display:flex;flex-direction:column;gap:12px;margin-bottom:16px">
+                <!-- Dynamic Folder rows rendered here -->
+              </div>
+
+              <div style="display:flex;gap:10px;justify-content:flex-end;border-top:1px dashed #d8b4fe;padding-top:14px">
+                <button type="button" class="ghost small" onclick="saveDriveLinks()" style="border-radius:10px;padding:9px 16px;font-weight:700;background:#fff;border:1px solid #c084fc;color:#6b21a8">💾 Lưu Tất Cả Link</button>
+                <button type="button" class="small" onclick="importFromGoogleDrive()" style="background:linear-gradient(135deg,#0284c7,#0369a1);color:#fff;border-radius:10px;border:none;padding:9px 18px;font-weight:700;box-shadow:0 4px 12px rgba(2,132,199,0.3)">📥 Đồng bộ tất cả từ Drive</button>
+              </div>
+            </div>
+
+            <!-- COLLAPSIBLE RAW MEDIA FILES DISPLAY (HIDDEN BY DEFAULT) -->
+            <div style="margin-top:20px;padding-top:16px;border-top:1px dashed var(--line)">
+              <div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer" onclick="toggleRawMediaGrid()">
+                <span style="font-size:13px;font-weight:700;color:var(--dark);display:flex;align-items:center;gap:6px">
+                  📂 Danh sách tệp media trong bộ nhớ hệ thống (<span id="rawMediaCount">0</span> tệp)
+                </span>
+                <span id="toggleRawMediaBtn" style="font-size:12px;font-weight:700;color:var(--blue)">▼ Hiển thị tệp</span>
+              </div>
+              <div id="mediaGridDisplay" class="media-grid" style="display:none;margin-top:16px"></div>
+            </div>
+
           </div>
         </div>
 
@@ -2240,9 +2267,22 @@
     }
     document.querySelectorAll('.nav button').forEach(x => x.onclick = () => openPage(x.dataset.page));
 
+    function toggleRawMediaGrid() {
+      const grid = document.getElementById('mediaGridDisplay');
+      const btn = document.getElementById('toggleRawMediaBtn');
+      if (!grid) return;
+
+      if (grid.style.display === 'none' || !grid.style.display) {
+        grid.style.display = 'grid';
+        if (btn) btn.textContent = '▲ Ẩn danh sách tệp';
+      } else {
+        grid.style.display = 'none';
+        if (btn) btn.textContent = '▼ Hiển thị tệp';
+      }
+    }
+
     async function loadMedia() {
       const grid = document.getElementById('mediaGridDisplay');
-      if (!grid) return;
 
       try {
         const res = await request('/media').catch(() => ({ data: [] }));
@@ -2254,6 +2294,7 @@
 
         setElText('totalImagesCount', images.length);
         setElText('totalVideosCount', videos.length);
+        setElText('rawMediaCount', mediaList.length);
 
         const statusBadge = document.getElementById('mediaStatusBadge');
         if (statusBadge) {
@@ -2266,51 +2307,51 @@
           }
         }
 
-        if (!mediaList.length) {
-          grid.innerHTML = '<p class="empty" style="grid-column:1/-1;text-align:center;padding:40px;color:var(--muted)">Chưa có tệp media nào trong kho. Bấm nút <b>↑ Tải media lên</b> hoặc <b>📥 Đồng bộ từ Drive</b> để thêm media!</p>';
-          return;
-        }
+        if (grid) {
+          if (!mediaList.length) {
+            grid.innerHTML = '<p class="empty" style="grid-column:1/-1;text-align:center;padding:30px;color:var(--muted)">Chưa có tệp media nào trong kho. Dán link Google Drive hoặc upload tệp để thêm media!</p>';
+          } else {
+            grid.innerHTML = mediaList.map(m => {
+              const isVideo = m.mimeType?.startsWith('video') || m.mediaType === 'VIDEO';
+              let url = m.storageUrl;
 
-        grid.innerHTML = mediaList.map(m => {
-          const isVideo = m.mimeType?.startsWith('video') || m.mediaType === 'VIDEO';
-          let url = m.storageUrl;
+              if ((!url || url.startsWith('/uploads/') || !url.startsWith('http')) && (m.fileName + ' ' + url).match(/([a-zA-Z0-9_-]{25,40})/)) {
+                const match = (m.fileName + ' ' + url).match(/([a-zA-Z0-9_-]{25,40})/);
+                if (match) {
+                  url = `https://lh3.googleusercontent.com/d/${match[1]}`;
+                }
+              }
 
-          // Auto-resolve Google Drive CDN URL if local upload path was cleaned or missing
-          if ((!url || url.startsWith('/uploads/') || !url.startsWith('http')) && (m.fileName + ' ' + url).match(/([a-zA-Z0-9_-]{25,40})/)) {
-            const match = (m.fileName + ' ' + url).match(/([a-zA-Z0-9_-]{25,40})/);
-            if (match) {
-              url = `https://lh3.googleusercontent.com/d/${match[1]}`;
-            }
-          }
+              const sizeMb = (m.fileSize / (1024 * 1024)).toFixed(2);
+              let displayName = m.fileName;
+              if (displayName.length > 22) {
+                displayName = displayName.substring(0, 10) + '...' + displayName.substring(displayName.length - 8);
+              }
 
-          const sizeMb = (m.fileSize / (1024 * 1024)).toFixed(2);
-          let displayName = m.fileName;
-          if (displayName.length > 22) {
-            displayName = displayName.substring(0, 10) + '...' + displayName.substring(displayName.length - 8);
-          }
-
-          return `
-        <div class="media-card">
-          <div style="height:150px;background:linear-gradient(135deg,#fff0f6,#fce7f3);display:grid;place-items:center;overflow:hidden;position:relative">
-            ${isVideo ? `
-              <video src="${url}" style="width:100%;height:100%;object-fit:cover" controls></video>
-            ` : `
-              <img src="${url}" style="width:100%;height:100%;object-fit:cover" alt="${m.fileName}" onerror="handleMediaImageError(this, '${m.fileName.replace(/'/g, "\\'")}', '${url}')">
-            `}
-            <span class="badge ${isVideo ? 'run' : 'ok'}" style="position:absolute;top:8px;right:8px;font-size:10px;font-weight:800;padding:3px 10px;border-radius:8px;box-shadow:0 2px 6px rgba(0,0,0,0.15)">${isVideo ? '🎥 VIDEO' : '📸 IMAGE'}</span>
-          </div>
-          <div style="padding:12px">
-            <div style="font-weight:700;font-size:12px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${m.fileName}">${displayName}</div>
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px">
-              <span style="font-size:11px;color:var(--muted);font-weight:600">💾 ${sizeMb} MB</span>
-              <button type="button" class="ghost small" style="color:var(--red);border-color:#fca5a5;padding:3px 10px;font-size:11px;border-radius:8px;font-weight:700" onclick="deleteMediaFile('${m.id}')">🗑️ Xóa</button>
+              return `
+            <div class="media-card">
+              <div style="height:140px;background:linear-gradient(135deg,#fff0f6,#fce7f3);display:grid;place-items:center;overflow:hidden;position:relative">
+                ${isVideo ? `
+                  <video src="${url}" style="width:100%;height:100%;object-fit:cover" controls></video>
+                ` : `
+                  <img src="${url}" style="width:100%;height:100%;object-fit:cover" alt="${m.fileName}" onerror="handleMediaImageError(this, '${m.fileName.replace(/'/g, "\\'")}', '${url}')">
+                `}
+                <span class="badge ${isVideo ? 'run' : 'ok'}" style="position:absolute;top:8px;right:8px;font-size:10px;font-weight:800;padding:3px 10px;border-radius:8px;box-shadow:0 2px 6px rgba(0,0,0,0.15)">${isVideo ? '🎥 VIDEO' : '📸 IMAGE'}</span>
+              </div>
+              <div style="padding:10px">
+                <div style="font-weight:700;font-size:11.5px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${m.fileName}">${displayName}</div>
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
+                  <span style="font-size:10.5px;color:var(--muted);font-weight:600">💾 ${sizeMb} MB</span>
+                  <button type="button" class="ghost small" style="color:var(--red);border-color:#fca5a5;padding:2px 8px;font-size:10.5px;border-radius:6px;font-weight:700" onclick="deleteMediaFile('${m.id}')">🗑️ Xóa</button>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
-      `;
-        }).join('');
+          `;
+            }).join('');
+          }
+        }
       } catch (err) {
-        grid.innerHTML = `<p style="color:var(--red);grid-column:1/-1">🔴 Lỗi tải kho media: ${err.message}</p>`;
+        if (grid) grid.innerHTML = `<p style="color:var(--red);grid-column:1/-1">🔴 Lỗi tải kho media: ${err.message}</p>`;
       } finally {
         loadDriveLinks();
       }
@@ -2362,20 +2403,22 @@
 
     function renderDriveFolderRows() {
       const container = document.getElementById('driveFoldersContainer');
+      setElText('totalDriveFoldersCount', currentDriveFolders.length);
+
       if (!container) return;
 
       container.innerHTML = currentDriveFolders.map((f, idx) => `
-        <div style="display:flex;gap:8px;align-items:center;background:#fff;padding:8px 12px;border-radius:10px;border:1px solid #e2e8f0;box-shadow:0 1px 3px rgba(0,0,0,0.03)">
-          <input type="text" value="${(f.name || '').replace(/"/g, '&quot;')}" onchange="updateDriveFolder(${idx}, 'name', this.value)" placeholder="Thương hiệu / Tên thư mục" style="width:160px;font-size:12px;font-weight:700;padding:6px 10px;border-radius:6px;border:1px solid #cbd5e1;background:#f8fafc">
+        <div style="display:flex;gap:10px;align-items:center;background:#fff;padding:10px 14px;border-radius:12px;border:1px solid #e9d5ff;box-shadow:0 2px 6px rgba(126,34,206,0.04)">
+          <input type="text" value="${(f.name || '').replace(/"/g, '&quot;')}" onchange="updateDriveFolder(${idx}, 'name', this.value)" placeholder="Thương hiệu / Tên thư mục" style="width:180px;font-size:12.5px;font-weight:700;padding:8px 12px;border-radius:8px;border:1px solid #d8b4fe;background:#faf5ff;color:#581c87">
           
-          <select onchange="updateDriveFolder(${idx}, 'type', this.value)" style="width:95px;font-size:12px;font-weight:700;padding:6px 6px;border-radius:6px;border:1px solid #cbd5e1;background:#fff">
+          <select onchange="updateDriveFolder(${idx}, 'type', this.value)" style="width:105px;font-size:12px;font-weight:700;padding:8px 8px;border-radius:8px;border:1px solid #d8b4fe;background:#fff;color:#581c87">
             <option value="IMAGE" ${f.type === 'IMAGE' ? 'selected' : ''}>🖼️ Ảnh</option>
             <option value="VIDEO" ${f.type === 'VIDEO' ? 'selected' : ''}>🎥 Video</option>
           </select>
 
-          <input type="url" value="${(f.url || '').replace(/"/g, '&quot;')}" onchange="updateDriveFolder(${idx}, 'url', this.value)" placeholder="https://drive.google.com/drive/folders/... (Link được chia sẻ quyền xem/sửa)" style="flex:1;font-size:12px;padding:6px 10px;border-radius:6px;border:1px solid #cbd5e1">
+          <input type="url" value="${(f.url || '').replace(/"/g, '&quot;')}" onchange="updateDriveFolder(${idx}, 'url', this.value)" placeholder="https://drive.google.com/drive/folders/... (Link được chia sẻ quyền xem/sửa)" style="flex:1;font-size:12.5px;padding:8px 12px;border-radius:8px;border:1px solid #d8b4fe;background:#fff">
 
-          <button type="button" class="ghost small" onclick="removeDriveFolderRow(${idx})" style="color:var(--red);border-radius:6px;padding:4px 8px;font-size:11px">🗑️</button>
+          <button type="button" class="ghost small" onclick="removeDriveFolderRow(${idx})" style="color:var(--red);border-radius:8px;padding:6px 10px;font-size:12px;border-color:#fca5a5">🗑️ Xóa</button>
         </div>
       `).join('');
     }
