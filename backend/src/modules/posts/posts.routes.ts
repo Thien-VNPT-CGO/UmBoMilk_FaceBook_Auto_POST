@@ -317,8 +317,15 @@ router.post('/:id/approve', requireAuth, requirePermission('content.approve'), a
     });
     if (!post) throw new NotFoundError('Không tìm thấy bài viết');
 
+    const cp = await prisma.campaignPage.findUnique({
+      where: { id: post.campaignPageId },
+      include: { facebookPage: true },
+    });
+    if (!post) throw new NotFoundError('Không tìm thấy bài viết');
+
     const now = new Date();
-    const intervalMinutes = post.campaignPage?.intervalMinutes || 15;
+    const pageCustomInterval = cp?.facebookPage?.defaultIntervalMinutes;
+    const intervalMinutes = pageCustomInterval || cp?.intervalMinutes || 15;
     const intervalMs = intervalMinutes * 60 * 1000;
 
     // Find latest approved/scheduled/published post for the same page/campaign to enforce 15-min gap
@@ -393,7 +400,7 @@ router.post('/bulk-approve', requireAuth, requirePermission('content.approve'), 
 
     const posts = await prisma.generatedPost.findMany({
       where: { id: { in: postIds } },
-      include: { campaignPage: true },
+      include: { campaignPage: { include: { facebookPage: true } } },
       orderBy: { sequenceNumber: 'asc' },
     });
 
@@ -401,7 +408,8 @@ router.post('/bulk-approve', requireAuth, requirePermission('content.approve'), 
     const approvedPosts = [];
 
     for (const post of posts) {
-      const intervalMinutes = post.campaignPage?.intervalMinutes || 15;
+      const pageCustomInterval = post.campaignPage?.facebookPage?.defaultIntervalMinutes;
+      const intervalMinutes = pageCustomInterval || post.campaignPage?.intervalMinutes || 15;
       const intervalMs = intervalMinutes * 60 * 1000;
 
       const lastApprovedPost = await prisma.generatedPost.findFirst({

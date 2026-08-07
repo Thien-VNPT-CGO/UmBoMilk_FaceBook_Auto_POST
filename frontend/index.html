@@ -2285,9 +2285,50 @@
       if (page === 'settings') loadAiSettings();
       if (page === 'media') loadMedia();
       if (page === 'reports') loadReportsData();
-      if (page === 'calendar') loadPosts();
+      if (page === 'calendar') renderCalendarTimeline();
     }
     document.querySelectorAll('.nav button').forEach(x => x.onclick = () => openPage(x.dataset.page));
+
+    function renderCalendarTimeline() {
+      const container = document.getElementById('calendarTimeline');
+      if (!container) return;
+      const pages = window.loadedPages || [];
+      if (!pages.length) {
+        container.innerHTML = '<div style="padding:30px;text-align:center;color:var(--muted);font-weight:700">⚠️ Chưa có Facebook Page nào được kết nối. Vui lòng vào trang "Facebook Page" để thêm Page.</div>';
+        return;
+      }
+
+      const html = pages.map(p => {
+        const interval = p.defaultIntervalMinutes || 15;
+        const postCount = p.defaultPostCount || 10;
+        const isCustom = interval !== 15;
+        return `
+          <div style="background:#fff;border:1.5px solid ${isCustom ? '#c084fc' : '#e2e8f0'};border-radius:16px;padding:18px 22px;margin-bottom:14px;box-shadow:0 3px 12px rgba(0,0,0,0.03);display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
+            <div style="display:flex;align-items:center;gap:14px">
+              <div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#1877F2,#0056b3);color:#fff;display:grid;place-items:center;font-weight:900;font-size:20px;box-shadow:0 4px 12px rgba(24,119,242,0.25)">f</div>
+              <div>
+                <div style="font-weight:800;font-size:15px;color:var(--dark);display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+                  ${p.pageName || p.name}
+                  <span class="badge ${isCustom ? 'run' : 'ok'}" style="font-size:11px;padding:3px 10px">
+                    ${isCustom ? `⚡ Lịch tự động riêng: ${interval} phút/bài` : '🌿 Mặc định hệ thống: Cách 15 phút/bài'}
+                  </span>
+                </div>
+                <div style="font-size:12.5px;color:var(--muted);margin-top:4px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+                  <span>⏰ Khung giờ: <b>08:00 - 22:00</b></span>
+                  <span>📝 Bài mặc định: <b>${postCount} bài</b></span>
+                  <span>⏱ Khoảng cách đăng: <b style="color:${isCustom ? '#7e22ce' : 'var(--pink)'}">${interval} phút/bài</b></span>
+                </div>
+              </div>
+            </div>
+            <button class="ghost small" style="border-color:var(--pink);color:var(--pink);font-weight:800;padding:8px 16px;border-radius:10px" onclick="openEditPageSettingsModal('${p.id}', '${(p.pageName || p.name).replace(/'/g, "\\'")}', ${postCount}, ${interval})">
+              ⚙ Cài Đặt Lịch Riêng
+            </button>
+          </div>
+        `;
+      }).join('');
+
+      container.innerHTML = html;
+    }
 
     function toggleRawMediaGrid() {
       const grid = document.getElementById('mediaGridDisplay');
