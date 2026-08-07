@@ -2404,12 +2404,52 @@
     }
 
     let currentDriveFolders = [
-      { id: '1', name: 'Hình ảnh Bối Bối', type: 'IMAGE', url: '', count: 0 },
-      { id: '2', name: 'Hình ảnh KenStore', type: 'IMAGE', url: '', count: 0 },
-      { id: '3', name: 'Hình ảnh Mốt lab', type: 'IMAGE', url: '', count: 0 },
-      { id: '4', name: 'Hình ảnh Ụm Bò Milk', type: 'IMAGE', url: '', count: 0 },
-      { id: '5', name: 'Video Ụm Bò Milk', type: 'VIDEO', url: '', count: 0 },
+      { id: '1', name: 'Hình ảnh Bối Bối', type: 'IMAGE', url: '', count: 0, children: [] },
+      { id: '2', name: 'Hình ảnh KenStore', type: 'IMAGE', url: '', count: 0, children: [] },
+      { id: '3', name: 'Hình ảnh Mốt lab', type: 'IMAGE', url: '', count: 0, children: [] },
+      { id: '4', name: 'Hình ảnh Ụm Bò Milk', type: 'IMAGE', url: '', count: 0, children: [] },
+      {
+        id: '5',
+        name: 'Video Ụm Bò Milk',
+        type: 'VIDEO',
+        url: '',
+        count: 0,
+        children: [
+          { id: '5-1', name: '🚨 NHÌN VỊ SỮA ĐOÁN TÍNH CÁCH', type: 'VIDEO', url: '', count: 0 },
+          { id: '5-2', name: 'CÀNG LỚN CÀNG THÍCH NHỮNG THỨ ĐƠN GIẢN', type: 'VIDEO', url: '', count: 0 },
+          { id: '5-3', name: 'ĐIỀU THẢO THÍCH NHẤT KHÔNG PHẢI LÀ DOANH SỐ', type: 'VIDEO', url: '', count: 0 }
+        ]
+      },
     ];
+
+    function addChildDriveFolderRow(parentIdx) {
+      if (isDriveSyncingActive) return;
+      if (!currentDriveFolders[parentIdx].children) {
+        currentDriveFolders[parentIdx].children = [];
+      }
+      currentDriveFolders[parentIdx].children.push({
+        id: `${Date.now()}_child`,
+        name: `Nhánh con ${currentDriveFolders[parentIdx].children.length + 1}`,
+        type: currentDriveFolders[parentIdx].type || 'IMAGE',
+        url: '',
+        count: 0
+      });
+      renderDriveFolderRows();
+    }
+
+    function updateChildDriveFolder(parentIdx, childIdx, field, val) {
+      if (currentDriveFolders[parentIdx]?.children?.[childIdx]) {
+        currentDriveFolders[parentIdx].children[childIdx][field] = val;
+      }
+    }
+
+    function removeChildDriveFolderRow(parentIdx, childIdx) {
+      if (isDriveSyncingActive) return;
+      if (currentDriveFolders[parentIdx]?.children) {
+        currentDriveFolders[parentIdx].children.splice(childIdx, 1);
+        saveDriveLinks(false);
+      }
+    }
 
     async function loadDriveLinks() {
       try {
@@ -2473,28 +2513,48 @@
 
       if (!container) return;
 
-      container.innerHTML = currentDriveFolders.map((f, idx) => `
-        <div style="display:flex;gap:10px;align-items:center;background:#fff;padding:10px 14px;border-radius:12px;border:1px solid #e9d5ff;box-shadow:0 2px 6px rgba(126,34,206,0.04)">
-          <input type="text" value="${(f.name || '').replace(/"/g, '&quot;')}" onchange="updateDriveFolder(${idx}, 'name', this.value)" placeholder="Thương hiệu / Tên thư mục" style="width:180px;font-size:12.5px;font-weight:700;padding:8px 12px;border-radius:8px;border:1px solid #d8b4fe;background:#faf5ff;color:#581c87">
-          
-          <select onchange="updateDriveFolder(${idx}, 'type', this.value);autoSaveDriveLinksDebounced()" style="width:105px;font-size:12px;font-weight:700;padding:8px 8px;border-radius:8px;border:1px solid #d8b4fe;background:#fff;color:#581c87">
-            <option value="IMAGE" ${f.type === 'IMAGE' ? 'selected' : ''}>🖼️ Ảnh</option>
-            <option value="VIDEO" ${f.type === 'VIDEO' ? 'selected' : ''}>🎥 Video</option>
-          </select>
+      container.innerHTML = currentDriveFolders.map((f, idx) => {
+        const hasChildren = Array.isArray(f.children) && f.children.length > 0;
 
-          <input type="url" value="${(f.url || '').replace(/"/g, '&quot;')}" onchange="updateDriveFolder(${idx}, 'url', this.value);autoSaveDriveLinksDebounced()" oninput="updateDriveFolder(${idx}, 'url', this.value);autoSaveDriveLinksDebounced()" placeholder="https://drive.google.com/drive/folders/... (Link thư mục Mẹ - tự động quét cả thư mục con)" style="flex:1;font-size:12.5px;padding:8px 12px;border-radius:8px;border:1px solid #d8b4fe;background:#fff">
+        let childrenHtml = '';
+        if (hasChildren) {
+          childrenHtml = f.children.map((child, cIdx) => `
+            <div style="display:flex;gap:10px;align-items:center;background:#faf5ff;padding:8px 12px;border-radius:10px;border:1px dashed #d8b4fe;margin-top:6px;margin-left:26px">
+              <span style="font-size:12px;font-weight:800;color:#7e22ce">↳ 🌿</span>
+              <input type="text" value="${(child.name || '').replace(/"/g, '&quot;')}" onchange="updateChildDriveFolder(${idx}, ${cIdx}, 'name', this.value)" placeholder="Tên thư mục con (VD: 🚨 NHÌN VỊ SỮA...)" style="width:230px;font-size:12px;font-weight:700;padding:6px 10px;border-radius:6px;border:1px solid #c084fc;background:#fff;color:#581c87">
+              <input type="url" value="${(child.url || '').replace(/"/g, '&quot;')}" onchange="updateChildDriveFolder(${idx}, ${cIdx}, 'url', this.value);autoSaveDriveLinksDebounced()" oninput="updateChildDriveFolder(${idx}, ${cIdx}, 'url', this.value);autoSaveDriveLinksDebounced()" placeholder="https://drive.google.com/drive/folders/... (Link thư mục con)" style="flex:1;font-size:12px;padding:6px 10px;border-radius:6px;border:1px solid #d8b4fe;background:#fff">
+              <span class="badge ${child.count > 0 ? 'ok' : 'wait'}" style="font-size:11px;font-weight:800;padding:4px 10px;white-space:nowrap">
+                ${(child.type || f.type) === 'VIDEO' ? '🎥' : '📸'} ${child.count || 0} tệp
+              </span>
+              <button type="button" class="ghost small" onclick="removeChildDriveFolderRow(${idx}, ${cIdx})" style="color:var(--red);border-radius:6px;padding:4px 8px;font-size:11px;border-color:#fca5a5">🗑️ Xóa nhánh</button>
+            </div>
+          `).join('');
+        }
 
-          <span style="font-size:11px;font-weight:800;color:#047857;background:#ecfdf5;border:1px solid #a7f3d0;padding:5px 9px;border-radius:8px;white-space:nowrap;display:inline-flex;align-items:center;gap:4px" title="Tự động rẽ nhánh quét sâu toàn bộ thư mục con bên trong">
-            🌿 Quét Rẽ Nhánh
-          </span>
+        return `
+        <div style="background:#fff;border:1.5px solid #e9d5ff;border-radius:14px;padding:12px 14px;box-shadow:0 3px 10px rgba(126,34,206,0.03)">
+          <div style="display:flex;gap:10px;align-items:center">
+            <input type="text" value="${(f.name || '').replace(/"/g, '&quot;')}" onchange="updateDriveFolder(${idx}, 'name', this.value)" placeholder="Thương hiệu / Tên thư mục Mẹ" style="width:180px;font-size:12.5px;font-weight:800;padding:8px 12px;border-radius:8px;border:1px solid #d8b4fe;background:#faf5ff;color:#581c87">
+            
+            <select onchange="updateDriveFolder(${idx}, 'type', this.value);autoSaveDriveLinksDebounced()" style="width:105px;font-size:12px;font-weight:700;padding:8px 8px;border-radius:8px;border:1px solid #d8b4fe;background:#fff;color:#581c87">
+              <option value="IMAGE" ${f.type === 'IMAGE' ? 'selected' : ''}>🖼️ Ảnh</option>
+              <option value="VIDEO" ${f.type === 'VIDEO' ? 'selected' : ''}>🎥 Video</option>
+            </select>
 
-          <span class="badge ${f.count > 0 ? 'ok' : 'wait'}" style="font-size:11.5px;font-weight:800;padding:6px 12px;white-space:nowrap">
-            ${f.type === 'VIDEO' ? '🎥' : '📸'} ${f.count || 0} tệp realtime
-          </span>
+            <input type="url" value="${(f.url || '').replace(/"/g, '&quot;')}" onchange="updateDriveFolder(${idx}, 'url', this.value);autoSaveDriveLinksDebounced()" oninput="updateDriveFolder(${idx}, 'url', this.value);autoSaveDriveLinksDebounced()" placeholder="https://drive.google.com/drive/folders/... (Link thư mục Mẹ)" style="flex:1;font-size:12.5px;padding:8px 12px;border-radius:8px;border:1px solid #d8b4fe;background:#fff">
 
-          <button type="button" class="ghost small" onclick="removeDriveFolderRow(${idx})" style="color:var(--red);border-radius:8px;padding:6px 10px;font-size:12px;border-color:#fca5a5">🗑️ Xóa</button>
+            <button type="button" class="ghost small" onclick="addChildDriveFolderRow(${idx})" style="color:#7e22ce;border-radius:8px;padding:6px 12px;font-size:11.5px;border-color:#c084fc;font-weight:700;background:#faf5ff">🌿 ＋ Rẽ Nhánh Con</button>
+
+            <span class="badge ${f.count > 0 ? 'ok' : 'wait'}" style="font-size:11.5px;font-weight:800;padding:6px 12px;white-space:nowrap">
+              ${f.type === 'VIDEO' ? '🎥' : '📸'} ${f.count || 0} tệp realtime
+            </span>
+
+            <button type="button" class="ghost small" onclick="removeDriveFolderRow(${idx})" style="color:var(--red);border-radius:8px;padding:6px 10px;font-size:12px;border-color:#fca5a5">🗑️ Xóa</button>
+          </div>
+          ${childrenHtml}
         </div>
-      `).join('');
+      `;
+      }).join('');
     }
 
     let isDriveSyncingActive = false;
@@ -2914,9 +2974,15 @@
                 <option value="AUTO" ${(!wizardData.mediaSourceMode || wizardData.mediaSourceMode === 'AUTO') ? 'selected' : ''}>🎲 Tự động chọn ngẫu nhiên từ Kho Media (6 ảnh / 1 video)</option>
                 <option value="SELECTED" ${wizardData.mediaSourceMode === 'SELECTED' ? 'selected' : ''}>⭐ Chỉ định Hình ảnh / Video Yêu thích (Admin/Manager tự tích chọn)</option>
                 <optgroup label="🌐 Chọn Theo Thư Mục Google Drive Thương Hiệu">
-                  ${(currentDriveFolders || []).map(f => `
-                    <option value="GDRIVE_${f.id}" ${wizardData.mediaSourceMode === ('GDRIVE_' + f.id) ? 'selected' : ''}>📁 ${f.name} (${f.type === 'VIDEO' ? '🎥 Video' : '🖼️ Ảnh'})</option>
-                  `).join('')}
+                  ${(currentDriveFolders || []).map(f => {
+                    let opts = `<option value="GDRIVE_${f.id}" ${wizardData.mediaSourceMode === ('GDRIVE_' + f.id) ? 'selected' : ''}>📁 ${f.name} (${f.type === 'VIDEO' ? '🎥 Video' : '🖼️ Ảnh'})</option>`;
+                    if (Array.isArray(f.children) && f.children.length > 0) {
+                      f.children.forEach(c => {
+                        opts += `<option value="GDRIVE_${c.id || c.name}" ${wizardData.mediaSourceMode === ('GDRIVE_' + (c.id || c.name)) ? 'selected' : ''}>&nbsp;&nbsp;&nbsp;&nbsp;↳ 🌿 ${c.name} (${(c.type || f.type) === 'VIDEO' ? '🎥 Video' : '🖼️ Ảnh'})</option>`;
+                      });
+                    }
+                    return opts;
+                  }).join('')}
                 </optgroup>
               </select>
             </div>

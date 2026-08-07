@@ -204,11 +204,21 @@ async function downloadAndSaveDriveFile(fileIdOrUrl: string, expectedType: 'IMAG
 }
 
 const DEFAULT_DRIVE_FOLDERS = [
-  { id: '1', name: 'Hình ảnh Bối Bối', type: 'IMAGE', url: '' },
-  { id: '2', name: 'Hình ảnh KenStore', type: 'IMAGE', url: '' },
-  { id: '3', name: 'Hình ảnh Mốt lab', type: 'IMAGE', url: '' },
-  { id: '4', name: 'Hình ảnh Ụm Bò Milk', type: 'IMAGE', url: '' },
-  { id: '5', name: 'Video Ụm Bò Milk', type: 'VIDEO', url: '' },
+  { id: '1', name: 'Hình ảnh Bối Bối', type: 'IMAGE', url: '', children: [] },
+  { id: '2', name: 'Hình ảnh KenStore', type: 'IMAGE', url: '', children: [] },
+  { id: '3', name: 'Hình ảnh Mốt lab', type: 'IMAGE', url: '', children: [] },
+  { id: '4', name: 'Hình ảnh Ụm Bò Milk', type: 'IMAGE', url: '', children: [] },
+  {
+    id: '5',
+    name: 'Video Ụm Bò Milk',
+    type: 'VIDEO',
+    url: '',
+    children: [
+      { id: '5-1', name: '🚨 NHÌN VỊ SỮA ĐOÁN TÍNH CÁCH', type: 'VIDEO', url: '' },
+      { id: '5-2', name: 'CÀNG LỚN CÀNG THÍCH NHỮNG THỨ ĐƠN GIẢN', type: 'VIDEO', url: '' },
+      { id: '5-3', name: 'ĐIỀU THẢO THÍCH NHẤT KHÔNG PHẢI LÀ DOANH SỐ', type: 'VIDEO', url: '' }
+    ]
+  },
 ];
 
 let driveSyncProgressState = {
@@ -250,8 +260,29 @@ router.post('/import-drive', requireAuth, async (req, res, next) => {
       ];
     }
 
-    const activeLinks = links.filter((l: any) => l.url && l.url.trim().length > 0);
-    if (!activeLinks.length) {
+    const activeTasks: { folderName: string; expectedType: 'IMAGE' | 'VIDEO'; driveUrl: string }[] = [];
+    for (const folder of links) {
+      if (folder.url && folder.url.trim().length > 0) {
+        activeTasks.push({
+          folderName: folder.name || 'Drive',
+          expectedType: folder.type === 'VIDEO' ? 'VIDEO' : 'IMAGE',
+          driveUrl: folder.url.trim(),
+        });
+      }
+      if (Array.isArray(folder.children)) {
+        for (const child of folder.children) {
+          if (child.url && child.url.trim().length > 0) {
+            activeTasks.push({
+              folderName: child.name || folder.name || 'Drive',
+              expectedType: (child.type || folder.type) === 'VIDEO' ? 'VIDEO' : 'IMAGE',
+              driveUrl: child.url.trim(),
+            });
+          }
+        }
+      }
+    }
+
+    if (!activeTasks.length) {
       throw new BadRequestError('Vui lòng dán ít nhất 1 liên kết Google Drive cho các thư mục media!');
     }
 
@@ -271,10 +302,10 @@ router.post('/import-drive', requireAuth, async (req, res, next) => {
     const folderTasks: { folderName: string; expectedType: 'IMAGE' | 'VIDEO'; fileIds: string[] }[] = [];
     let totalFileCount = 0;
 
-    for (const folder of activeLinks) {
-      const folderName = folder.name || 'Drive';
-      const expectedType = folder.type === 'VIDEO' ? 'VIDEO' : 'IMAGE';
-      const driveUrl = folder.url.trim();
+    for (const task of activeTasks) {
+      const folderName = task.folderName;
+      const expectedType = task.expectedType;
+      const driveUrl = task.driveUrl;
 
       let fileIds = extractDriveFileIds(driveUrl);
       if (fileIds.length === 0 && driveUrl.includes('/folders/')) {
@@ -469,17 +500,38 @@ router.delete('/:id', requireAuth, async (req, res, next) => {
 async function attachFolderCounts(links: any[]) {
   const result = [];
   for (const f of links) {
-    const folderTag = (f.name || '').toLowerCase().replace(/[^a-z0-9]+/g, '_');
-    let count = 0;
-    if (folderTag) {
-      count = await prisma.mediaFile.count({
+    const parentFolderTag = (f.name || '').toLowerCase().replace(/[^a-z0-9]+/g, '_');
+    let parentCount = 0;
+
+    const childrenWithCounts = [];
+    if (Array.isArray(f.children) && f.children.length > 0) {
+      for (const child of f.children) {
+        const childTag = (child.name || '').toLowerCase().replace(/[^a-z0-9]+/g, '_');
+        let childCount = 0;
+        if (childTag) {
+          childCount = await prisma.mediaFile.count({
+            where: {
+              status: 'ACTIVE',
+              fileName: { contains: childTag }
+            }
+          });
+        }
+        childrenWithCounts.push({ ...child, count: childCount });
+        parentCount += childCount;
+      }
+    }
+
+    if (parentFolderTag) {
+      const selfCount = await prisma.mediaFile.count({
         where: {
           status: 'ACTIVE',
-          fileName: { contains: folderTag }
+          fileName: { contains: parentFolderTag }
         }
       });
+      parentCount += selfCount;
     }
-    result.push({ ...f, count });
+
+    result.push({ ...f, count: parentCount, children: childrenWithCounts });
   }
   return result;
 }
@@ -517,35 +569,6 @@ router.post('/drive-links', requireAuth, async (req, res, next) => {
       update: { valueEncrypted: JSON.stringify(links) },
       create: { key: 'gdrive_folder_links', valueEncrypted: JSON.stringify(links) },
     });
-
-    // Auto-trigger background sync for active links with non-empty URL
-    const activeLinks = links.filter((l: any) => l.url && l.url.trim().length > 0);
-    if (activeLinks.length > 0) {
-      (async () => {
-        try {
-          await cleanDuplicateMediaFiles();
-          for (const folder of activeLinks) {
-            const folderName = folder.name || 'Drive';
-            const expectedType = folder.type === 'VIDEO' ? 'VIDEO' : 'IMAGE';
-            const driveUrl = folder.url.trim();
-            let fileIds = extractDriveFileIds(driveUrl);
-            if (fileIds.length === 0 && driveUrl.includes('/folders/')) {
-              fileIds = await extractFileIdsFromFolderUrl(driveUrl);
-            }
-            if (fileIds.length === 0 && driveUrl.startsWith('http')) {
-              fileIds = [driveUrl];
-            }
-            for (const idOrUrl of fileIds) {
-              try {
-                await downloadAndSaveDriveFile(idOrUrl, expectedType, folderName);
-              } catch (e) {}
-            }
-          }
-        } catch (bgErr) {
-          console.error('[AutoDriveSync] Background error:', bgErr);
-        }
-      })();
-    }
 
     const linksWithCounts = await attachFolderCounts(links);
     res.json({ success: true, message: '✅ Đã lưu và đang tự động đồng bộ Google Drive trong nền!', data: linksWithCounts });
