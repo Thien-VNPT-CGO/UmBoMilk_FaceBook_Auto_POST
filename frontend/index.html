@@ -2534,8 +2534,8 @@
                   <strong style="font-size:22px;font-weight:900;color:${count > 0 ? 'var(--pink)' : 'var(--dark)'}">${count}</strong>
                   <span style="font-size:11px;color:var(--muted);font-weight:600"> tệp</span>
                 </div>
-                <span style="font-size:11px;font-weight:700;color:${count > 0 ? '#047857' : ((f.url || hasChildren) ? '#d97706' : 'var(--muted)')}">
-                  ${count > 0 ? '🟢 Realtime Active' : ((f.url || hasChildren) ? '⚡ Đang đồng bộ...' : '⚪ Chưa có link')}
+                <span style="font-size:11px;font-weight:700;color:${count > 0 ? '#047857' : (hasChildren ? '#7e22ce' : (f.url ? '#d97706' : 'var(--muted)'))}">
+                  ${count > 0 ? '🟢 Realtime Active' : (hasChildren ? '🌿 Đã rẽ nhánh con' : (f.url ? '⚡ Đang đồng bộ...' : '⚪ Chưa có link'))}
                 </span>
               </div>
             </div>

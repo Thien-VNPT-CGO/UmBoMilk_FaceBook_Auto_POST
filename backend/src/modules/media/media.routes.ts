@@ -123,7 +123,7 @@ async function downloadAndSaveDriveFile(fileIdOrUrl: string, expectedType: 'IMAG
   const isDirectUrl = fileIdOrUrl.startsWith('http://') || fileIdOrUrl.startsWith('https://');
   const directDriveUrl = driveIds.length > 0 ? `https://lh3.googleusercontent.com/d/${driveIds[0]}` : (isDirectUrl ? fileIdOrUrl : null);
 
-  const folderTag = folderName ? folderName.toLowerCase().replace(/[^a-z0-9]+/g, '_') : 'gdrive';
+  const folderTag = folderName ? removeVietnameseTones(folderName) : 'gdrive';
 
   // Check 1: Pre-check DB for existing media by Drive ID or storageUrl
   if (directDriveUrl || driveId) {
@@ -515,11 +515,19 @@ function removeVietnameseTones(str: string): string {
     .replace(/^_+|_+$/g, '');
 }
 
+function extractDriveFolderId(url: string): string | null {
+  if (!url) return null;
+  const match = url.match(/\/folders\/([a-zA-Z0-9_-]+)/);
+  return match ? match[1] : null;
+}
+
 // Helper to attach realtime media file count per drive folder
 async function attachFolderCounts(links: any[]) {
   const result = [];
   for (const f of links) {
     const parentFolderTag = removeVietnameseTones(f.name || '');
+    const parentRawTag = (f.name || '').toLowerCase().replace(/[^a-z0-9]+/g, '_');
+    const parentFolderId = extractDriveFolderId(f.url || '');
     let parentCount = 0;
 
     const childrenWithCounts = [];
@@ -528,18 +536,26 @@ async function attachFolderCounts(links: any[]) {
     if (hasChildren) {
       for (const child of f.children) {
         const childTag = removeVietnameseTones(child.name || '');
+        const childRawTag = (child.name || '').toLowerCase().replace(/[^a-z0-9]+/g, '_');
+        const childFolderId = extractDriveFolderId(child.url || '');
+        const driveIds = extractDriveFileIds(child.url || '');
+        const driveId = driveIds[0] || childFolderId;
+
         let childCount = 0;
         if (child.url && child.url.trim().length > 0) {
-          const driveIds = extractDriveFileIds(child.url);
-          const driveId = driveIds[0];
-          
           const orConditions: any[] = [];
           if (childTag) {
             orConditions.push({ fileName: { contains: childTag } });
           }
+          if (childRawTag) {
+            orConditions.push({ fileName: { contains: childRawTag } });
+          }
           if (driveId) {
             orConditions.push({ fileName: { contains: driveId } });
             orConditions.push({ storageUrl: { contains: driveId } });
+          }
+          if (childFolderId) {
+            orConditions.push({ fileName: { contains: childFolderId } });
           }
 
           if (orConditions.length > 0) {
@@ -555,16 +571,22 @@ async function attachFolderCounts(links: any[]) {
         parentCount += childCount;
       }
     } else if (f.url && f.url.trim().length > 0) {
-      const driveIds = extractDriveFileIds(f.url);
-      const driveId = driveIds[0];
+      const driveIds = extractDriveFileIds(f.url || '');
+      const driveId = driveIds[0] || parentFolderId;
 
       const orConditions: any[] = [];
       if (parentFolderTag) {
         orConditions.push({ fileName: { contains: parentFolderTag } });
       }
+      if (parentRawTag) {
+        orConditions.push({ fileName: { contains: parentRawTag } });
+      }
       if (driveId) {
         orConditions.push({ fileName: { contains: driveId } });
         orConditions.push({ storageUrl: { contains: driveId } });
+      }
+      if (parentFolderId) {
+        orConditions.push({ fileName: { contains: parentFolderId } });
       }
 
       if (orConditions.length > 0) {
