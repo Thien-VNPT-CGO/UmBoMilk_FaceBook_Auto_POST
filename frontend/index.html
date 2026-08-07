@@ -3093,14 +3093,6 @@
               <input type="time" value="${wizardData.allowedEndTime}" onchange="wizardData.allowedEndTime=this.value">
             </div>
           </div>
-
-          <div style="background:#f8fafc;border:1.5px solid var(--line);border-radius:14px;padding:16px;display:flex;align-items:center;justify-content:space-between">
-            <div>
-              <div style="font-weight:800;font-size:13.5px;color:var(--ink)">Kho Media Khả Dụng: 📸 ${imageCount} tệp ảnh | 🎥 ${videoCount} tệp video</div>
-              <div style="font-size:12px;color:var(--muted);margin-top:2px">${isSelectedMode ? `Đang chỉ định ${selectedIds.length} tệp media yêu thích do Admin/Manager lựa chọn.` : 'Thuật toán Fisher-Yates sẽ tự động chọn 6 ảnh ngẫu nhiên hoặc 1 video cho mỗi bài viết.'}</div>
-            </div>
-            <button type="button" class="ghost small" onclick="openPage('media')">🖼️ Quản Lý Media</button>
-          </div>
         </div>
       `;
         }
