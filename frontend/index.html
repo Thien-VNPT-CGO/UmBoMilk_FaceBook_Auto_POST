@@ -2443,11 +2443,13 @@
         count: 0
       });
       renderDriveFolderRows();
+      autoSaveDriveLinksDebounced();
     }
 
     function updateChildDriveFolder(parentIdx, childIdx, field, val) {
       if (currentDriveFolders[parentIdx]?.children?.[childIdx]) {
         currentDriveFolders[parentIdx].children[childIdx][field] = val;
+        autoSaveDriveLinksDebounced();
       }
     }
 
@@ -2455,7 +2457,8 @@
       if (isDriveSyncingActive) return;
       if (currentDriveFolders[parentIdx]?.children) {
         currentDriveFolders[parentIdx].children.splice(childIdx, 1);
-        saveDriveLinks(false);
+        renderDriveFolderRows();
+        autoSaveDriveLinksDebounced();
       }
     }
 
@@ -2675,15 +2678,19 @@
     function updateDriveFolder(idx, field, val) {
       if (currentDriveFolders[idx]) {
         currentDriveFolders[idx][field] = val;
+        autoSaveDriveLinksDebounced();
       }
     }
 
     let driveSaveTimeout = null;
     function autoSaveDriveLinksDebounced() {
+      try {
+        localStorage.setItem('pinkflow_drive_folders_cache', JSON.stringify(currentDriveFolders));
+      } catch (e) {}
       if (driveSaveTimeout) clearTimeout(driveSaveTimeout);
       driveSaveTimeout = setTimeout(() => {
         saveDriveLinks(false);
-      }, 700);
+      }, 500);
     }
 
     function addDriveFolderRow() {
@@ -2696,6 +2703,7 @@
         count: 0
       });
       renderDriveFolderRows();
+      autoSaveDriveLinksDebounced();
     }
 
     function removeDriveFolderRow(idx) {
@@ -2705,17 +2713,24 @@
         return;
       }
       currentDriveFolders.splice(idx, 1);
-      saveDriveLinks(false);
+      renderDriveFolderRows();
+      autoSaveDriveLinksDebounced();
     }
 
     async function saveDriveLinks(triggerSync = true) {
       try {
+        try {
+          localStorage.setItem('pinkflow_drive_folders_cache', JSON.stringify(currentDriveFolders));
+        } catch (e) {}
         const res = await request('/media/drive-links', {
           method: 'POST',
           body: JSON.stringify({ links: currentDriveFolders })
         });
         if (res && Array.isArray(res.data)) {
           currentDriveFolders = res.data;
+          try {
+            localStorage.setItem('pinkflow_drive_folders_cache', JSON.stringify(currentDriveFolders));
+          } catch (e) {}
           renderDriveFolderRows();
         }
 
@@ -2723,7 +2738,7 @@
           startDriveSyncWithProgress();
         }
       } catch (err) {
-        alert('🔴 Lỗi lưu link Google Drive: ' + err.message);
+        console.error('🔴 Lỗi lưu link Google Drive:', err);
       }
     }
 
