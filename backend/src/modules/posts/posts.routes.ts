@@ -20,6 +20,21 @@ router.get('/', requireAuth, requirePermission('post.view'), async (_req, res, n
       },
       orderBy: { createdAt: 'desc' },
     });
+    const now = new Date();
+    const expiredPending = posts.filter(p => p.status === 'PENDING_APPROVAL' && p.scheduledAt && p.scheduledAt.getTime() < now.getTime());
+    if (expiredPending.length > 0) {
+      for (let i = 0; i < expiredPending.length; i++) {
+        const p = expiredPending[i];
+        const interval = p.campaignPage?.intervalMinutes || 15;
+        const newSched = new Date(now.getTime() + (i + 1) * interval * 60 * 1000);
+        await prisma.generatedPost.update({
+          where: { id: p.id },
+          data: { scheduledAt: newSched },
+        }).catch(() => {});
+        p.scheduledAt = newSched;
+      }
+    }
+
     res.json({ success: true, data: posts });
   } catch (err) {
     next(err);

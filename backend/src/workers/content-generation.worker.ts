@@ -41,10 +41,12 @@ async function processContentGeneration(job: { data: ContentGenerationJob; id?: 
       postCount: campaign.defaultPostCount,
     });
 
+    const genNow = new Date();
     for (let cpIdx = 0; cpIdx < campaign.campaignPages.length; cpIdx++) {
       const cp = campaign.campaignPages[cpIdx];
+      const effectiveStartAt = cp.startAt.getTime() < genNow.getTime() ? genNow : cp.startAt;
       const validTimes = ScheduleService.calculateScheduleTimes({
-        startAt: cp.startAt,
+        startAt: effectiveStartAt,
         postCount: cp.postCount,
         intervalMinutes: cp.intervalMinutes,
         allowedStartTime: cp.allowedStartTime,
@@ -55,7 +57,7 @@ async function processContentGeneration(job: { data: ContentGenerationJob; id?: 
 
       for (let i = 0; i < cp.postCount; i++) {
         const text = aiTexts[i % aiTexts.length];
-        const scheduledAt = validTimes[i] || new Date(cp.startAt.getTime() + i * cp.intervalMinutes * 60000);
+        const scheduledAt = validTimes[i] || new Date(effectiveStartAt.getTime() + i * cp.intervalMinutes * 60000);
 
         await prisma.generatedPost.create({
           data: {
@@ -93,8 +95,10 @@ async function processContentGeneration(job: { data: ContentGenerationJob; id?: 
         postCount: cp.postCount,
       });
 
+      const genNow = new Date();
+      const effectiveStartAt = cp.startAt.getTime() < genNow.getTime() ? genNow : cp.startAt;
       const validTimes = ScheduleService.calculateScheduleTimes({
-        startAt: cp.startAt,
+        startAt: effectiveStartAt,
         postCount: cp.postCount,
         intervalMinutes: cp.intervalMinutes,
         allowedStartTime: cp.allowedStartTime,
@@ -105,7 +109,7 @@ async function processContentGeneration(job: { data: ContentGenerationJob; id?: 
 
       for (let i = 0; i < cp.postCount; i++) {
         const text = aiTexts[i];
-        const scheduledAt = validTimes[i] || new Date(cp.startAt.getTime() + i * cp.intervalMinutes * 60000);
+        const scheduledAt = validTimes[i] || new Date(effectiveStartAt.getTime() + i * cp.intervalMinutes * 60000);
 
         await prisma.generatedPost.create({
           data: {
