@@ -1,5 +1,7 @@
 import { Worker } from 'bullmq';
 import axios from 'axios';
+import fs from 'fs';
+import path from 'path';
 import { redisConnection } from '../common/redis/redis';
 import { prisma } from '../common/database/prisma';
 import { logger } from '../common/utils/logger';
@@ -8,6 +10,25 @@ import { facebookPublishingQueue } from '../common/queue/queues';
 
 interface PostSchedulingJob {
   postId: string;
+}
+
+function extractDriveFileIds(text: string): string[] {
+  if (!text) return [];
+  const ids = new Set<string>();
+  const patterns = [
+    /\/d\/([a-zA-Z0-9_-]{25,})/g,
+    /id=([a-zA-Z0-9_-]{25,})/g,
+    /lh3\.googleusercontent\.com\/d\/([a-zA-Z0-9_-]{25,})/g,
+    /gdrive_[a-z0-9_]+_video_([a-zA-Z0-9_-]{25,})/g,
+    /gdrive_[a-z0-9_]+_image_([a-zA-Z0-9_-]{25,})/g,
+  ];
+  for (const pattern of patterns) {
+    let match;
+    while ((match = pattern.exec(text)) !== null) {
+      if (match[1]) ids.add(match[1]);
+    }
+  }
+  return Array.from(ids);
 }
 
 function getPublicMediaUrl(rawUrl: string): string {
@@ -67,8 +88,66 @@ export async function publishPost(postId: string) {
 
   try {
     if (post.mediaType === 'VIDEO' && mediaCount > 0) {
-      // 1. Post Video
-      const videoUrl = getPublicMediaUrl(post.postMedias[0].mediaFile.storageUrl);
+      // 1. Post Video: Ensure raw video MP4 file is available on server disk and served via public /uploads/ URL
+      const mediaFile = post.postMedias[0].mediaFile;
+      let storageUrl = mediaFile.storageUrl || '';
+
+      const uploadDir = path.join(process.cwd(), 'uploads');
+      if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+      }
+
+      const driveMatch = extractDriveFileIds(storageUrl + ' ' + mediaFile.fileName);
+      const driveId = driveMatch[0];
+
+      let localFileName = '';
+      if (storageUrl.startsWith('/uploads/')) {
+        localFileName = path.basename(storageUrl);
+      } else if (driveId) {
+        localFileName = `drive-${driveId}.mp4`;
+      } else {
+        localFileName = `video-${mediaFile.id}.mp4`;
+      }
+
+      const localFilePath = path.join(uploadDir, localFileName);
+
+      // Verify if video exists on disk. If missing, download directly from Google Drive to disk
+      if (!fs.existsSync(localFilePath)) {
+        logger.info(`[Video Publish] Tệp ${localFileName} chưa có trên đĩa server, đang tải từ Drive về đĩa...`);
+        let downloadUrl = storageUrl;
+        if (driveId) {
+          downloadUrl = `https://lh3.googleusercontent.com/d/${driveId}`;
+        }
+        if (downloadUrl.startsWith('http')) {
+          try {
+            const resp = await axios.get(downloadUrl, {
+              responseType: 'arraybuffer',
+              timeout: 90000,
+              headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }
+            });
+            fs.writeFileSync(localFilePath, Buffer.from(resp.data));
+            logger.info(`[Video Publish] Đã tải xong video ${localFileName} (${resp.data.length} bytes) lưu vào đĩa.`);
+          } catch (dlErr: any) {
+            logger.warn(`[Video Publish Warning] Lỗi tải video từ Google Drive: ${dlErr.message}`);
+          }
+        }
+      }
+
+      // Update DB storageUrl to point to local /uploads/ URL so Facebook Graph API receives raw MP4 stream
+      if (fs.existsSync(localFilePath)) {
+        const newStorageUrl = `/uploads/${localFileName}`;
+        if (mediaFile.storageUrl !== newStorageUrl) {
+          await prisma.mediaFile.update({
+            where: { id: mediaFile.id },
+            data: { storageUrl: newStorageUrl }
+          }).catch(() => {});
+        }
+        storageUrl = newStorageUrl;
+      }
+
+      const videoUrl = getPublicMediaUrl(storageUrl);
+      logger.info(`[Video Publish] Đang đăng video phát chuẩn lên Facebook Page ${page.pageName} với URL: ${videoUrl}`);
+
       const res = await axios.post(
         `https://graph.facebook.com/v19.0/${page.facebookPageId}/videos`,
         null,
@@ -78,7 +157,7 @@ export async function publishPost(postId: string) {
             description: post.content,
             file_url: videoUrl,
           },
-          timeout: 60000,
+          timeout: 120000,
         }
       );
       facebookPostId = res.data?.id?.toString() ?? null;

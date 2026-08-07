@@ -184,7 +184,9 @@ async function downloadAndSaveDriveFile(fileIdOrUrl: string, expectedType: 'IMAG
     return { ...existingByChecksum, isDuplicate: true };
   }
 
-  const storageUrlFinal = directDriveUrl || `/uploads/${filename}`;
+  const storageUrlFinal = (expectedType === 'VIDEO' || mediaType === 'VIDEO')
+    ? `/uploads/${filename}`
+    : (directDriveUrl || `/uploads/${filename}`);
   const savedFileName = driveId
     ? `gdrive_${folderTag}_${expectedType.toLowerCase()}_${driveId}.${ext}`
     : `gdrive_${folderTag}_${expectedType.toLowerCase()}_${filename}`;
