@@ -66,12 +66,12 @@ async function cleanDuplicateMediaFiles(): Promise<number> {
     for (const m of allMedia) {
       let isDup = false;
 
-      // 1. Purge records with invalid local storage paths missing from disk
+      // 1. Purge records with local storage path (/uploads/) missing from disk on server restart
       if (m.storageUrl && m.storageUrl.startsWith('/uploads/')) {
         const localPath = path.join(uploadDir, path.basename(m.storageUrl));
-        const driveIdMatch = (m.fileName + ' ' + m.storageUrl).match(/([a-zA-Z0-9_-]{25,40})/);
-        if (!fs.existsSync(localPath) && !driveIdMatch) {
+        if (!fs.existsSync(localPath)) {
           isDup = true;
+          console.log(`[Media Purge] Phát hiện tệp hỏng mất file đĩa (${m.storageUrl}), xóa kỷ lục DB để tải lại.`);
         }
       }
 
@@ -85,9 +85,9 @@ async function cleanDuplicateMediaFiles(): Promise<number> {
       }
 
       // 3. Deduplicate by Google Drive File ID
-      const driveMatch = (m.fileName + ' ' + m.storageUrl).match(/([a-zA-Z0-9_-]{25,40})/);
-      if (driveMatch) {
-        const driveId = driveMatch[1];
+      const driveMatch = extractDriveFileIds(m.fileName + ' ' + m.storageUrl);
+      if (driveMatch.length > 0) {
+        const driveId = driveMatch[0];
         if (seenDriveIds.has(driveId)) {
           isDup = true;
         } else {
@@ -107,7 +107,7 @@ async function cleanDuplicateMediaFiles(): Promise<number> {
       await prisma.mediaFile.deleteMany({
         where: { id: { in: duplicateIdsToDelete } },
       });
-      console.log(`[Media Deduplication Cleanup] Đã tự động xóa ${duplicateIdsToDelete.length} tệp hỏng/trùng lặp trong Kho Media.`);
+      console.log(`[Media Cleanup] Đã xóa thành công ${duplicateIdsToDelete.length} tệp hỏng/trùng lặp khỏi Kho Media.`);
     }
 
     return duplicateIdsToDelete.length;
@@ -466,7 +466,7 @@ function extractDriveFileIds(inputUrl: string): string[] {
       ids.push(match2[1]);
       continue;
     }
-    if (/^[a-zA-Z0-9_-]{25,}$/.test(trimmed)) {
+    if (/^[a-zA-Z0-9_-]{25,}$/.test(trimmed) && !trimmed.startsWith('drive-') && !trimmed.startsWith('gdrive_')) {
       ids.push(trimmed);
       continue;
     }
