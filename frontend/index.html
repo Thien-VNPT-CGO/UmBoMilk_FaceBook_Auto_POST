@@ -1105,12 +1105,6 @@
                 </div>
               </div>
               
-              <div style="display:flex;gap:10px;align-items:center">
-                <label class="button" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;padding:9px 16px;background:linear-gradient(135deg,var(--pink),#db2777);color:#fff;border-radius:10px;font-weight:700;box-shadow:0 4px 12px rgba(236,72,153,0.3);font-size:13px">
-                  ↑ Upload Tệp Media <input type="file" id="globalMediaUpload" multiple accept="image/*,video/*" style="display:none" onchange="uploadGlobalMedia(this)">
-                </label>
-                <button class="ghost small" style="border-radius:10px;padding:9px 14px;font-weight:700;font-size:12.5px" onclick="shuffleMediaAllocation()">🎲 Phân bổ ngẫu nhiên</button>
-              </div>
             </div>
 
             <!-- STATS CARDS BAR -->
@@ -2433,6 +2427,24 @@
       const container = document.getElementById('driveFoldersContainer');
       const breakdownContainer = document.getElementById('realtimeFolderBreakdownGrid');
       setElText('totalDriveFoldersCount', currentDriveFolders.length);
+
+      // Compute exact real total images and videos from Google Drive folders
+      const realTotalImages = currentDriveFolders.filter(f => f.type === 'IMAGE').reduce((sum, f) => sum + (f.count || 0), 0);
+      const realTotalVideos = currentDriveFolders.filter(f => f.type === 'VIDEO').reduce((sum, f) => sum + (f.count || 0), 0);
+
+      setElText('totalImagesCount', realTotalImages);
+      setElText('totalVideosCount', realTotalVideos);
+
+      const statusBadge = document.getElementById('mediaStatusBadge');
+      if (statusBadge) {
+        if (realTotalImages >= 6 || realTotalVideos >= 1) {
+          statusBadge.className = 'badge ok';
+          statusBadge.textContent = 'Đủ tài nguyên';
+        } else {
+          statusBadge.className = 'badge err';
+          statusBadge.textContent = 'Cần thêm ảnh/video';
+        }
+      }
 
       if (breakdownContainer) {
         breakdownContainer.innerHTML = currentDriveFolders.map(f => {
