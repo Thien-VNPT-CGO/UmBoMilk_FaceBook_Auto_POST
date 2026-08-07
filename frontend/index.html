@@ -2745,28 +2745,17 @@
     }
 
     async function importFromGoogleDrive() {
-      const activeLinks = currentDriveFolders.filter(f => f.url && f.url.trim().length > 0);
-      if (!activeLinks.length) {
+      const hasAnyLink = (currentDriveFolders || []).some(f => {
+        if (f.url && f.url.trim().length > 0) return true;
+        if (Array.isArray(f.children) && f.children.some(c => c.url && c.url.trim().length > 0)) return true;
+        return false;
+      });
+      if (!hasAnyLink) {
         alert('⚠️ Vui lòng dán ít nhất 1 link Google Drive cho các thư mục media!');
         return;
       }
 
-      const grid = document.getElementById('mediaGridDisplay');
-      if (grid) {
-        grid.innerHTML = '<p style="color:var(--pink);grid-column:1/-1;padding:30px;text-align:center;font-weight:700">⏳ Đang tự động quét và tải hình ảnh/video từ các link Google Drive về kho media...</p>';
-      }
-
-      try {
-        const res = await request('/media/import-drive', {
-          method: 'POST',
-          body: JSON.stringify({ links: currentDriveFolders })
-        });
-        alert(res.message || '🎉 Đã đồng bộ media từ Google Drive thành công!');
-        loadMedia();
-      } catch (err) {
-        alert('🔴 Lỗi đồng bộ Google Drive: ' + err.message);
-        loadMedia();
-      }
+      saveDriveLinks(true);
     }
 
     async function uploadGlobalMedia(input) {

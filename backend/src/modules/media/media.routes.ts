@@ -303,6 +303,7 @@ router.post('/import-drive', requireAuth, async (req, res, next) => {
     // Pre-calculate file lists across folders for accurate percentage calculation
     const folderTasks: { folderName: string; expectedType: 'IMAGE' | 'VIDEO'; fileIds: string[] }[] = [];
     let totalFileCount = 0;
+    const errors: string[] = [];
 
     for (const task of activeTasks) {
       const folderName = task.folderName;
@@ -312,12 +313,17 @@ router.post('/import-drive', requireAuth, async (req, res, next) => {
       let fileIds = extractDriveFileIds(driveUrl);
       if (fileIds.length === 0 && driveUrl.includes('/folders/')) {
         fileIds = await extractFileIdsFromFolderUrl(driveUrl);
+        if (fileIds.length === 0) {
+          errors.push(`Thư mục "${folderName}" không thể đọc tệp (Vui lòng kiểm tra lại link hoặc mở quyền "Bất kỳ ai có liên kết đều có thể xem").`);
+        }
       }
       if (fileIds.length === 0 && driveUrl.startsWith('http')) {
         fileIds = [driveUrl];
       }
-      folderTasks.push({ folderName, expectedType, fileIds });
-      totalFileCount += fileIds.length;
+      if (fileIds.length > 0) {
+        folderTasks.push({ folderName, expectedType, fileIds });
+        totalFileCount += fileIds.length;
+      }
     }
 
     if (totalFileCount === 0) totalFileCount = 1;
@@ -327,7 +333,6 @@ router.post('/import-drive', requireAuth, async (req, res, next) => {
 
     const importedMedia: any[] = [];
     let skippedCount = 0;
-    const errors: string[] = [];
     let processedIndex = 0;
 
     for (const task of folderTasks) {
