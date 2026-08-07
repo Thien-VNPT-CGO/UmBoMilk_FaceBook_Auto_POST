@@ -48,20 +48,36 @@ export class MediaService {
       // Clear existing assignments for clean allocation
       await prisma.postMedia.deleteMany({ where: { generatedPostId: post.id } });
 
-      if (post.mediaType === 'IMAGE') {
-        if (imageFiles.length === 0) {
-          console.warn(`[MediaService] Không có hình ảnh nào khả dụng trong Kho Media cho bài viết ${post.id}`);
-          continue;
-        }
+      const hasImages = imageFiles.length > 0;
+      const hasVideos = videoFiles.length > 0;
 
+      if (!hasImages && !hasVideos) {
+        console.warn(`[MediaService] Không có media (ảnh/video) nào trong Kho Media cho bài viết ${post.id}`);
+        continue;
+      }
+
+      const shouldAssignVideo = (post.mediaType === 'VIDEO' && hasVideos) || (!hasImages && hasVideos);
+
+      if (shouldAssignVideo) {
+        // Pick 1 video
+        const shuffled = this.shuffleArray(videoFiles);
+        const selectedVideo = shuffled[0];
+
+        await prisma.postMedia.create({
+          data: {
+            generatedPostId: post.id,
+            mediaFileId: selectedVideo.id,
+            sortOrder: 0,
+          },
+        });
+      } else {
+        // Pick 6 photos (or available photos with wrap-around reuse)
         let selected: typeof imageFiles = [];
-        if (imageFiles.length >= 6) {
-          // Shuffle and pick 6 unique images for this post
-          const shuffled = this.shuffleArray(imageFiles);
+        const shuffled = this.shuffleArray(imageFiles);
+
+        if (shuffled.length >= 6) {
           selected = shuffled.slice(0, 6);
         } else {
-          // Allow reuse: shuffle and repeat available images to reach up to 6 images per post
-          const shuffled = this.shuffleArray(imageFiles);
           for (let i = 0; i < 6; i++) {
             selected.push(shuffled[i % shuffled.length]);
           }
@@ -77,22 +93,6 @@ export class MediaService {
             },
           });
         }
-      } else if (post.mediaType === 'VIDEO') {
-        if (videoFiles.length === 0) {
-          console.warn(`[MediaService] Không có video nào khả dụng trong Kho Media cho bài viết ${post.id}`);
-          continue;
-        }
-        // Pick 1 video
-        const shuffled = this.shuffleArray(videoFiles);
-        const selectedVideo = shuffled[0];
-
-        await prisma.postMedia.create({
-          data: {
-            generatedPostId: post.id,
-            mediaFileId: selectedVideo.id,
-            sortOrder: 0,
-          },
-        });
       }
     }
   }

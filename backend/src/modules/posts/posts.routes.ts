@@ -11,14 +11,30 @@ const router = Router();
 // 1. Get list of posts for a campaign
 router.get('/campaigns/:campaignId/posts', requireAuth, requirePermission('post.view'), async (req, res, next) => {
   try {
-    const posts = await prisma.generatedPost.findMany({
-      where: { campaignId: req.params.campaignId },
+    const campaignId = req.params.campaignId;
+    let posts = await prisma.generatedPost.findMany({
+      where: { campaignId },
       include: {
         campaignPage: { include: { facebookPage: true } },
         postMedias: { include: { mediaFile: true }, orderBy: { sortOrder: 'asc' } },
       },
       orderBy: { sequenceNumber: 'asc' },
     });
+
+    const isMissingMedia = posts.some(p => !p.postMedias || p.postMedias.length === 0);
+    if (isMissingMedia) {
+      const { MediaService } = await import('../media/media.service');
+      await MediaService.assignMediaToCampaign(campaignId).catch(() => {});
+      posts = await prisma.generatedPost.findMany({
+        where: { campaignId },
+        include: {
+          campaignPage: { include: { facebookPage: true } },
+          postMedias: { include: { mediaFile: true }, orderBy: { sortOrder: 'asc' } },
+        },
+        orderBy: { sequenceNumber: 'asc' },
+      });
+    }
+
     res.json({ data: posts });
   } catch (err) {
     next(err);
@@ -28,7 +44,7 @@ router.get('/campaigns/:campaignId/posts', requireAuth, requirePermission('post.
 // 2. Get single post details
 router.get('/:id', requireAuth, requirePermission('post.view'), async (req, res, next) => {
   try {
-    const post = await prisma.generatedPost.findUnique({
+    let post = await prisma.generatedPost.findUnique({
       where: { id: req.params.id },
       include: {
         campaignPage: { include: { facebookPage: true } },
@@ -38,6 +54,21 @@ router.get('/:id', requireAuth, requirePermission('post.view'), async (req, res,
       },
     });
     if (!post) throw new NotFoundError('Không tìm thấy bài viết');
+
+    if (!post.postMedias || post.postMedias.length === 0) {
+      const { MediaService } = await import('../media/media.service');
+      await MediaService.assignMediaToCampaign(post.campaignId).catch(() => {});
+      post = await prisma.generatedPost.findUnique({
+        where: { id: req.params.id },
+        include: {
+          campaignPage: { include: { facebookPage: true } },
+          postMedias: { include: { mediaFile: true }, orderBy: { sortOrder: 'asc' } },
+          contentRevisions: { include: { editedByUser: true }, orderBy: { createdAt: 'desc' } },
+          approvalHistories: { include: { performedByUser: true }, orderBy: { createdAt: 'desc' } },
+        },
+      });
+    }
+
     res.json({ data: post });
   } catch (err) {
     next(err);

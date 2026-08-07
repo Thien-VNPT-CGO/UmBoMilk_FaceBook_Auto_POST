@@ -84,9 +84,11 @@ export async function publishPost(postId: string) {
       facebookPostId = res.data?.id?.toString() ?? null;
     } else if (mediaCount > 1) {
       // 2. Post Multi-Photo Album (e.g. 6 Photos)
-      try {
-        const attachedMediaIds: string[] = [];
-        for (const pm of post.postMedias) {
+      const attachedMediaIds: string[] = [];
+      const photoErrors: string[] = [];
+
+      for (const pm of post.postMedias) {
+        try {
           const photoUrl = getPublicMediaUrl(pm.mediaFile.storageUrl);
           const photoRes = await axios.post(
             `https://graph.facebook.com/v19.0/${page.facebookPageId}/photos`,
@@ -97,69 +99,52 @@ export async function publishPost(postId: string) {
                 url: photoUrl,
                 published: false,
               },
-              timeout: 20000,
+              timeout: 25000,
             }
           );
           if (photoRes.data?.id) {
             attachedMediaIds.push(photoRes.data.id);
           }
+        } catch (err: any) {
+          logger.warn(`[Photo Upload Warning] Lỗi tải 1 hình ảnh lên FB: ${err.message}`);
+          photoErrors.push(err.message);
         }
-
-        const feedParams: Record<string, unknown> = {
-          access_token: accessToken,
-          message: post.content,
-        };
-        attachedMediaIds.forEach((id, idx) => {
-          feedParams[`attached_media[${idx}]`] = JSON.stringify({ media_fbid: id });
-        });
-
-        const feedRes = await axios.post(
-          `https://graph.facebook.com/v19.0/${page.facebookPageId}/feed`,
-          null,
-          { params: feedParams, timeout: 20000 }
-        );
-        facebookPostId = feedRes.data?.id?.toString() ?? null;
-      } catch (albumErr: any) {
-        logger.warn(`Multi-photo upload failed (${albumErr.message}). Publishing feed post...`);
-        const feedRes = await axios.post(
-          `https://graph.facebook.com/v19.0/${page.facebookPageId}/feed`,
-          null,
-          {
-            params: { access_token: accessToken, message: post.content },
-            timeout: 15000,
-          }
-        );
-        facebookPostId = feedRes.data?.id?.toString() ?? null;
       }
+
+      if (attachedMediaIds.length === 0) {
+        throw new Error(`Không thể đăng bộ ảnh lên Facebook Page (Lỗi tải ảnh: ${photoErrors.join('; ') || 'URL ảnh không thể truy cập từ máy chủ Facebook'}).`);
+      }
+
+      const feedParams: Record<string, unknown> = {
+        access_token: accessToken,
+        message: post.content,
+      };
+      attachedMediaIds.forEach((id, idx) => {
+        feedParams[`attached_media[${idx}]`] = JSON.stringify({ media_fbid: id });
+      });
+
+      const feedRes = await axios.post(
+        `https://graph.facebook.com/v19.0/${page.facebookPageId}/feed`,
+        null,
+        { params: feedParams, timeout: 25000 }
+      );
+      facebookPostId = feedRes.data?.id?.toString() ?? null;
     } else if (mediaCount === 1) {
-      // 3. Single Photo Post with fallback
-      try {
-        const photoUrl = getPublicMediaUrl(post.postMedias[0].mediaFile.storageUrl);
-        const res = await axios.post(
-          `https://graph.facebook.com/v19.0/${page.facebookPageId}/photos`,
-          null,
-          {
-            params: {
-              access_token: accessToken,
-              caption: post.content,
-              url: photoUrl,
-            },
-            timeout: 20000,
-          }
-        );
-        facebookPostId = res.data?.id?.toString() ?? null;
-      } catch (photoErr: any) {
-        logger.warn(`Single photo upload failed (${photoErr.message}). Publishing feed post...`);
-        const feedRes = await axios.post(
-          `https://graph.facebook.com/v19.0/${page.facebookPageId}/feed`,
-          null,
-          {
-            params: { access_token: accessToken, message: post.content },
-            timeout: 15000,
-          }
-        );
-        facebookPostId = feedRes.data?.id?.toString() ?? null;
-      }
+      // 3. Single Photo Post
+      const photoUrl = getPublicMediaUrl(post.postMedias[0].mediaFile.storageUrl);
+      const res = await axios.post(
+        `https://graph.facebook.com/v19.0/${page.facebookPageId}/photos`,
+        null,
+        {
+          params: {
+            access_token: accessToken,
+            caption: post.content,
+            url: photoUrl,
+          },
+          timeout: 25000,
+        }
+      );
+      facebookPostId = res.data?.id?.toString() ?? null;
     } else {
       // 4. Text-only Post
       const res = await axios.post(
