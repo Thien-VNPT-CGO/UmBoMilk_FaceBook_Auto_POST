@@ -2679,6 +2679,9 @@
     function updateDriveFolder(idx, field, val) {
       if (currentDriveFolders[idx]) {
         currentDriveFolders[idx][field] = val;
+        if (field === 'type' && Array.isArray(currentDriveFolders[idx].children)) {
+          currentDriveFolders[idx].children.forEach(c => c.type = val);
+        }
         autoSaveDriveLinksDebounced();
       }
     }
@@ -3021,10 +3024,15 @@
                 <option value="SELECTED" ${wizardData.mediaSourceMode === 'SELECTED' ? 'selected' : ''}>⭐ Chỉ định Hình ảnh / Video Yêu thích (Admin/Manager tự tích chọn)</option>
                 <optgroup label="🌐 Chọn Theo Thư Mục Google Drive Thương Hiệu">
                   ${(currentDriveFolders || []).map(f => {
-                    let opts = `<option value="GDRIVE_${f.id}" ${wizardData.mediaSourceMode === ('GDRIVE_' + f.id) ? 'selected' : ''}>📁 ${f.name} (${f.type === 'VIDEO' ? '🎥 Video' : '🖼️ Ảnh'})</option>`;
-                    if (Array.isArray(f.children) && f.children.length > 0) {
+                    const isVid = f.type === 'VIDEO';
+                    const icon = isVid ? '🎥' : '🖼️';
+                    const hasChildren = Array.isArray(f.children) && f.children.length > 0;
+                    let opts = `<option value="GDRIVE_${f.id}" ${wizardData.mediaSourceMode === ('GDRIVE_' + f.id) ? 'selected' : ''}>📁 ${f.name} (${hasChildren ? 'Nhóm thư mục mẹ' : (isVid ? '🎥 Video' : '🖼️ Ảnh')})</option>`;
+                    if (hasChildren) {
                       f.children.forEach(c => {
-                        opts += `<option value="GDRIVE_${c.id || c.name}" ${wizardData.mediaSourceMode === ('GDRIVE_' + (c.id || c.name)) ? 'selected' : ''}>&nbsp;&nbsp;&nbsp;&nbsp;↳ 🌿 ${c.name} (${(c.type || f.type) === 'VIDEO' ? '🎥 Video' : '🖼️ Ảnh'})</option>`;
+                        const childIsVid = (c.type || f.type) === 'VIDEO';
+                        const childIcon = childIsVid ? '🎥' : '🖼️';
+                        opts += `<option value="GDRIVE_${c.id || c.name}" ${wizardData.mediaSourceMode === ('GDRIVE_' + (c.id || c.name)) ? 'selected' : ''}>&nbsp;&nbsp;&nbsp;&nbsp;↳ 🌿 ${c.name} (${childIcon} ${childIsVid ? 'Video' : 'Ảnh'})</option>`;
                       });
                     }
                     return opts;
