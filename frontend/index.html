@@ -3265,12 +3265,12 @@
     }
 
     // Health status check
-    fetch('http://localhost:5000/health').then(r => r.json()).then(() => {
-      setElText('apiStatus', 'API Online');
+    fetch('/health').then(r => r.json()).then(() => {
+      setElText('apiStatus', '🟢 API Online');
       const el = document.getElementById('apiStatus');
       if (el) el.className = 'badge ok';
     }).catch(() => {
-      setElText('apiStatus', 'API Offline');
+      setElText('apiStatus', '🔴 API Offline');
       const el = document.getElementById('apiStatus');
       if (el) el.className = 'badge err';
     });
