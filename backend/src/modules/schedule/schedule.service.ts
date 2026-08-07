@@ -125,8 +125,9 @@ export class ScheduleService {
 
       // Auto stagger pages by 5 minutes
       const staggerOffset = pIdx * 5;
+      const baseStartAt = cp.startAt.getTime() < now ? new Date(now) : cp.startAt;
       const validTimes = this.calculateScheduleTimes({
-        startAt: cp.startAt,
+        startAt: baseStartAt,
         postCount: cp.generatedPosts.length,
         intervalMinutes: cp.intervalMinutes,
         allowedStartTime: cp.allowedStartTime,

@@ -299,9 +299,15 @@ router.post('/:id/approve', requireAuth, requirePermission('content.approve'), a
     const post = await prisma.generatedPost.findUnique({ where: { id: req.params.id } });
     if (!post) throw new NotFoundError('Không tìm thấy bài viết');
 
+    const now = new Date();
+    const updateData: any = { status: 'APPROVED', approvedAt: now };
+    if (post.scheduledAt && post.scheduledAt.getTime() < now.getTime()) {
+      updateData.scheduledAt = now;
+    }
+
     const updated = await prisma.generatedPost.update({
       where: { id: post.id },
-      data: { status: 'APPROVED', approvedAt: new Date() },
+      data: updateData,
     });
 
     await prisma.approvalHistory.create({
