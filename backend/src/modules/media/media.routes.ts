@@ -521,6 +521,28 @@ function extractDriveFolderId(url: string): string | null {
   return match ? match[1] : null;
 }
 
+const folderCountCache = new Map<string, { count: number; timestamp: number }>();
+
+async function getStableFolderLiveCount(folderUrl: string): Promise<number> {
+  if (!folderUrl || !folderUrl.includes('/folders/')) return 0;
+  const cached = folderCountCache.get(folderUrl);
+  const now = Date.now();
+  if (cached && (now - cached.timestamp < 1800000) && cached.count > 0) {
+    return cached.count;
+  }
+
+  try {
+    const liveFiles = await extractFileIdsFromFolderUrl(folderUrl);
+    if (liveFiles.length > 0) {
+      const finalCount = cached ? Math.max(cached.count, liveFiles.length) : liveFiles.length;
+      folderCountCache.set(folderUrl, { count: finalCount, timestamp: now });
+      return finalCount;
+    }
+  } catch (e) {}
+
+  return cached?.count || 0;
+}
+
 async function attachFolderCounts(links: any[]) {
   const result = [];
   for (const f of links) {
@@ -549,7 +571,10 @@ async function attachFolderCounts(links: any[]) {
             orConditions.push({ fileName: { contains: driveId } });
             orConditions.push({ storageUrl: { contains: driveId } });
           }
-          if (childFolderId) orConditions.push({ fileName: { contains: childFolderId } });
+          if (childFolderId) {
+            orConditions.push({ fileName: { contains: childFolderId } });
+            orConditions.push({ storageUrl: { contains: childFolderId } });
+          }
 
           if (orConditions.length > 0) {
             childCount = await prisma.mediaFile.count({
@@ -557,14 +582,12 @@ async function attachFolderCounts(links: any[]) {
             });
           }
 
-          // Fallback: Quét số lượng tệp thực tế trực tiếp từ link Google Drive
-          if (childCount === 0 && child.url.includes('/folders/')) {
-            try {
-              const liveFiles = await extractFileIdsFromFolderUrl(child.url);
-              if (liveFiles.length > 0) {
-                childCount = liveFiles.length;
-              }
-            } catch (e) {}
+          if (child.url.includes('/folders/')) {
+            const liveCount = await getStableFolderLiveCount(child.url);
+            childCount = Math.max(childCount, liveCount);
+            if (childCount > 0) {
+              folderCountCache.set(child.url, { count: childCount, timestamp: Date.now() });
+            }
           }
         }
         childrenWithCounts.push({ ...child, count: childCount });
@@ -581,7 +604,10 @@ async function attachFolderCounts(links: any[]) {
         orConditions.push({ fileName: { contains: driveId } });
         orConditions.push({ storageUrl: { contains: driveId } });
       }
-      if (parentFolderId) orConditions.push({ fileName: { contains: parentFolderId } });
+      if (parentFolderId) {
+        orConditions.push({ fileName: { contains: parentFolderId } });
+        orConditions.push({ storageUrl: { contains: parentFolderId } });
+      }
 
       if (orConditions.length > 0) {
         parentCount = await prisma.mediaFile.count({
@@ -589,14 +615,12 @@ async function attachFolderCounts(links: any[]) {
         });
       }
 
-      // Fallback: Quét số lượng tệp thực tế trực tiếp từ link Google Drive
-      if (parentCount === 0 && f.url.includes('/folders/')) {
-        try {
-          const liveFiles = await extractFileIdsFromFolderUrl(f.url);
-          if (liveFiles.length > 0) {
-            parentCount = liveFiles.length;
-          }
-        } catch (e) {}
+      if (f.url.includes('/folders/')) {
+        const liveCount = await getStableFolderLiveCount(f.url);
+        parentCount = Math.max(parentCount, liveCount);
+        if (parentCount > 0) {
+          folderCountCache.set(f.url, { count: parentCount, timestamp: Date.now() });
+        }
       }
     }
 
