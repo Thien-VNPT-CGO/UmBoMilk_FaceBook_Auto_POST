@@ -498,11 +498,23 @@ router.delete('/:id', requireAuth, async (req, res, next) => {
   }
 });
 
+function removeVietnameseTones(str: string): string {
+  if (!str) return '';
+  return str
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd')
+    .replace(/Đ/g, 'D')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '');
+}
+
 // Helper to attach realtime media file count per drive folder
 async function attachFolderCounts(links: any[]) {
   const result = [];
   for (const f of links) {
-    const parentFolderTag = (f.name || '').toLowerCase().replace(/[^a-z0-9]+/g, '_');
+    const parentFolderTag = removeVietnameseTones(f.name || '');
     let parentCount = 0;
 
     const childrenWithCounts = [];
@@ -510,28 +522,54 @@ async function attachFolderCounts(links: any[]) {
 
     if (hasChildren) {
       for (const child of f.children) {
-        const childTag = (child.name || '').toLowerCase().replace(/[^a-z0-9]+/g, '_');
+        const childTag = removeVietnameseTones(child.name || '');
         let childCount = 0;
-        // MUST have non-empty url to count files!
-        if (childTag && child.url && child.url.trim().length > 0) {
-          childCount = await prisma.mediaFile.count({
-            where: {
-              status: 'ACTIVE',
-              fileName: { contains: childTag }
-            }
-          });
+        if (child.url && child.url.trim().length > 0) {
+          const driveIds = extractDriveFileIds(child.url);
+          const driveId = driveIds[0];
+          
+          const orConditions: any[] = [];
+          if (childTag) {
+            orConditions.push({ fileName: { contains: childTag } });
+          }
+          if (driveId) {
+            orConditions.push({ fileName: { contains: driveId } });
+            orConditions.push({ storageUrl: { contains: driveId } });
+          }
+
+          if (orConditions.length > 0) {
+            childCount = await prisma.mediaFile.count({
+              where: {
+                status: 'ACTIVE',
+                OR: orConditions
+              }
+            });
+          }
         }
         childrenWithCounts.push({ ...child, count: childCount });
         parentCount += childCount;
       }
-    } else if (parentFolderTag && f.url && f.url.trim().length > 0) {
-      // MUST have non-empty url to count files!
-      parentCount = await prisma.mediaFile.count({
-        where: {
-          status: 'ACTIVE',
-          fileName: { contains: parentFolderTag }
-        }
-      });
+    } else if (f.url && f.url.trim().length > 0) {
+      const driveIds = extractDriveFileIds(f.url);
+      const driveId = driveIds[0];
+
+      const orConditions: any[] = [];
+      if (parentFolderTag) {
+        orConditions.push({ fileName: { contains: parentFolderTag } });
+      }
+      if (driveId) {
+        orConditions.push({ fileName: { contains: driveId } });
+        orConditions.push({ storageUrl: { contains: driveId } });
+      }
+
+      if (orConditions.length > 0) {
+        parentCount = await prisma.mediaFile.count({
+          where: {
+            status: 'ACTIVE',
+            OR: orConditions
+          }
+        });
+      }
     }
 
     result.push({ ...f, count: parentCount, children: childrenWithCounts });
@@ -567,6 +605,7 @@ router.post('/drive-links', requireAuth, async (req, res, next) => {
   try {
     const { links } = req.body;
     if (!Array.isArray(links)) throw new BadRequestError('Dữ liệu links phải là mảng');
+
     await prisma.systemSetting.upsert({
       where: { key: 'gdrive_folder_links' },
       update: { valueEncrypted: JSON.stringify(links) },
@@ -618,22 +657,36 @@ async function extractFileIdsFromFolderUrl(folderUrl: string, depth = 0): Promis
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
       },
-      timeout: 12000
+      timeout: 15000
     });
     const html = res.data;
 
-    // Extract all potential Drive file IDs from initial JS data
-    const matches = html.match(/\\\\"[a-zA-Z0-9_-]{25,}\\\\"|"[a-zA-Z0-9_-]{28,35}"/g) || [];
-    const candidateIds: string[] = [];
-    for (const m of matches) {
-      const clean = m.replace(/[\"\\]/g, '');
-      if (clean !== folderId && clean.length >= 25 && clean.length <= 40) {
-        candidateIds.push(clean);
+    // Enhanced Drive File ID pattern extraction (supports all modern Google Drive HTML layouts)
+    const patterns = [
+      /1[a-zA-Z0-9_-]{32}/g,
+      /0B[a-zA-Z0-9_-]{31}/g,
+      /0b[a-zA-Z0-9_-]{31}/g,
+      /\/file\/d\/([a-zA-Z0-9_-]{25,})/g,
+      /\\\\"[a-zA-Z0-9_-]{25,}\\\\"|"[a-zA-Z0-9_-]{28,35}"/g,
+    ];
+
+    const candidateIds = new Set<string>();
+    for (const pattern of patterns) {
+      let m;
+      while ((m = pattern.exec(html)) !== null) {
+        const idStr = m[1] || m[0];
+        const clean = idStr.replace(/[\"\\]/g, '').replace(/-0$/, '');
+        if (clean !== folderId && clean.length >= 25 && clean.length <= 40) {
+          if (!clean.includes('-webkit') && !clean.includes('google') && !clean.includes('logo_') && !clean.includes('theme') && !clean.includes('__') && !clean.includes('--') && /[0-9]/.test(clean) && /[a-zA-Z]/.test(clean)) {
+            candidateIds.add(clean);
+          }
+        }
       }
     }
-    let allIds = [...new Set(candidateIds)];
 
-    // Detect child sub-folders inside the parent folder for branching
+    let allIds = Array.from(candidateIds);
+
+    // Detect child sub-folders inside parent folder for branching
     const subFolderMatches = html.match(/\[\\"[a-zA-Z0-9_-]{25,}\\",\\"[^"]+\\",\\"application\/vnd\.google-apps\.folder\\"/g) || [];
     const subFolderIds: string[] = [];
     for (const sf of subFolderMatches) {
@@ -659,7 +712,7 @@ async function extractFileIdsFromFolderUrl(folderUrl: string, depth = 0): Promis
 
     return [...new Set(allIds)];
   } catch (err: any) {
-    console.error('[Drive Import] Lỗi phân tích thư mục:', err.message);
+    console.error(`[Drive Folder Extract Error] Lỗi đọc thư mục ${folderUrl}:`, err.message);
     return [];
   }
 }
