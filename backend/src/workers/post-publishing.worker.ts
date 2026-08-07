@@ -8,8 +8,90 @@ import { logger } from '../common/utils/logger';
 import { decryptString } from '../common/encryption/crypto';
 import { facebookPublishingQueue } from '../common/queue/queues';
 
+import FormData from 'form-data';
+
 interface PostSchedulingJob {
   postId: string;
+}
+
+async function downloadDriveVideoBuffer(driveId: string): Promise<Buffer> {
+  const downloadUrls = [
+    `https://drive.google.com/uc?export=download&id=${driveId}&confirm=t`,
+    `https://docs.google.com/uc?export=download&id=${driveId}&confirm=t`,
+    `https://drive.usercontent.google.com/download?id=${driveId}&export=download&confirm=t`,
+    `https://lh3.googleusercontent.com/d/${driveId}`,
+  ];
+
+  let lastError: Error | null = null;
+
+  for (const url of downloadUrls) {
+    try {
+      const resp = await axios.get(url, {
+        responseType: 'arraybuffer',
+        timeout: 120000,
+        maxRedirects: 10,
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'Accept': '*/*',
+        },
+      });
+
+      const buf = Buffer.from(resp.data);
+      const sampleText = buf.toString('utf8', 0, 300).toLowerCase();
+
+      // Check if response is HTML error/confirmation page
+      if (sampleText.includes('<!doctype html') || sampleText.includes('<html') || sampleText.includes('google.com/accounts')) {
+        const confirmMatch = sampleText.match(/confirm=([a-zA-Z0-9_-]+)/i);
+        if (confirmMatch && confirmMatch[1]) {
+          const confirmToken = confirmMatch[1];
+          const confirmUrl = `https://drive.google.com/uc?export=download&id=${driveId}&confirm=${confirmToken}`;
+          const confirmResp = await axios.get(confirmUrl, {
+            responseType: 'arraybuffer',
+            timeout: 120000,
+            maxRedirects: 10,
+            headers: {
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+            },
+          });
+          const confirmBuf = Buffer.from(confirmResp.data);
+          const confirmSample = confirmBuf.toString('utf8', 0, 300).toLowerCase();
+          if (!confirmSample.includes('<!doctype html') && !confirmSample.includes('<html')) {
+            return confirmBuf;
+          }
+        }
+        continue;
+      }
+
+      if (buf.length > 10000) {
+        return buf;
+      }
+    } catch (err: any) {
+      lastError = err;
+    }
+  }
+
+  throw new Error(`Không thể tải file video MP4 từ Google Drive (ID: ${driveId}). Chi tiết lỗi: ${lastError?.message || 'Download failed'}`);
+}
+
+function isValidVideoFile(filePath: string): boolean {
+  if (!fs.existsSync(filePath)) return false;
+  const stat = fs.statSync(filePath);
+  if (stat.size < 10000) return false;
+
+  try {
+    const fd = fs.openSync(filePath, 'r');
+    const buffer = Buffer.alloc(200);
+    fs.readSync(fd, buffer, 0, 200, 0);
+    fs.closeSync(fd);
+
+    const sample = buffer.toString('utf8').toLowerCase();
+    if (sample.includes('<!doctype html') || sample.includes('<html') || sample.includes('<body') || sample.includes('google.com')) {
+      return false;
+    }
+    return true;
+  } catch (e) {
+    return false;
+  }
 }
 
 function extractDriveFileIds(text: string): string[] {
@@ -88,7 +170,7 @@ export async function publishPost(postId: string) {
 
   try {
     if (post.mediaType === 'VIDEO' && mediaCount > 0) {
-      // 1. Post Video: Ensure raw video MP4 file is available on server disk and served via public /uploads/ URL
+      // 1. Post Video: Ensure raw video MP4 file is downloaded & verified
       const mediaFile = post.postMedias[0].mediaFile;
       let storageUrl = mediaFile.storageUrl || '';
 
@@ -100,67 +182,80 @@ export async function publishPost(postId: string) {
       const driveMatch = extractDriveFileIds(storageUrl + ' ' + mediaFile.fileName);
       const driveId = driveMatch[0];
 
-      let localFileName = '';
+      let localFileName = `video-${mediaFile.id}.mp4`;
       if (storageUrl.startsWith('/uploads/')) {
         localFileName = path.basename(storageUrl);
       } else if (driveId) {
         localFileName = `drive-${driveId}.mp4`;
-      } else {
-        localFileName = `video-${mediaFile.id}.mp4`;
       }
 
       const localFilePath = path.join(uploadDir, localFileName);
 
-      // Verify if video exists on disk. If missing, download directly from Google Drive to disk
-      if (!fs.existsSync(localFilePath)) {
-        logger.info(`[Video Publish] Tệp ${localFileName} chưa có trên đĩa server, đang tải từ Drive về đĩa...`);
-        let downloadUrl = storageUrl;
+      // Check if local file is valid MP4 video. If invalid/missing/HTML, re-download from Google Drive
+      if (!isValidVideoFile(localFilePath)) {
+        logger.info(`[Video Publish] Đang tải & kiểm định tệp video MP4 chuẩn từ Drive (ID: ${driveId || storageUrl})...`);
         if (driveId) {
-          downloadUrl = `https://lh3.googleusercontent.com/d/${driveId}`;
+          const videoBuf = await downloadDriveVideoBuffer(driveId);
+          fs.writeFileSync(localFilePath, videoBuf);
+          logger.info(`[Video Publish] Đã tải & ghi đĩa tệp MP4 chuẩn (${videoBuf.length} bytes).`);
+        } else if (storageUrl.startsWith('http')) {
+          const resp = await axios.get(storageUrl, {
+            responseType: 'arraybuffer',
+            timeout: 120000,
+            headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }
+          });
+          const videoBuf = Buffer.from(resp.data);
+          fs.writeFileSync(localFilePath, videoBuf);
         }
-        if (downloadUrl.startsWith('http')) {
-          try {
-            const resp = await axios.get(downloadUrl, {
-              responseType: 'arraybuffer',
-              timeout: 90000,
-              headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }
-            });
-            fs.writeFileSync(localFilePath, Buffer.from(resp.data));
-            logger.info(`[Video Publish] Đã tải xong video ${localFileName} (${resp.data.length} bytes) lưu vào đĩa.`);
-          } catch (dlErr: any) {
-            logger.warn(`[Video Publish Warning] Lỗi tải video từ Google Drive: ${dlErr.message}`);
+      }
+
+      const newStorageUrl = `/uploads/${localFileName}`;
+      if (mediaFile.storageUrl !== newStorageUrl) {
+        await prisma.mediaFile.update({
+          where: { id: mediaFile.id },
+          data: { storageUrl: newStorageUrl }
+        }).catch(() => {});
+      }
+
+      const videoUrl = getPublicMediaUrl(newStorageUrl);
+      logger.info(`[Video Publish] Đang tải video MP4 trực tiếp lên Facebook Graph API (File: ${localFileName}, URL: ${videoUrl})...`);
+
+      // Try Direct Multipart FormData Binary Upload first for 100% playable Facebook videos
+      try {
+        const formData = new FormData();
+        formData.append('access_token', accessToken);
+        formData.append('description', post.content);
+        formData.append('source', fs.createReadStream(localFilePath));
+
+        const res = await axios.post(
+          `https://graph.facebook.com/v19.0/${page.facebookPageId}/videos`,
+          formData,
+          {
+            headers: formData.getHeaders(),
+            maxContentLength: Infinity,
+            maxBodyLength: Infinity,
+            timeout: 300000,
           }
-        }
+        );
+        facebookPostId = res.data?.id?.toString() ?? null;
+        logger.info(`[Video Publish Success] Đã đăng video trực tiếp lên FB Page thành công! FB Video ID: ${facebookPostId}`);
+      } catch (uploadErr: any) {
+        logger.warn(`[Video Direct Upload Warning] Direct stream upload failed, falling back to file_url: ${uploadErr.message}`);
+        // Fallback to file_url if direct stream failed
+        const res = await axios.post(
+          `https://graph.facebook.com/v19.0/${page.facebookPageId}/videos`,
+          null,
+          {
+            params: {
+              access_token: accessToken,
+              description: post.content,
+              file_url: videoUrl,
+            },
+            timeout: 120000,
+          }
+        );
+        facebookPostId = res.data?.id?.toString() ?? null;
       }
-
-      // Update DB storageUrl to point to local /uploads/ URL so Facebook Graph API receives raw MP4 stream
-      if (fs.existsSync(localFilePath)) {
-        const newStorageUrl = `/uploads/${localFileName}`;
-        if (mediaFile.storageUrl !== newStorageUrl) {
-          await prisma.mediaFile.update({
-            where: { id: mediaFile.id },
-            data: { storageUrl: newStorageUrl }
-          }).catch(() => {});
-        }
-        storageUrl = newStorageUrl;
-      }
-
-      const videoUrl = getPublicMediaUrl(storageUrl);
-      logger.info(`[Video Publish] Đang đăng video phát chuẩn lên Facebook Page ${page.pageName} với URL: ${videoUrl}`);
-
-      const res = await axios.post(
-        `https://graph.facebook.com/v19.0/${page.facebookPageId}/videos`,
-        null,
-        {
-          params: {
-            access_token: accessToken,
-            description: post.content,
-            file_url: videoUrl,
-          },
-          timeout: 120000,
-        }
-      );
-      facebookPostId = res.data?.id?.toString() ?? null;
     } else if (mediaCount > 1) {
       // 2. Post Multi-Photo Album (e.g. 6 Photos)
       const attachedMediaIds: string[] = [];
