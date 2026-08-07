@@ -3020,23 +3020,34 @@
             <div style="flex:1">
               <label style="font-weight:800;color:var(--dark)">Nguồn Media (Chọn Thư Mục Google Drive hoặc Kho Media)</label>
               <select id="wizardDriveFolderSelect" onchange="wizardData.mediaSourceMode=this.value;renderWizard()">
-                <option value="AUTO" ${(!wizardData.mediaSourceMode || wizardData.mediaSourceMode === 'AUTO') ? 'selected' : ''}>🎲 Tự động chọn ngẫu nhiên từ Kho Media (6 ảnh / 1 video)</option>
-                <option value="SELECTED" ${wizardData.mediaSourceMode === 'SELECTED' ? 'selected' : ''}>⭐ Chỉ định Hình ảnh / Video Yêu thích (Admin/Manager tự tích chọn)</option>
                 <optgroup label="🌐 Chọn Theo Thư Mục Google Drive Thương Hiệu">
-                  ${(currentDriveFolders || []).map(f => {
-                    const isVid = f.type === 'VIDEO';
-                    const icon = isVid ? '🎥' : '🖼️';
-                    const hasChildren = Array.isArray(f.children) && f.children.length > 0;
-                    let opts = `<option value="GDRIVE_${f.id}" ${wizardData.mediaSourceMode === ('GDRIVE_' + f.id) ? 'selected' : ''}>📁 ${f.name} (${hasChildren ? 'Nhóm thư mục mẹ' : (isVid ? '🎥 Video' : '🖼️ Ảnh')})</option>`;
-                    if (hasChildren) {
-                      f.children.forEach(c => {
-                        const childIsVid = (c.type || f.type) === 'VIDEO';
-                        const childIcon = childIsVid ? '🎥' : '🖼️';
-                        opts += `<option value="GDRIVE_${c.id || c.name}" ${wizardData.mediaSourceMode === ('GDRIVE_' + (c.id || c.name)) ? 'selected' : ''}>&nbsp;&nbsp;&nbsp;&nbsp;↳ 🌿 ${c.name} (${childIcon} ${childIsVid ? 'Video' : 'Ảnh'})</option>`;
-                      });
+                  ${(() => {
+                    const folders = currentDriveFolders || [];
+                    if (!wizardData.mediaSourceMode || wizardData.mediaSourceMode === 'AUTO' || wizardData.mediaSourceMode === 'SELECTED') {
+                      const firstF = folders[0];
+                      if (firstF) {
+                        if (Array.isArray(firstF.children) && firstF.children.length > 0) {
+                          wizardData.mediaSourceMode = 'GDRIVE_' + (firstF.children[0].id || firstF.children[0].name);
+                        } else {
+                          wizardData.mediaSourceMode = 'GDRIVE_' + firstF.id;
+                        }
+                      }
                     }
-                    return opts;
-                  }).join('')}
+                    return folders.map(f => {
+                      const isVid = f.type === 'VIDEO';
+                      const icon = isVid ? '🎥' : '🖼️';
+                      const hasChildren = Array.isArray(f.children) && f.children.length > 0;
+                      let opts = `<option value="GDRIVE_${f.id}" ${wizardData.mediaSourceMode === ('GDRIVE_' + f.id) ? 'selected' : ''}>📁 ${f.name} (${hasChildren ? 'Nhóm thư mục mẹ' : (isVid ? '🎥 Video' : '🖼️ Ảnh')})</option>`;
+                      if (hasChildren) {
+                        f.children.forEach(c => {
+                          const childIsVid = (c.type || f.type) === 'VIDEO';
+                          const childIcon = childIsVid ? '🎥' : '🖼️';
+                          opts += `<option value="GDRIVE_${c.id || c.name}" ${wizardData.mediaSourceMode === ('GDRIVE_' + (c.id || c.name)) ? 'selected' : ''}>&nbsp;&nbsp;&nbsp;&nbsp;↳ 🌿 ${c.name} (${childIcon} ${childIsVid ? 'Video' : 'Ảnh'})</option>`;
+                        });
+                      }
+                      return opts;
+                    }).join('');
+                  })()}
                 </optgroup>
               </select>
             </div>
