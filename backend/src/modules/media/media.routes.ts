@@ -581,7 +581,8 @@ function extractDriveFileIds(inputUrl: string): string[] {
   return [...new Set(ids)];
 }
 
-async function extractFileIdsFromFolderUrl(folderUrl: string): Promise<string[]> {
+async function extractFileIdsFromFolderUrl(folderUrl: string, depth = 0): Promise<string[]> {
+  if (depth > 2) return []; // Maximum 2 subfolder levels depth
   try {
     const match = folderUrl.match(/\/folders\/([a-zA-Z0-9_-]+)/);
     if (!match) return [];
@@ -589,22 +590,50 @@ async function extractFileIdsFromFolderUrl(folderUrl: string): Promise<string[]>
 
     const res = await axios.get(`https://drive.google.com/drive/folders/${folderId}`, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
       },
-      timeout: 10000
+      timeout: 12000
     });
     const html = res.data;
+
+    // Extract all potential Drive file IDs from initial JS data
     const matches = html.match(/\\\\"[a-zA-Z0-9_-]{25,}\\\\"|"[a-zA-Z0-9_-]{28,35}"/g) || [];
-    const foundIds: string[] = [];
+    const candidateIds: string[] = [];
     for (const m of matches) {
       const clean = m.replace(/[\"\\]/g, '');
       if (clean !== folderId && clean.length >= 25 && clean.length <= 40) {
-        foundIds.push(clean);
+        candidateIds.push(clean);
       }
     }
-    return [...new Set(foundIds)];
-  } catch (err) {
-    console.error('[Drive Import] Error parsing folder:', err);
+    let allIds = [...new Set(candidateIds)];
+
+    // Detect child sub-folders inside the parent folder for branching
+    const subFolderMatches = html.match(/\[\\"[a-zA-Z0-9_-]{25,}\\",\\"[^"]+\\",\\"application\/vnd\.google-apps\.folder\\"/g) || [];
+    const subFolderIds: string[] = [];
+    for (const sf of subFolderMatches) {
+      const sfMatch = sf.match(/\\"[a-zA-Z0-9_-]{25,}\\"/);
+      if (sfMatch) {
+        const cleanSfId = sfMatch[0].replace(/[\"\\]/g, '');
+        if (cleanSfId && cleanSfId !== folderId) subFolderIds.push(cleanSfId);
+      }
+    }
+
+    const uniqueSubFolders = [...new Set(subFolderIds)];
+    if (uniqueSubFolders.length > 0 && depth < 2) {
+      console.log(`[Drive Branching] Thư mục ${folderId} phát hiện ${uniqueSubFolders.length} thư mục con rẽ nhánh.`);
+      for (const sfId of uniqueSubFolders) {
+        try {
+          const childFileIds = await extractFileIdsFromFolderUrl(`https://drive.google.com/drive/folders/${sfId}`, depth + 1);
+          allIds.push(...childFileIds);
+        } catch (subErr: any) {
+          console.warn(`[Drive Branching Warning] Lỗi quét thư mục con ${sfId}:`, subErr.message);
+        }
+      }
+    }
+
+    return [...new Set(allIds)];
+  } catch (err: any) {
+    console.error('[Drive Import] Lỗi phân tích thư mục:', err.message);
     return [];
   }
 }
