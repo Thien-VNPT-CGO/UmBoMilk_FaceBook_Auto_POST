@@ -704,7 +704,7 @@ async function extractFileIdsFromFolderUrl(folderUrl: string, depth = 0): Promis
         const idStr = m[1] || m[0];
         const clean = idStr.replace(/[\"\\]/g, '').replace(/-0$/, '');
         if (clean !== folderId && clean.length >= 25 && clean.length <= 40) {
-          if (!clean.includes('-webkit') && !clean.includes('google') && !clean.includes('logo_') && !clean.includes('theme') && !clean.includes('__') && !clean.includes('--') && /[0-9]/.test(clean) && /[a-zA-Z]/.test(clean)) {
+          if (!clean.includes('-webkit') && !clean.includes('google') && !clean.includes('logo_') && !clean.includes('theme') && !clean.includes('__') && !clean.includes('--') && !clean.includes('v-') && !clean.includes('h-') && !clean.includes('Zm') && !clean.includes('v80H') && /[0-9]/.test(clean) && /[a-zA-Z]/.test(clean)) {
             candidateIds.add(clean);
           }
         }
