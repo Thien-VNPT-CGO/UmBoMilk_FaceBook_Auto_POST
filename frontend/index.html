@@ -2430,11 +2430,12 @@
       }
     } catch (e) {}
 
-    function addChildDriveFolderRow(parentIdx) {
+    async function addChildDriveFolderRow(parentIdx) {
       if (isDriveSyncingActive) return;
       if (!currentDriveFolders[parentIdx].children) {
         currentDriveFolders[parentIdx].children = [];
       }
+      currentDriveFolders[parentIdx].url = '';
       currentDriveFolders[parentIdx].children.push({
         id: `${Date.now()}_child`,
         name: `Nhánh con ${currentDriveFolders[parentIdx].children.length + 1}`,
@@ -2443,7 +2444,7 @@
         count: 0
       });
       renderDriveFolderRows();
-      autoSaveDriveLinksDebounced();
+      await saveDriveLinks(false);
     }
 
     function updateChildDriveFolder(parentIdx, childIdx, field, val) {
@@ -2453,12 +2454,12 @@
       }
     }
 
-    function removeChildDriveFolderRow(parentIdx, childIdx) {
+    async function removeChildDriveFolderRow(parentIdx, childIdx) {
       if (isDriveSyncingActive) return;
       if (currentDriveFolders[parentIdx]?.children) {
         currentDriveFolders[parentIdx].children.splice(childIdx, 1);
         renderDriveFolderRows();
-        autoSaveDriveLinksDebounced();
+        await saveDriveLinks(false);
       }
     }
 
@@ -2693,20 +2694,21 @@
       }, 500);
     }
 
-    function addDriveFolderRow() {
+    async function addDriveFolderRow() {
       if (isDriveSyncingActive) return;
       currentDriveFolders.push({
         id: Date.now().toString(),
         name: `Thư mục ${currentDriveFolders.length + 1}`,
         type: 'IMAGE',
         url: '',
-        count: 0
+        count: 0,
+        children: []
       });
       renderDriveFolderRows();
-      autoSaveDriveLinksDebounced();
+      await saveDriveLinks(false);
     }
 
-    function removeDriveFolderRow(idx) {
+    async function removeDriveFolderRow(idx) {
       if (isDriveSyncingActive) return;
       if (currentDriveFolders.length <= 1) {
         alert('Cần giữ ít nhất 1 dòng thư mục Google Drive!');
@@ -2714,7 +2716,7 @@
       }
       currentDriveFolders.splice(idx, 1);
       renderDriveFolderRows();
-      autoSaveDriveLinksDebounced();
+      await saveDriveLinks(false);
     }
 
     async function saveDriveLinks(triggerSync = true) {
