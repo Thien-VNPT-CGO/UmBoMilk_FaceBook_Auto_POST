@@ -2483,10 +2483,17 @@
       let realTotalImages = 0;
       let realTotalVideos = 0;
       (currentDriveFolders || []).forEach(f => {
+        const hasChildren = Array.isArray(f.children) && f.children.length > 0;
+        let count = 0;
+        if (hasChildren) {
+          count = f.children.reduce((sum, c) => sum + (c.url && c.url.trim() ? (c.count || 0) : 0), 0);
+        } else if (f.url && f.url.trim()) {
+          count = f.count || 0;
+        }
         if (f.type === 'VIDEO') {
-          realTotalVideos += (f.count || 0);
+          realTotalVideos += count;
         } else {
-          realTotalImages += (f.count || 0);
+          realTotalImages += count;
         }
       });
 
@@ -2508,7 +2515,10 @@
         breakdownContainer.innerHTML = currentDriveFolders.map(f => {
           const isVid = f.type === 'VIDEO';
           const icon = isVid ? '🎥' : '🖼️';
-          const count = f.count || 0;
+          const hasChildren = Array.isArray(f.children) && f.children.length > 0;
+          const count = hasChildren 
+            ? f.children.reduce((sum, c) => sum + (c.url && c.url.trim() ? (c.count || 0) : 0), 0)
+            : (f.url && f.url.trim() ? (f.count || 0) : 0);
           return `
             <div style="background:#fff;border:1.5px solid ${count > 0 ? '#c084fc' : '#e2e8f0'};border-radius:14px;padding:12px 14px;box-shadow:0 3px 10px rgba(126,34,206,0.03);display:flex;flex-direction:column;gap:6px">
               <div style="display:flex;justify-content:space-between;align-items:center">
@@ -2520,8 +2530,8 @@
                   <strong style="font-size:22px;font-weight:900;color:${count > 0 ? 'var(--pink)' : 'var(--dark)'}">${count}</strong>
                   <span style="font-size:11px;color:var(--muted);font-weight:600"> tệp</span>
                 </div>
-                <span style="font-size:11px;font-weight:700;color:${count > 0 ? '#047857' : (f.url ? '#d97706' : 'var(--muted)')}">
-                  ${count > 0 ? '🟢 Realtime Active' : (f.url ? '⚡ Đang đồng bộ...' : '⚪ Chưa có link')}
+                <span style="font-size:11px;font-weight:700;color:${count > 0 ? '#047857' : ((f.url || hasChildren) ? '#d97706' : 'var(--muted)')}">
+                  ${count > 0 ? '🟢 Realtime Active' : ((f.url || hasChildren) ? '⚡ Đang đồng bộ...' : '⚪ Chưa có link')}
                 </span>
               </div>
             </div>
@@ -2533,20 +2543,26 @@
 
       container.innerHTML = currentDriveFolders.map((f, idx) => {
         const hasChildren = Array.isArray(f.children) && f.children.length > 0;
+        const count = hasChildren 
+          ? f.children.reduce((sum, c) => sum + (c.url && c.url.trim() ? (c.count || 0) : 0), 0)
+          : (f.url && f.url.trim() ? (f.count || 0) : 0);
 
         let childrenHtml = '';
         if (hasChildren) {
-          childrenHtml = f.children.map((child, cIdx) => `
+          childrenHtml = f.children.map((child, cIdx) => {
+            const childCount = (child.url && child.url.trim()) ? (child.count || 0) : 0;
+            return `
             <div style="display:flex;gap:10px;align-items:center;background:#faf5ff;padding:8px 12px;border-radius:10px;border:1px dashed #d8b4fe;margin-top:6px;margin-left:26px">
               <span style="font-size:12px;font-weight:800;color:#7e22ce">↳ 🌿</span>
               <input type="text" value="${(child.name || '').replace(/"/g, '&quot;')}" onchange="updateChildDriveFolder(${idx}, ${cIdx}, 'name', this.value)" placeholder="Tên thư mục con (VD: 🚨 NHÌN VỊ SỮA...)" style="width:230px;font-size:12px;font-weight:700;padding:6px 10px;border-radius:6px;border:1px solid #c084fc;background:#fff;color:#581c87">
               <input type="url" value="${(child.url || '').replace(/"/g, '&quot;')}" onchange="updateChildDriveFolder(${idx}, ${cIdx}, 'url', this.value);autoSaveDriveLinksDebounced()" oninput="updateChildDriveFolder(${idx}, ${cIdx}, 'url', this.value);autoSaveDriveLinksDebounced()" placeholder="https://drive.google.com/drive/folders/... (Link thư mục con)" style="flex:1;font-size:12px;padding:6px 10px;border-radius:6px;border:1px solid #d8b4fe;background:#fff">
-              <span class="badge ${child.count > 0 ? 'ok' : 'wait'}" style="font-size:11px;font-weight:800;padding:4px 10px;white-space:nowrap">
-                ${(child.type || f.type) === 'VIDEO' ? '🎥' : '📸'} ${child.count || 0} tệp
+              <span class="badge ${childCount > 0 ? 'ok' : 'wait'}" style="font-size:11px;font-weight:800;padding:4px 10px;white-space:nowrap">
+                ${(child.type || f.type) === 'VIDEO' ? '🎥' : '📸'} ${childCount} tệp
               </span>
               <button type="button" class="ghost small" onclick="removeChildDriveFolderRow(${idx}, ${cIdx})" style="color:var(--red);border-radius:6px;padding:4px 8px;font-size:11px;border-color:#fca5a5">🗑️ Xóa nhánh</button>
             </div>
-          `).join('');
+          `;
+          }).join('');
         }
 
         return `
@@ -2569,8 +2585,8 @@
 
             <button type="button" class="ghost small" onclick="addChildDriveFolderRow(${idx})" style="color:#7e22ce;border-radius:8px;padding:6px 12px;font-size:11.5px;border-color:#c084fc;font-weight:700;background:#faf5ff">🌿 ＋ Rẽ Nhánh Con</button>
 
-            <span class="badge ${f.count > 0 ? 'ok' : 'wait'}" style="font-size:11.5px;font-weight:800;padding:6px 12px;white-space:nowrap" title="Tổng tệp của tất cả các nhánh con cộng lại">
-              ${f.type === 'VIDEO' ? '🎥' : '📸'} ${f.count || 0} tệp tổng
+            <span class="badge ${count > 0 ? 'ok' : 'wait'}" style="font-size:11.5px;font-weight:800;padding:6px 12px;white-space:nowrap" title="Tổng tệp của tất cả các nhánh con cộng lại">
+              ${f.type === 'VIDEO' ? '🎥' : '📸'} ${count} tệp tổng
             </span>
 
             <button type="button" class="ghost small" onclick="removeDriveFolderRow(${idx})" style="color:var(--red);border-radius:8px;padding:6px 10px;font-size:12px;border-color:#fca5a5">🗑️ Xóa</button>

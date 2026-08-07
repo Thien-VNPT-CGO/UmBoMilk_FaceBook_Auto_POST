@@ -510,7 +510,8 @@ async function attachFolderCounts(links: any[]) {
       for (const child of f.children) {
         const childTag = (child.name || '').toLowerCase().replace(/[^a-z0-9]+/g, '_');
         let childCount = 0;
-        if (childTag) {
+        // MUST have non-empty url to count files!
+        if (childTag && child.url && child.url.trim().length > 0) {
           childCount = await prisma.mediaFile.count({
             where: {
               status: 'ACTIVE',
@@ -521,7 +522,8 @@ async function attachFolderCounts(links: any[]) {
         childrenWithCounts.push({ ...child, count: childCount });
         parentCount += childCount;
       }
-    } else if (parentFolderTag) {
+    } else if (parentFolderTag && f.url && f.url.trim().length > 0) {
+      // MUST have non-empty url to count files!
       parentCount = await prisma.mediaFile.count({
         where: {
           status: 'ACTIVE',
