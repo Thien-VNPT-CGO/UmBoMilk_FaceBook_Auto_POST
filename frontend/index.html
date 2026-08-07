@@ -1147,6 +1147,26 @@
               </div>
             </div>
 
+            <!-- ANIMATED REALTIME SYNC PROGRESS BAR BANNER (HIDDEN WHEN IDLE) -->
+            <div id="driveSyncProgressBarCard" style="display:none;margin-bottom:20px;background:linear-gradient(135deg,#fff0f6,#fff7fb);border:1.5px solid var(--pink);border-radius:16px;padding:18px 20px;box-shadow:0 6px 20px rgba(244,91,154,0.12)">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+                <div style="display:flex;align-items:center;gap:10px">
+                  <div style="width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--pink),var(--dark));color:#fff;display:grid;place-items:center;font-size:18px;font-weight:800">⏳</div>
+                  <div>
+                    <div style="font-weight:800;font-size:14px;color:var(--dark)" id="syncProgressText">Đang đồng bộ dữ liệu từ Google Drive...</div>
+                    <div style="font-size:12px;color:var(--muted);margin-top:2px" id="syncProgressDetail">Đang kết nối API và phân loại tệp...</div>
+                  </div>
+                </div>
+                <span class="badge run" id="syncProgressBadge" style="font-size:14px;font-weight:900;padding:6px 14px;border-radius:10px">0%</span>
+              </div>
+              <div style="width:100%;height:10px;background:#fce7f3;border-radius:10px;overflow:hidden;margin-top:6px">
+                <div id="syncProgressBarFill" style="width:0%;height:100%;background:linear-gradient(90deg,var(--pink),#db2777);border-radius:10px;transition:width 0.3s ease"></div>
+              </div>
+              <div style="margin-top:10px;font-size:11.5px;color:#9f1239;font-weight:700;display:flex;align-items:center;gap:6px">
+                🔒 Các đường link và nút Xóa hiện đang TẠM KHÓA để tránh click nhầm trong lúc dữ liệu đang nhảy realtime!
+              </div>
+            </div>
+
             <!-- REALTIME FOLDER BREAKDOWN CARDS -->
             <div style="margin-bottom:24px;background:#fcfaff;border:1px solid #f3e8ff;border-radius:16px;padding:16px">
               <div style="font-size:13px;font-weight:800;color:#6b21a8;margin-bottom:12px;display:flex;align-items:center;gap:6px">
@@ -2461,6 +2481,81 @@
       `).join('');
     }
 
+    let isDriveSyncingActive = false;
+    let driveSyncPollTimer = null;
+
+    function lockDriveFolderInputs(lock = true) {
+      isDriveSyncingActive = lock;
+      const container = document.getElementById('driveFoldersContainer');
+      if (container) {
+        container.style.opacity = lock ? '0.6' : '1';
+        container.style.pointerEvents = lock ? 'none' : 'auto';
+        container.querySelectorAll('input, select, button').forEach(el => {
+          el.disabled = lock;
+        });
+      }
+    }
+
+    async function startDriveSyncWithProgress() {
+      if (isDriveSyncingActive) return;
+      lockDriveFolderInputs(true);
+
+      const card = document.getElementById('driveSyncProgressBarCard');
+      const badge = document.getElementById('syncProgressBadge');
+      const fill = document.getElementById('syncProgressBarFill');
+      const text = document.getElementById('syncProgressText');
+      const detail = document.getElementById('syncProgressDetail');
+
+      if (card) card.style.display = 'block';
+      if (badge) badge.textContent = '5%';
+      if (fill) fill.style.width = '5%';
+      if (text) text.textContent = '⏳ Đang khởi động đồng bộ Google Drive...';
+      if (detail) detail.textContent = 'Đang kết nối API và phân loại tệp...';
+
+      // Start import request
+      request('/media/import-drive', {
+        method: 'POST',
+        body: JSON.stringify({ links: currentDriveFolders })
+      }).catch(() => {});
+
+      // Poll sync status
+      if (driveSyncPollTimer) clearInterval(driveSyncPollTimer);
+      driveSyncPollTimer = setInterval(async () => {
+        try {
+          const res = await request('/media/sync-status').catch(() => null);
+          const data = res?.data;
+
+          if (data) {
+            const percent = data.progressPercent || 0;
+            if (badge) badge.textContent = `${percent}%`;
+            if (fill) fill.style.width = `${percent}%`;
+            if (text) text.textContent = data.message || `⏳ Đang đồng bộ... (${percent}%)`;
+            if (detail) detail.textContent = data.currentFolder ? `📁 Đang tải tệp cho "${data.currentFolder}"...` : 'Đang xử lý dữ liệu realtime...';
+
+            // Refresh counts live
+            const linksRes = await request('/media/drive-links').catch(() => null);
+            if (linksRes && Array.isArray(linksRes.data)) {
+              currentDriveFolders = linksRes.data;
+              renderDriveFolderRows();
+            }
+
+            if (!data.isSyncing && percent >= 100) {
+              clearInterval(driveSyncPollTimer);
+              driveSyncPollTimer = null;
+              if (text) text.textContent = '✅ ĐÃ ĐỒNG BỘ HOÀN TẤT 100%! DỮ LIỆU ĐÃ CẬP NHẬT REALTIME!';
+              if (detail) detail.textContent = 'Tất cả hình ảnh & video đã nạp đầy đủ vào hệ thống.';
+
+              setTimeout(() => {
+                if (card) card.style.display = 'none';
+                lockDriveFolderInputs(false);
+                loadMedia();
+              }, 2200);
+            }
+          }
+        } catch (e) {}
+      }, 700);
+    }
+
     function updateDriveFolder(idx, field, val) {
       if (currentDriveFolders[idx]) {
         currentDriveFolders[idx][field] = val;
@@ -2476,6 +2571,7 @@
     }
 
     function addDriveFolderRow() {
+      if (isDriveSyncingActive) return;
       currentDriveFolders.push({
         id: Date.now().toString(),
         name: `Thư mục ${currentDriveFolders.length + 1}`,
@@ -2487,6 +2583,7 @@
     }
 
     function removeDriveFolderRow(idx) {
+      if (isDriveSyncingActive) return;
       if (currentDriveFolders.length <= 1) {
         alert('Cần giữ ít nhất 1 dòng thư mục Google Drive!');
         return;
@@ -2495,7 +2592,7 @@
       saveDriveLinks(false);
     }
 
-    async function saveDriveLinks(showAlert = true) {
+    async function saveDriveLinks(triggerSync = true) {
       try {
         const res = await request('/media/drive-links', {
           method: 'POST',
@@ -2505,13 +2602,12 @@
           currentDriveFolders = res.data;
           renderDriveFolderRows();
         }
-        if (showAlert) {
-          alert(res.message || '✅ Đã lưu và tự động đồng bộ liên kết Google Drive realtime!');
+
+        if (triggerSync) {
+          startDriveSyncWithProgress();
         }
       } catch (err) {
-        if (showAlert) {
-          alert('🔴 Lỗi lưu link Google Drive: ' + err.message);
-        }
+        alert('🔴 Lỗi lưu link Google Drive: ' + err.message);
       }
     }
 

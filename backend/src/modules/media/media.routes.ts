@@ -211,6 +211,24 @@ const DEFAULT_DRIVE_FOLDERS = [
   { id: '5', name: 'Video Ụm Bò Milk', type: 'VIDEO', url: '' },
 ];
 
+let driveSyncProgressState = {
+  isSyncing: false,
+  progressPercent: 0,
+  currentFolder: '',
+  processedFiles: 0,
+  totalFiles: 0,
+  message: 'Sẵn sàng đồng bộ',
+  updatedAt: new Date().toISOString(),
+};
+
+// GET /api/media/sync-status - Fetch current Google Drive sync progress
+router.get('/sync-status', requireAuth, async (_req, res) => {
+  res.json({
+    success: true,
+    data: driveSyncProgressState,
+  });
+});
+
 // POST /api/media/import-drive - Sync/Import media files from Google Drive URLs
 router.post('/import-drive', requireAuth, async (req, res, next) => {
   try {
@@ -237,11 +255,21 @@ router.post('/import-drive', requireAuth, async (req, res, next) => {
       throw new BadRequestError('Vui lòng dán ít nhất 1 liên kết Google Drive cho các thư mục media!');
     }
 
+    driveSyncProgressState = {
+      isSyncing: true,
+      progressPercent: 5,
+      currentFolder: 'Khởi động kết nối Drive...',
+      processedFiles: 0,
+      totalFiles: 100,
+      message: '⏳ Đang quét danh sách tệp từ Google Drive...',
+      updatedAt: new Date().toISOString(),
+    };
+
     await cleanDuplicateMediaFiles();
 
-    const importedMedia: any[] = [];
-    let skippedCount = 0;
-    const errors: string[] = [];
+    // Pre-calculate file lists across folders for accurate percentage calculation
+    const folderTasks: { folderName: string; expectedType: 'IMAGE' | 'VIDEO'; fileIds: string[] }[] = [];
+    let totalFileCount = 0;
 
     for (const folder of activeLinks) {
       const folderName = folder.name || 'Drive';
@@ -255,21 +283,54 @@ router.post('/import-drive', requireAuth, async (req, res, next) => {
       if (fileIds.length === 0 && driveUrl.startsWith('http')) {
         fileIds = [driveUrl];
       }
+      folderTasks.push({ folderName, expectedType, fileIds });
+      totalFileCount += fileIds.length;
+    }
 
-      for (const idOrUrl of fileIds) {
+    if (totalFileCount === 0) totalFileCount = 1;
+
+    driveSyncProgressState.totalFiles = totalFileCount;
+    driveSyncProgressState.progressPercent = 10;
+
+    const importedMedia: any[] = [];
+    let skippedCount = 0;
+    const errors: string[] = [];
+    let processedIndex = 0;
+
+    for (const task of folderTasks) {
+      driveSyncProgressState.currentFolder = task.folderName;
+      
+      for (const idOrUrl of task.fileIds) {
+        processedIndex++;
+        const percent = Math.min(98, Math.round((processedIndex / totalFileCount) * 88) + 10);
+        driveSyncProgressState.processedFiles = processedIndex;
+        driveSyncProgressState.progressPercent = percent;
+        driveSyncProgressState.message = `⏳ Đang tải tệp ${processedIndex}/${totalFileCount} cho "${task.folderName}" (${percent}%)...`;
+        driveSyncProgressState.updatedAt = new Date().toISOString();
+
         try {
-          const media = await downloadAndSaveDriveFile(idOrUrl, expectedType, folderName);
+          const media = await downloadAndSaveDriveFile(idOrUrl, task.expectedType, task.folderName);
           if (media?.isDuplicate) {
             skippedCount++;
           } else {
             importedMedia.push(media);
           }
         } catch (err: any) {
-          console.error(`[Drive Import] Lỗi nạp (${folderName} - ${idOrUrl}):`, err.message);
-          errors.push(`${folderName}: ${err.message}`);
+          console.error(`[Drive Import] Lỗi nạp (${task.folderName} - ${idOrUrl}):`, err.message);
+          errors.push(`${task.folderName}: ${err.message}`);
         }
       }
     }
+
+    driveSyncProgressState = {
+      isSyncing: false,
+      progressPercent: 100,
+      currentFolder: 'Hoàn tất',
+      processedFiles: totalFileCount,
+      totalFiles: totalFileCount,
+      message: `🎉 Đã đồng bộ hoàn tất 100%! Tải mới: ${importedMedia.length} tệp, Trùng lặp: ${skippedCount} tệp.`,
+      updatedAt: new Date().toISOString(),
+    };
 
     if (importedMedia.length === 0 && skippedCount === 0 && errors.length > 0) {
       throw new BadRequestError(`Không thể tải media từ Google Drive: ${errors.join('; ')}`);
@@ -277,10 +338,12 @@ router.post('/import-drive', requireAuth, async (req, res, next) => {
 
     res.json({
       success: true,
-      message: `🎉 Đã đồng bộ hoàn tất! Tải mới: ${importedMedia.length} tệp, Trùng lặp bỏ qua: ${skippedCount} tệp.`,
+      message: `🎉 Đã đồng bộ hoàn tất 100%! Tải mới: ${importedMedia.length} tệp, Trùng lặp bỏ qua: ${skippedCount} tệp.`,
       data: { importedMedia, skippedCount, errors },
     });
   } catch (err) {
+    driveSyncProgressState.isSyncing = false;
+    driveSyncProgressState.message = '🔴 Lỗi đồng bộ: ' + (err as Error).message;
     next(err);
   }
 });
