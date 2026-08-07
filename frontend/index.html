@@ -1649,30 +1649,65 @@
       }
     }
 
-    async function confirmResetSystemData() {
+    function confirmResetSystemData() {
       if (!isAdminUser()) {
         alert('⛔ Bạn không có quyền Admin để thực hiện Reset dữ liệu!');
         return;
       }
 
-      const prompt1 = confirm('⚠️ BẠN CÓ CHẮC CHẮN MUỐN RESET TOÀN BỘ DỮ LIỆU HỆ THỐNG?\n\n- Toàn bộ bài viết, chiến dịch, kho media và log sẽ bị xóa sạch.\n- Tài khoản và Facebook Page được giữ nguyên.\n\nBấm OK để tiếp tục.');
-      if (!prompt1) return;
+      showModal(
+        '⚠️ BẢO MẬT ADMIN: XÁC NHẬN RESET DỮ LIỆU HỆ THỐNG',
+        `
+        <div style="background:#fff5f5;border:1.5px solid #fecaca;border-radius:16px;padding:16px 20px;margin-bottom:18px">
+          <div style="font-weight:800;font-size:14px;color:#991b1b;margin-bottom:6px">
+            🛡️ Bảo mật chống lỡ tay bấm nhầm & Chọn mốc thời gian dọn dẹp:
+          </div>
+          <div style="font-size:12.5px;color:#b91c1c;line-height:1.5">
+            - Bắt buộc nhập đúng mật khẩu bảo mật Admin: <b><code style="background:#fff;padding:2px 6px;border-radius:4px">Master@@2026</code></b><br>
+            - Bạn có thể chọn khoảng mốc thời gian <b>Từ ngày -> Đến ngày</b> để dọn dẹp bài viết/chiến dịch trong khoảng thời gian đó (hoặc để trống nếu muốn dọn sạch tất cả mốc thời gian).<br>
+            - <b>Tài khoản người dùng & Danh sách Facebook Page luôn được bảo vệ an toàn 100%.</b>
+          </div>
+        </div>
 
-      const prompt2 = prompt('XÁC NHẬN ADMIN: Vui lòng gõ từ "RESET" vào ô bên dưới để thực thi dọn dẹp dữ liệu:');
-      if (!prompt2 || prompt2.trim().toUpperCase() !== 'RESET') {
-        alert('Bản gõ từ xác nhận không chính xác. Đã hủy thao tác reset.');
-        return;
-      }
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px">
+          <div>
+            <label style="font-weight:800;font-size:13px;color:var(--ink);margin-bottom:6px">Từ ngày (Tuỳ chọn)</label>
+            <input type="date" id="mResetStartDate" style="padding:10px 14px;border-radius:12px;font-size:13.5px;font-weight:700">
+          </div>
+          <div>
+            <label style="font-weight:800;font-size:13px;color:var(--ink);margin-bottom:6px">Đến ngày (Tuỳ chọn)</label>
+            <input type="date" id="mResetEndDate" style="padding:10px 14px;border-radius:12px;font-size:13.5px;font-weight:700">
+          </div>
+        </div>
 
-      try {
-        const res = await request('/settings/reset-system-data', { method: 'POST' });
-        alert(res.message || '🧹 ĐÃ RESET TOÀN BỘ DỮ LIỆU THÀNH CÔNG!');
-        if (typeof clearWizardState === 'function') clearWizardState();
-        loadData();
-        openPage('overview');
-      } catch (err) {
-        alert('Lỗi Reset Dữ Liệu: ' + (err.error?.message || err.message || 'Không thể thực hiện'));
-      }
+        <label style="font-weight:800;font-size:13px;color:var(--red);margin-bottom:6px">🔑 Nhập mật khẩu bảo mật Master (Bắt buộc)</label>
+        <input type="password" id="mResetMasterPassword" placeholder="Nhập mật khẩu Master@@2026 để xác nhận..." style="padding:12px 14px;border-radius:12px;font-size:14px;font-weight:800;border:1.5px solid #fca5a5;background:#fff">
+        `,
+        async () => {
+          const masterPassword = document.getElementById('mResetMasterPassword').value.trim();
+          const startDate = document.getElementById('mResetStartDate').value;
+          const endDate = document.getElementById('mResetEndDate').value;
+
+          if (!masterPassword) {
+            alert('Vui lòng nhập mật khẩu bảo mật Master!');
+            return;
+          }
+          if (masterPassword !== 'Master@@2026') {
+            alert('🔴 Mật khẩu bảo mật Master không chính xác! Vui lòng nhập "Master@@2026".');
+            return;
+          }
+
+          const res = await request('/settings/reset-system-data', {
+            method: 'POST',
+            body: JSON.stringify({ masterPassword, startDate, endDate })
+          });
+
+          alert(res.message || '🧹 ĐÃ RESET DỮ LIỆU THÀNH CÔNG!');
+          if (typeof clearWizardState === 'function') clearWizardState();
+          loadData();
+          openPage('overview');
+        }
+      );
     }
 
     async function checkAuth() {
