@@ -1300,7 +1300,7 @@
             </div>
 
             <!-- SYSTEM PERMISSIONS MATRIX REFERENCE CARD -->
-            <div class="card c12">
+            <div class="card c12" id="rbacMatrixCard">
               <div class="section-title">
                 <h3>Ma Trận 16 Quyền Chức Năng Hệ Thống (RBAC Matrix)</h3>
                 <span class="badge ok">16 / 16 Active Permissions</span>
@@ -1579,14 +1579,43 @@
       return [];
     }
 
+    function isAdminUser() {
+      if (!currentUser) return false;
+      const roleNames = ((currentUser.roles && currentUser.roles.length) 
+        ? currentUser.roles.map(r => (r.name || r).toUpperCase()) 
+        : (currentUser.userRoles?.map(r => (r.role?.name || r).toUpperCase()) || [])
+      );
+      const usernameStr = (currentUser.username || currentUser.name || currentUser.email || '').toUpperCase();
+      return roleNames.some(r => r.includes('ADMIN')) || usernameStr.includes('ADMIN');
+    }
+
     function updateUserDisplayUI() {
       if (!currentUser) return;
       const displayName = currentUser.name || currentUser.username || currentUser.email || 'Người dùng';
       setElText('userNameDisplay', displayName);
 
-      const avatarEl = document.querySelector('.user-info .avatar');
+      const avatarEl = document.querySelector('.profile .avatar');
       if (avatarEl) {
         avatarEl.textContent = displayName[0].toUpperCase();
+      }
+
+      // Enforce Admin-only restriction for "Người dùng" tab & "Ma Trận 16 Quyền" (RBAC Matrix)
+      const isAdmin = isAdminUser();
+
+      const usersNavBtn = document.querySelector('button[data-page="users"]');
+      if (usersNavBtn) {
+        usersNavBtn.style.display = isAdmin ? 'flex' : 'none';
+      }
+
+      const rbacCard = document.getElementById('rbacMatrixCard');
+      if (rbacCard) {
+        rbacCard.style.display = isAdmin ? 'block' : 'none';
+      }
+
+      // If non-admin is currently on 'users' page, redirect to 'overview'
+      const activePage = localStorage.getItem('pinkflow_active_page');
+      if (!isAdmin && activePage === 'users') {
+        openPage('overview');
       }
     }
 
@@ -2256,6 +2285,11 @@
     }
 
     function openPage(page) {
+      if (page === 'users' && !isAdminUser()) {
+        alert('⛔ Chức năng "Quản trị người dùng & Phân quyền RBAC" chỉ dành riêng cho tài khoản Admin!');
+        openPage('overview');
+        return;
+      }
       closeMobileSidebar();
       document.querySelectorAll('.panel').forEach(x => x.classList.remove('active'));
       const p = document.getElementById(page);
