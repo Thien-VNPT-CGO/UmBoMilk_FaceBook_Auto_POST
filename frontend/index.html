@@ -1584,6 +1584,74 @@
       return [];
     }
 
+    async function runWithButtonProgress(btnEl, defaultLabel, asyncTaskFn, actionName = 'Đang xử lý') {
+      let targetBtn = null;
+      if (typeof btnEl === 'string') {
+        targetBtn = document.getElementById(btnEl);
+      } else if (btnEl && btnEl.target) {
+        targetBtn = btnEl.target.closest('button') || btnEl.target;
+      } else if (btnEl && btnEl.nodeType === 1) {
+        targetBtn = btnEl;
+      } else if (window.event && window.event.target) {
+        targetBtn = window.event.target.closest('button') || window.event.target;
+      } else if (document.activeElement && document.activeElement.tagName === 'BUTTON') {
+        targetBtn = document.activeElement;
+      }
+
+      let progress = 15;
+      let timer = null;
+      const origHtml = targetBtn ? (targetBtn.innerHTML || defaultLabel) : defaultLabel;
+
+      if (targetBtn) {
+        targetBtn.disabled = true;
+        targetBtn.style.opacity = '0.75';
+        targetBtn.style.cursor = 'not-allowed';
+        targetBtn.style.transition = 'all 0.25s ease';
+        targetBtn.dataset.origHtml = origHtml;
+        targetBtn.innerHTML = `⏳ ${actionName}... 15%`;
+
+        timer = setInterval(() => {
+          if (progress < 90) {
+            progress += Math.floor(Math.random() * 12) + 5;
+            if (progress > 90) progress = 90;
+            targetBtn.innerHTML = `⏳ ${actionName}... ${progress}%`;
+          }
+        }, 300);
+      }
+
+      try {
+        const result = await asyncTaskFn();
+        if (timer) clearInterval(timer);
+        if (targetBtn) {
+          targetBtn.innerHTML = `🎉 Hoàn tất 100%!`;
+          targetBtn.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+          targetBtn.style.color = '#ffffff';
+          setTimeout(() => {
+            if (targetBtn) {
+              targetBtn.disabled = false;
+              targetBtn.style.opacity = '1';
+              targetBtn.style.cursor = 'pointer';
+              targetBtn.style.background = '';
+              targetBtn.style.color = '';
+              targetBtn.innerHTML = targetBtn.dataset.origHtml || origHtml;
+            }
+          }, 700);
+        }
+        return result;
+      } catch (err) {
+        if (timer) clearInterval(timer);
+        if (targetBtn) {
+          targetBtn.disabled = false;
+          targetBtn.style.opacity = '1';
+          targetBtn.style.cursor = 'pointer';
+          targetBtn.style.background = '';
+          targetBtn.style.color = '';
+          targetBtn.innerHTML = targetBtn.dataset.origHtml || origHtml;
+        }
+        throw err;
+      }
+    }
+
     function isAdminUser() {
       if (!currentUser) return false;
       const roleNames = ((currentUser.roles && currentUser.roles.length) 
@@ -3571,7 +3639,7 @@
     <button type="button" class="ghost" style="padding:11px 22px;border-radius:12px;font-weight:700" onclick="gotoWizardStep(Math.max(0,step-1))" ${step === 0 ? 'disabled' : ''}>← Quay lại</button>
     ${step < totalSteps - 1 
       ? `<button type="button" style="padding:11px 26px;border-radius:12px;font-weight:700;box-shadow:0 4px 16px rgba(244,91,154,0.35)" onclick="gotoWizardStep(step+1)">Tiếp tục →</button>` 
-      : `<button type="button" style="background:linear-gradient(135deg,#10b981,#059669);padding:12px 30px;border-radius:12px;font-weight:800;box-shadow:0 4px 16px rgba(16,185,129,0.35)" onclick="submitCampaign()">🚀 Kích hoạt chiến dịch ngay ✓</button>`
+      : `<button type="button" style="background:linear-gradient(135deg,#10b981,#059669);padding:12px 30px;border-radius:12px;font-weight:800;box-shadow:0 4px 16px rgba(16,185,129,0.35)" onclick="submitCampaign(this)">🚀 Kích hoạt chiến dịch ngay ✓</button>`
     }
   </div>`;
 
