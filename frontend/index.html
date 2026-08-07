@@ -1027,7 +1027,10 @@
           <div class="card">
             <div class="section-title">
               <h3>Tất cả bài viết</h3>
-              <div class="row"><select style="width:180px" id="postStatusFilter" onchange="loadPosts()">
+              <div class="row" style="gap:8px">
+                <button id="bulkCancelPostsBtn" class="ghost small" style="display:none;color:var(--dark);border-color:#cbd5e1;font-weight:700" onclick="bulkCancelPosts()">🚫 Hủy bài chọn</button>
+                <button id="bulkDeletePostsBtn" class="ghost small" style="display:none;color:var(--red);border-color:#fca5a5;font-weight:700" onclick="bulkDeletePosts()">🗑️ Xóa bài chọn</button>
+                <select style="width:180px" id="postStatusFilter" onchange="loadPosts()">
                   <option value="">Tất cả trạng thái</option>
                   <option>PENDING_APPROVAL</option>
                   <option>APPROVED</option>
@@ -1035,11 +1038,13 @@
                   <option>SCHEDULED</option>
                   <option>PUBLISHED</option>
                   <option>FAILED</option>
-                </select><button class="ghost small" onclick="loadPosts()">Làm mới</button></div>
+                </select><button class="ghost small" onclick="loadPosts()">Làm mới</button>
+              </div>
             </div>
             <table>
               <thead>
                 <tr>
+                  <th style="width:40px;text-align:center"><input type="checkbox" id="selectAllPostsCheckbox" onchange="toggleSelectAllPosts(this)" style="width:16px;height:16px;cursor:pointer"></th>
                   <th>Nội dung bài viết</th>
                   <th>Facebook Page</th>
                   <th>Trạng thái</th>
@@ -1049,7 +1054,7 @@
               </thead>
               <tbody id="postsTbody">
                 <tr>
-                  <td colspan="5" class="empty">Đang tải...</td>
+                  <td colspan="6" class="empty">Đang tải...</td>
                 </tr>
               </tbody>
             </table>
@@ -3105,6 +3110,7 @@
 
           return `
         <tr style="transition:background 0.2s ease">
+          <td style="text-align:center;padding:14px 12px"><input type="checkbox" class="post-checkbox" value="${p.id}" onchange="updateBulkPostActionButtons()" style="width:16px;height:16px;cursor:pointer"></td>
           <td style="padding:14px 12px"><div style="max-height:55px;overflow:hidden;font-size:13px;line-height:1.5;color:var(--ink);font-weight:500">${p.content}</div></td>
           <td style="white-space:nowrap;padding:14px 12px">
             <div style="display:flex;align-items:center;gap:8px">
@@ -3124,9 +3130,82 @@
           </td>
         </tr>
       `;
-        }).join('') : '<tr><td colspan="5" class="empty">Chưa có bài viết nào</td></tr>';
+        }).join('') : '<tr><td colspan="6" class="empty">Chưa có bài viết nào</td></tr>';
         setElHtml('postsTbody', html);
+        updateBulkPostActionButtons();
       } catch (e) { console.error(e); }
+    }
+
+    function toggleSelectAllPosts(master) {
+      const checked = master.checked;
+      document.querySelectorAll('.post-checkbox').forEach(cb => cb.checked = checked);
+      updateBulkPostActionButtons();
+    }
+
+    function updateBulkPostActionButtons() {
+      const selected = Array.from(document.querySelectorAll('.post-checkbox:checked')).map(cb => cb.value);
+      const cancelBtn = document.getElementById('bulkCancelPostsBtn');
+      const deleteBtn = document.getElementById('bulkDeletePostsBtn');
+      const masterCb = document.getElementById('selectAllPostsCheckbox');
+
+      if (cancelBtn) {
+        if (selected.length > 0) {
+          cancelBtn.style.display = 'inline-flex';
+          cancelBtn.textContent = `🚫 Hủy (${selected.length}) bài chọn`;
+        } else {
+          cancelBtn.style.display = 'none';
+        }
+      }
+
+      if (deleteBtn) {
+        if (selected.length > 0) {
+          deleteBtn.style.display = 'inline-flex';
+          deleteBtn.textContent = `🗑️ Xóa (${selected.length}) bài chọn`;
+        } else {
+          deleteBtn.style.display = 'none';
+        }
+      }
+
+      const allCbs = document.querySelectorAll('.post-checkbox');
+      if (masterCb && allCbs.length > 0) {
+        masterCb.checked = selected.length === allCbs.length;
+      }
+    }
+
+    async function bulkCancelPosts() {
+      const selectedIds = Array.from(document.querySelectorAll('.post-checkbox:checked')).map(cb => cb.value);
+      if (!selectedIds.length) { alert('Vui lòng tích chọn ít nhất 1 bài viết!'); return; }
+
+      if (!confirm(`Bạn có chắc chắn muốn HỦY ${selectedIds.length} bài viết đã chọn?\n\nCác bài viết này sẽ KHÔNG ĐƯỢC ĐĂNG lên Facebook Page.`)) return;
+
+      try {
+        const res = await request('/posts/bulk-cancel', {
+          method: 'POST',
+          body: JSON.stringify({ postIds: selectedIds })
+        });
+        alert(res.message || 'Đã hủy thành công các bài viết đã chọn!');
+        loadPosts();
+      } catch (e) {
+        alert('Lỗi hủy hàng loạt: ' + (e.error?.message || e.message));
+      }
+    }
+
+    async function bulkDeletePosts() {
+      const selectedIds = Array.from(document.querySelectorAll('.post-checkbox:checked')).map(cb => cb.value);
+      if (!selectedIds.length) { alert('Vui lòng tích chọn ít nhất 1 bài viết!'); return; }
+
+      if (!confirm(`⚠️ CẢNH BÁO XÓA HÀNG LOẠT:\n\nBạn có chắc chắn muốn XÓA ${selectedIds.length} bài viết đã chọn?\n\nNếu có bài viết đã đăng trên Facebook Page, hệ thống sẽ gửi lệnh XÓA BÀI VIẾT TRỰC TIẾP TRÊN FACEBOOK.`)) return;
+
+      try {
+        const res = await request('/posts/bulk-delete', {
+          method: 'POST',
+          body: JSON.stringify({ postIds: selectedIds })
+        });
+        alert(res.message || 'Đã xóa thành công các bài viết đã chọn!');
+        loadPosts();
+      } catch (e) {
+        alert('Lỗi xóa hàng loạt: ' + (e.error?.message || e.message));
+      }
     }
 
     async function publishPostNow(id) {

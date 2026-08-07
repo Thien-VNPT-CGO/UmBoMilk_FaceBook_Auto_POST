@@ -463,4 +463,83 @@ router.post('/:id/cancel', requireAuth, requirePermission('content.edit'), async
   }
 });
 
+// 13. Bulk cancel posts
+router.post('/bulk-cancel', requireAuth, requirePermission('content.edit'), async (req, res, next) => {
+  try {
+    const { postIds } = req.body;
+    if (!Array.isArray(postIds) || !postIds.length) {
+      throw new BadRequestError('Danh sách postIds không hợp lệ');
+    }
+
+    const updated = await prisma.generatedPost.updateMany({
+      where: { id: { in: postIds } },
+      data: { status: 'REJECTED' },
+    });
+
+    const authReq = req as AuthenticatedRequest;
+    await prisma.approvalHistory.createMany({
+      data: postIds.map(id => ({
+        generatedPostId: id,
+        performedByUserId: authReq.user!.id,
+        action: 'REJECTED',
+        note: 'Hủy hàng loạt bài viết bởi người dùng',
+      })),
+    });
+
+    res.json({
+      success: true,
+      message: `🚫 Đã hủy thành công ${updated.count} bài viết!`,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// 14. Bulk delete posts (Deletes live posts on Facebook Page as well if published)
+router.post('/bulk-delete', requireAuth, requirePermission('content.edit'), async (req, res, next) => {
+  try {
+    const { postIds } = req.body;
+    if (!Array.isArray(postIds) || !postIds.length) {
+      throw new BadRequestError('Danh sách postIds không hợp lệ');
+    }
+
+    const posts = await prisma.generatedPost.findMany({
+      where: { id: { in: postIds } },
+      include: { campaignPage: { include: { facebookPage: true } } },
+    });
+
+    let fbDeletedCount = 0;
+
+    for (const p of posts) {
+      if (p.facebookPostId && p.campaignPage?.facebookPage) {
+        try {
+          const page = p.campaignPage.facebookPage;
+          const { decryptString } = await import('../../common/encryption/crypto');
+          const token = decryptString(page.encryptedPageAccessToken);
+          if (token) {
+            await axios.delete(`https://graph.facebook.com/v19.0/${p.facebookPostId}`, {
+              params: { access_token: token }
+            });
+            fbDeletedCount++;
+          }
+        } catch (e: any) {
+          console.warn(`[Bulk Delete FB Warning] Post ${p.facebookPostId}:`, e.message);
+        }
+      }
+    }
+
+    await prisma.postMedia.deleteMany({ where: { generatedPostId: { in: postIds } } });
+    await prisma.contentRevision.deleteMany({ where: { generatedPostId: { in: postIds } } });
+    await prisma.approvalHistory.deleteMany({ where: { generatedPostId: { in: postIds } } });
+    const deleted = await prisma.generatedPost.deleteMany({ where: { id: { in: postIds } } });
+
+    res.json({
+      success: true,
+      message: `Đã xóa ${deleted.count} bài viết khỏi hệ thống${fbDeletedCount > 0 ? ` (và đã xóa ${fbDeletedCount} bài trên Facebook Page)` : ''}!`,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
 export default router;
