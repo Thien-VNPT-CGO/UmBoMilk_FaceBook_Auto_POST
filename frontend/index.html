@@ -1604,7 +1604,7 @@
 
       if (targetBtn) {
         targetBtn.disabled = true;
-        targetBtn.style.opacity = '0.75';
+        targetBtn.style.opacity = '0.85';
         targetBtn.style.cursor = 'not-allowed';
         targetBtn.style.transition = 'all 0.25s ease';
         targetBtn.dataset.origHtml = origHtml;
@@ -1612,11 +1612,11 @@
 
         timer = setInterval(() => {
           if (progress < 90) {
-            progress += Math.floor(Math.random() * 12) + 5;
+            progress += Math.floor(Math.random() * 12) + 8;
             if (progress > 90) progress = 90;
             targetBtn.innerHTML = `⏳ ${actionName}... ${progress}%`;
           }
-        }, 300);
+        }, 180);
       }
 
       try {
@@ -1626,16 +1626,8 @@
           targetBtn.innerHTML = `🎉 Hoàn tất 100%!`;
           targetBtn.style.background = 'linear-gradient(135deg, #10b981, #059669)';
           targetBtn.style.color = '#ffffff';
-          setTimeout(() => {
-            if (targetBtn) {
-              targetBtn.disabled = false;
-              targetBtn.style.opacity = '1';
-              targetBtn.style.cursor = 'pointer';
-              targetBtn.style.background = '';
-              targetBtn.style.color = '';
-              targetBtn.innerHTML = targetBtn.dataset.origHtml || origHtml;
-            }
-          }, 700);
+          targetBtn.style.boxShadow = '0 4px 16px rgba(16,185,129,0.5)';
+          await new Promise(resolve => setTimeout(resolve, 600));
         }
         return result;
       } catch (err) {
@@ -3739,14 +3731,22 @@
         selectedMediaIds: mediaIdsToSubmit,
       };
 
-      await runWithButtonProgress(btnEl || event?.target, '🚀 KÍCH HOẠT CHIẾN DỊCH TỰ ĐỘNG HÓA', async () => {
-        const res = await request('/campaigns', { method: 'POST', body: JSON.stringify(payload) });
+      try {
+        const res = await runWithButtonProgress(btnEl || event?.target, '🚀 KÍCH HOẠT CHIẾN DỊCH TỰ ĐỘNG HÓA', async () => {
+          const apiRes = await request('/campaigns', { method: 'POST', body: JSON.stringify(payload) });
+          return apiRes;
+        }, 'Đang khởi tạo chiến dịch');
+
         activeCampaignId = res.data?.id || res.id;
-        alert('Khởi tạo chiến dịch thành công! Nội dung AI đang được tạo trong nền và chờ Admin duyệt.');
-        clearWizardState();
-        openPage('overview');
-        loadData();
-      }, 'Đang khởi tạo chiến dịch');
+        setTimeout(() => {
+          alert('🎉 Khởi tạo chiến dịch thành công! Nội dung AI đang được tạo trong nền và chờ Admin duyệt.');
+          clearWizardState();
+          openPage('overview');
+          loadData();
+        }, 200);
+      } catch (e) {
+        alert('Lỗi tạo chiến dịch: ' + (e.error?.message || e.message || 'Có lỗi xảy ra'));
+      }
     }
 
     async function openCampaignWizard(id) {
