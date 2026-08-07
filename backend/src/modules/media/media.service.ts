@@ -45,7 +45,29 @@ export class MediaService {
     let imageFiles = mediaFiles.filter((m) => m.mediaType === 'IMAGE');
     let videoFiles = mediaFiles.filter((m) => m.mediaType === 'VIDEO');
 
-    if (favIds.length > 0) {
+    let selectedDriveFolderTag = '';
+    const driveFolderId = favIds.find(id => id.startsWith('GDRIVE_'));
+    if (driveFolderId) {
+      const folderId = driveFolderId.replace('GDRIVE_', '');
+      const setting = await prisma.systemSetting.findUnique({ where: { key: 'gdrive_folder_links' } });
+      if (setting?.valueEncrypted) {
+        try {
+          const folders = JSON.parse(setting.valueEncrypted);
+          const matchedFolder = folders.find((f: any) => String(f.id) === folderId);
+          if (matchedFolder && matchedFolder.name) {
+            selectedDriveFolderTag = matchedFolder.name.toLowerCase().replace(/[^a-z0-9]+/g, '_');
+          }
+        } catch (e) {}
+      }
+    }
+
+    if (selectedDriveFolderTag) {
+      const matchedImgs = imageFiles.filter(m => m.fileName.toLowerCase().includes(selectedDriveFolderTag));
+      if (matchedImgs.length > 0) imageFiles = matchedImgs;
+
+      const matchedVids = videoFiles.filter(m => m.fileName.toLowerCase().includes(selectedDriveFolderTag));
+      if (matchedVids.length > 0) videoFiles = matchedVids;
+    } else if (favIds.length > 0) {
       const favImages = imageFiles.filter((m) => favIds.includes(m.id));
       if (favImages.length > 0) imageFiles = favImages;
 

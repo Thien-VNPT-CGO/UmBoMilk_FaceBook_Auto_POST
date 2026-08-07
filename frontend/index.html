@@ -2685,10 +2685,15 @@
               </select>
             </div>
             <div style="flex:1">
-              <label style="font-weight:800;color:var(--dark)">Chế độ chọn Media</label>
-              <select onchange="wizardData.mediaSourceMode=this.value;renderWizard()">
-                <option value="AUTO" ${wizardData.mediaSourceMode !== 'SELECTED' ? 'selected' : ''}>🎲 Tự động chọn ngẫu nhiên từ Kho Media (6 ảnh / 1 video)</option>
+              <label style="font-weight:800;color:var(--dark)">Nguồn Media (Chọn Thư Mục Google Drive hoặc Kho Media)</label>
+              <select id="wizardDriveFolderSelect" onchange="wizardData.mediaSourceMode=this.value;renderWizard()">
+                <option value="AUTO" ${(!wizardData.mediaSourceMode || wizardData.mediaSourceMode === 'AUTO') ? 'selected' : ''}>🎲 Tự động chọn ngẫu nhiên từ Kho Media (6 ảnh / 1 video)</option>
                 <option value="SELECTED" ${wizardData.mediaSourceMode === 'SELECTED' ? 'selected' : ''}>⭐ Chỉ định Hình ảnh / Video Yêu thích (Admin/Manager tự tích chọn)</option>
+                <optgroup label="🌐 Chọn Theo Thư Mục Google Drive Thương Hiệu">
+                  ${(currentDriveFolders || []).map(f => `
+                    <option value="GDRIVE_${f.id}" ${wizardData.mediaSourceMode === ('GDRIVE_' + f.id) ? 'selected' : ''}>📁 ${f.name} (${f.type === 'VIDEO' ? '🎥 Video' : '🖼️ Ảnh'})</option>
+                  `).join('')}
+                </optgroup>
               </select>
             </div>
           </div>
@@ -3131,6 +3136,11 @@
         step = 0; renderWizard(); return;
       }
 
+      let mediaIdsToSubmit = wizardData.selectedMediaIds || [];
+      if (wizardData.mediaSourceMode && wizardData.mediaSourceMode.startsWith('GDRIVE_')) {
+        mediaIdsToSubmit = [wizardData.mediaSourceMode];
+      }
+
       const payload = {
         name: wizardData.name,
         description: wizardData.description,
@@ -3155,7 +3165,7 @@
         allowHashtag: wizardData.allowHashtag,
         ctaRequired: wizardData.ctaRequired,
         allowMediaReuse: wizardData.allowMediaReuse,
-        selectedMediaIds: wizardData.selectedMediaIds || [],
+        selectedMediaIds: mediaIdsToSubmit,
       };
 
     function toggleWizardMediaSelection(id) {
