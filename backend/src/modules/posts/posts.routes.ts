@@ -508,7 +508,9 @@ router.post('/:id/publish-now', requireAuth, requirePermission('post.publish'), 
       data: updated,
     });
   } catch (err: any) {
-    const msg = err.response?.data?.error?.message || err.message || 'Lỗi đăng bài Facebook';
+    const fbMsg = err.response?.data?.error?.message;
+    const sysMsg = typeof err.message === 'string' && err.message !== '{}' ? err.message : null;
+    const msg = fbMsg || sysMsg || (typeof err === 'string' ? err : 'Tải media hoặc đăng bài lên Facebook thất bại');
     res.status(400).json({ success: false, message: `Lỗi đăng bài Facebook: ${msg}` });
   }
 });

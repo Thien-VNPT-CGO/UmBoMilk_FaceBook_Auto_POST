@@ -1561,6 +1561,21 @@
       if (el) el.innerHTML = val;
     }
 
+    function getErrorMessage(e, fallback = 'Có lỗi xảy ra trong quá trình xử lý') {
+      if (!e) return fallback;
+      if (typeof e === 'string' && e.trim() && e !== '{}') return e;
+      if (typeof e.message === 'string' && e.message.trim() && e.message !== '{}') return e.message;
+      if (typeof e.error === 'string' && e.error.trim() && e.error !== '{}') return e.error;
+      if (e.error && typeof e.error.message === 'string' && e.error.message.trim() && e.error.message !== '{}') return e.error.message;
+      if (e.data && typeof e.data.message === 'string' && e.data.message.trim() && e.data.message !== '{}') return e.data.message;
+      if (e.data?.error && typeof e.data.error.message === 'string' && e.data.error.message.trim()) return e.data.error.message;
+      try {
+        const str = JSON.stringify(e);
+        if (str && str !== '{}' && str !== '[]' && str !== '{"error":{}}') return str;
+      } catch (_) {}
+      return fallback;
+    }
+
     async function request(path, options = {}) {
       const headers = { 'Content-Type': 'application/json', ...(options.headers || {}) };
       if (token) headers.Authorization = `Bearer ${token}`;
@@ -4242,8 +4257,7 @@
           targetBtn.style.background = 'linear-gradient(135deg,var(--pink),var(--dark))';
           targetBtn.innerHTML = 'Đăng ngay 🚀';
         }
-        const errMsg = e?.message || e?.error?.message || e?.data?.error?.message || (typeof e === 'string' ? e : null) || JSON.stringify(e) || 'Lỗi không xác định';
-        alert('🔴 Lỗi xuất bản bài viết: ' + errMsg);
+        alert('🔴 Lỗi xuất bản bài viết: ' + getErrorMessage(e, 'Không thể kết nối đến máy chủ hoặc lỗi xuất bản bài viết'));
       }
     }
 
