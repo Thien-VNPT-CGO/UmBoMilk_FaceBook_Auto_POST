@@ -169,7 +169,14 @@ router.get('/:id', requirePermission('campaigns.view'), async (req: Request, res
     const campaign = await prisma.campaign.findUnique({
       where: { id: req.params.id },
       include: {
-        campaignPages: { include: { facebookPage: true, generatedPosts: true } },
+        campaignPages: { include: { facebookPage: true } },
+        generatedPosts: {
+          include: {
+            postMedias: { include: { mediaFile: true }, orderBy: { sortOrder: 'asc' } },
+            campaignPage: { include: { facebookPage: true } }
+          },
+          orderBy: { sequenceNumber: 'asc' }
+        },
         mediaFiles: true,
       },
     });

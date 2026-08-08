@@ -274,7 +274,20 @@ router.post('/:id/regenerate', requireAuth, requirePermission('content.regenerat
       data: { content: newContent },
     });
 
-    res.json({ message: 'Đã tạo lại nội dung thành công', data: updated });
+    try {
+      const { MediaService } = await import('../media/media.service');
+      await MediaService.assignMediaToCampaign(post.campaignId);
+    } catch (e) {}
+
+    const refetched = await prisma.generatedPost.findUnique({
+      where: { id: post.id },
+      include: {
+        postMedias: { include: { mediaFile: true }, orderBy: { sortOrder: 'asc' } },
+        campaignPage: { include: { facebookPage: true } }
+      }
+    });
+
+    res.json({ message: 'Đã tạo lại nội dung bài viết thành công!', data: refetched || updated });
   } catch (err) {
     next(err);
   }
