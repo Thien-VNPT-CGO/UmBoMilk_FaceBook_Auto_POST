@@ -3090,8 +3090,12 @@
 
     function clearWizardState() {
       try {
-        const uid = currentUser?.id || 'guest';
-        localStorage.removeItem(`pinkflow_wizard_draft_${uid}`);
+        Object.keys(localStorage).forEach(key => {
+          if (key.startsWith('pinkflow_wizard_draft')) {
+            localStorage.removeItem(key);
+          }
+        });
+
         wizardData = {
           name: '',
           description: '',
@@ -3121,9 +3125,17 @@
         selectedPageIds = [];
         window.wizardAiPreviewPosts = [];
         step = 0;
+
+        const elName = document.getElementById('wName');
+        if (elName) elName.value = '';
+        const elPrompt = document.getElementById('wPrompt');
+        if (elPrompt) elPrompt.value = '';
+
         openPage('campaign');
         renderWizard();
-      } catch (e) {}
+      } catch (e) {
+        console.error('Error clearing wizard state:', e);
+      }
     }
 
     function startNewCampaign() {
@@ -3168,12 +3180,12 @@
         <div style="display:flex;flex-direction:column;gap:16px">
           <div>
             <label style="font-weight:800;font-size:13.5px;color:var(--ink)">Tên chiến dịch</label>
-            <input id="wName" value="${wizardData.name}" onchange="wizardData.name=this.value" placeholder="VD: Chiến dịch Marketing Tự Động">
+            <input id="wName" value="${wizardData.name}" oninput="wizardData.name=this.value; saveWizardState();" placeholder="VD: Chiến dịch Marketing Tự Động">
           </div>
 
           <div>
             <label style="font-weight:800;font-size:13.5px;color:var(--ink)">Nội dung bài viết / Ý tưởng mẫu cho AI</label>
-            <textarea id="wPrompt" onchange="wizardData.prompt=this.value" style="height:140px;font-size:13.5px;line-height:1.6;padding:12px" placeholder="Nhập bài viết mẫu hoặc ý tưởng để AI viết bài content tự động...">${wizardData.prompt}</textarea>
+            <textarea id="wPrompt" oninput="wizardData.prompt=this.value; saveWizardState();" style="height:140px;font-size:13.5px;line-height:1.6;padding:12px" placeholder="Nhập bài viết mẫu hoặc ý tưởng để AI viết bài content tự động...">${wizardData.prompt}</textarea>
           </div>
 
           <div>
