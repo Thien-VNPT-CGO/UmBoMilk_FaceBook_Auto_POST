@@ -3289,23 +3289,64 @@
               <input type="number" min="1" max="720" value="${wizardData.defaultIntervalMinutes}" onchange="wizardData.defaultIntervalMinutes=parseInt(this.value)">
             </div>
             <div style="flex:1">
-              <label style="font-weight:800">Giọng văn AI</label>
-              <select onchange="wizardData.tone=this.value">
-                <option ${wizardData.tone === 'Thân thiện, Hấp dẫn' ? 'selected' : ''}>Thân thiện, Hấp dẫn</option>
-                <option ${wizardData.tone === 'Chuyên nghiệp, Uy tín' ? 'selected' : ''}>Chuyên nghiệp, Uy tín</option>
-                <option ${wizardData.tone === 'Sôi nổi, Hào hứng' ? 'selected' : ''}>Sôi nổi, Hào hứng</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="row" style="gap:16px">
-            <div style="flex:1">
               <label style="font-weight:800">Khung giờ đăng bài (Bắt đầu)</label>
               <input type="time" value="${wizardData.allowedStartTime}" onchange="wizardData.allowedStartTime=this.value">
             </div>
             <div style="flex:1">
               <label style="font-weight:800">Khung giờ đăng bài (Kết thúc)</label>
               <input type="time" value="${wizardData.allowedEndTime}" onchange="wizardData.allowedEndTime=this.value">
+            </div>
+          </div>
+
+          <div style="margin-top:14px;padding:18px;background:#faf5f8;border:1px solid #f6e3ec;border-radius:18px">
+            <label style="font-weight:800;font-size:14px;color:var(--dark);display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+              <span>🎨 Chọn Giọng Văn & Phong Cách Sáng Tạo AI (12 Phong Cách)</span>
+              <span style="font-size:12px;color:var(--pink);font-weight:700">Đã chọn: ${wizardData.tone || 'Thân thiện, Hấp dẫn'}</span>
+            </label>
+            
+            <div style="margin-bottom:14px">
+              <select style="font-weight:700;font-size:13.5px;padding:12px 16px;border-radius:12px;border:1px solid var(--pink);background:#fff;color:var(--ink);box-shadow:0 4px 14px rgba(244,91,154,0.1);width:100%" onchange="wizardData.tone=this.value;renderWizard();">
+                <option value="Thân thiện, Hấp dẫn" ${wizardData.tone === 'Thân thiện, Hấp dẫn' ? 'selected' : ''}>🌟 Thân thiện, Hấp dẫn (Gần gũi, ấm áp, kết nối khách hàng)</option>
+                <option value="Chuyên nghiệp, Uy tín" ${wizardData.tone === 'Chuyên nghiệp, Uy tín' ? 'selected' : ''}>💼 Chuyên nghiệp, Uy tín (Trang trọng, chuẩn mực, xây dựng lòng tin)</option>
+                <option value="Bắt Trend, Hài hước & Viral" ${wizardData.tone === 'Bắt Trend, Hài hước & Viral' ? 'selected' : ''}>🔥 Bắt Trend, Hài hước & Viral (Sành điệu, bắt kịp xu hướng giới trẻ)</option>
+                <option value="Giật gân, Thu hút & Thúc giục (FOMO)" ${wizardData.tone === 'Giật gân, Thu hút & Thúc giục (FOMO)' ? 'selected' : ''}>🚀 Giật gân, Thu hút & Thúc giục FOMO (Tạo tò mò, thúc đẩy mua ngay)</option>
+                <option value="Sang trọng, Đẳng cấp & Tinh tế" ${wizardData.tone === 'Sang trọng, Đẳng cấp & Tinh tế' ? 'selected' : ''}>👑 Sang trọng, Đẳng cấp & Tinh tế (Cao cấp, chau chuốt, nâng tầm thương hiệu)</option>
+                <option value="Kể chuyện, Truyền cảm hứng (Storytelling)" ${wizardData.tone === 'Kể chuyện, Truyền cảm hứng (Storytelling)' ? 'selected' : ''}>📖 Kể chuyện, Truyền cảm hứng Storytelling (Chân thật, chạm đến cảm xúc)</option>
+                <option value="Chuyên gia tư vấn & Chia sẻ giá trị" ${wizardData.tone === 'Chuyên gia tư vấn & Chia sẻ giá trị' ? 'selected' : ''}>💡 Chuyên gia tư vấn & Chia sẻ giá trị (Mẹo hay, kiến thức bổ ích)</option>
+                <option value="Thuyết phục & Thúc đẩy mua hàng (Sales-Focused)" ${wizardData.tone === 'Thuyết phục & Thúc đẩy mua hàng (Sales-Focused)' ? 'selected' : ''}>🎯 Thuyết phục & Thúc đẩy mua hàng (Chốt đơn mạnh mẽ, nhấn mạnh ưu đãi)</option>
+                <option value="Nhẹ nhàng, Tình cảm & Chăm sóc" ${wizardData.tone === 'Nhẹ nhàng, Tình cảm & Chăm sóc' ? 'selected' : ''}>🎀 Nhẹ nhàng, Tình cảm & Chăm sóc (Dịu dàng, thấu hiểu tình cảm mẹ bé)</option>
+                <option value="Ngắn gọn, Trực diện & Độc đáo" ${wizardData.tone === 'Ngắn gọn, Trực diện & Độc đáo' ? 'selected' : ''}>⚡ Ngắn gọn, Trực diện & Độc đáo (Súc tích, gây ấn tượng chỉ trong 3 giây)</option>
+                <option value="Giáo dục & Hướng dẫn chi tiết" ${wizardData.tone === 'Giáo dục & Hướng dẫn chi tiết' ? 'selected' : ''}>🎓 Giáo dục & Hướng dẫn chi tiết (Trình bày từng bước khoa học, dễ hiểu)</option>
+                <option value="Hài hước, Bá đạo & Đột phá" ${wizardData.tone === 'Hài hước, Bá đạo & Đột phá' ? 'selected' : ''}>🌶️ Hài hước, Bá đạo & Đột phá (Dí dỏm, giải trí vui vẻ cho người xem)</option>
+              </select>
+            </div>
+
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px">
+              ${[
+                { icon: '🌟', tone: 'Thân thiện, Hấp dẫn', desc: 'Gần gũi, ấm áp, kết nối khách hàng' },
+                { icon: '💼', tone: 'Chuyên nghiệp, Uy tín', desc: 'Trang trọng, xây dựng lòng tin' },
+                { icon: '🔥', tone: 'Bắt Trend, Hài hước & Viral', desc: 'Bắt xu hướng, dễ bùng nổ tương tác' },
+                { icon: '🚀', tone: 'Giật gân, Thu hút & Thúc giục (FOMO)', desc: 'Tạo tò mò, giật gân, mua ngay' },
+                { icon: '👑', tone: 'Sang trọng, Đẳng cấp & Tinh tế', desc: 'Cao cấp, tinh tế, khẳng định thương hiệu' },
+                { icon: '📖', tone: 'Kể chuyện, Truyền cảm hứng (Storytelling)', desc: 'Chạm cảm xúc qua câu chuyện' },
+                { icon: '💡', tone: 'Chuyên gia tư vấn & Chia sẻ giá trị', desc: 'Mẹo hay, chia sẻ kiến thức hữu ích' },
+                { icon: '🎯', tone: 'Thuyết phục & Thúc đẩy mua hàng (Sales-Focused)', desc: 'Chốt đơn, gọi mua hàng mạnh mẽ' },
+                { icon: '🎀', tone: 'Nhẹ nhàng, Tình cảm & Chăm sóc', desc: 'Dịu dàng, thấu hiểu tâm lý' },
+                { icon: '⚡', tone: 'Ngắn gọn, Trực diện & Độc đáo', desc: 'Súc tích, gây ấn tượng trong 3 giây' },
+                { icon: '🎓', tone: 'Giáo dục & Hướng dẫn chi tiết', desc: 'Hướng dẫn bài bản, khoa học' },
+                { icon: '🌶️', tone: 'Hài hước, Bá đạo & Đột phá', desc: 'Dí dỏm, đột phá và vui vẻ' },
+              ].map(t => {
+                const isSelected = wizardData.tone === t.tone;
+                return `
+                  <div style="padding:12px 14px;border-radius:14px;border:${isSelected ? '2px solid var(--pink)' : '1px solid #ebd4e0'};background:${isSelected ? 'linear-gradient(135deg,#fff0f6,#ffe4f0)' : '#fff'};cursor:pointer;transition:all 0.2s ease;box-shadow:${isSelected ? '0 4px 14px rgba(244,91,154,0.25)' : '0 2px 6px rgba(0,0,0,0.02)'}" onclick="wizardData.tone='${t.tone}';renderWizard();">
+                    <div style="display:flex;align-items:center;gap:8px;font-weight:800;font-size:13px;color:${isSelected ? 'var(--pink)' : 'var(--ink)'}">
+                      <span style="font-size:16px">${t.icon}</span>
+                      <span>${t.tone}</span>
+                    </div>
+                    <div style="font-size:11px;color:var(--muted);margin-top:4px;line-height:1.35">${t.desc}</div>
+                  </div>
+                `;
+              }).join('')}
             </div>
           </div>
         </div>
