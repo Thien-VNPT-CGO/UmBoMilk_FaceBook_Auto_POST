@@ -3967,6 +3967,7 @@
         </div>
         <div style="display:flex;align-items:center;gap:10px">
           <span class="badge ok" style="padding:6px 14px;border-radius:10px;font-size:12px;font-weight:800">${progressPercent}% Hoàn tất</span>
+          <button type="button" class="ghost small" style="color:var(--red);border-color:#fca5a5;font-weight:700;border-radius:10px;padding:6px 14px;font-size:12px" onclick="if(confirm('Bạn có chắc muốn reset toàn bộ form về trạng thái ban đầu không?')){clearWizardState();renderWizard();}">🔄 Reset Form</button>
         </div>
       </div>
       
