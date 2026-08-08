@@ -30,7 +30,7 @@ router.get('/', requireAuth, requirePermission('post.view'), async (_req, res, n
         await prisma.generatedPost.update({
           where: { id: p.id },
           data: { scheduledAt: newSched },
-        }).catch(() => {});
+        }).catch(() => { });
         p.scheduledAt = newSched;
       }
     }
@@ -148,7 +148,7 @@ router.get('/campaigns/:campaignId/posts', requireAuth, requirePermission('post.
     const isMissingMedia = posts.some(p => !p.postMedias || p.postMedias.length === 0);
     if (isMissingMedia) {
       const { MediaService } = await import('../media/media.service');
-      await MediaService.assignMediaToCampaign(campaignId).catch(() => {});
+      await MediaService.assignMediaToCampaign(campaignId).catch(() => { });
       posts = await prisma.generatedPost.findMany({
         where: { campaignId },
         include: {
@@ -181,7 +181,7 @@ router.get('/:id', requireAuth, requirePermission('post.view'), async (req, res,
 
     if (!post.postMedias || post.postMedias.length === 0) {
       const { MediaService } = await import('../media/media.service');
-      await MediaService.assignMediaToCampaign(post.campaignId).catch(() => {});
+      await MediaService.assignMediaToCampaign(post.campaignId).catch(() => { });
       post = await prisma.generatedPost.findUnique({
         where: { id: req.params.id },
         include: {
@@ -274,20 +274,7 @@ router.post('/:id/regenerate', requireAuth, requirePermission('content.regenerat
       data: { content: newContent },
     });
 
-    try {
-      const { MediaService } = await import('../media/media.service');
-      await MediaService.assignMediaToCampaign(post.campaignId);
-    } catch (e) {}
-
-    const refetched = await prisma.generatedPost.findUnique({
-      where: { id: post.id },
-      include: {
-        postMedias: { include: { mediaFile: true }, orderBy: { sortOrder: 'asc' } },
-        campaignPage: { include: { facebookPage: true } }
-      }
-    });
-
-    res.json({ message: 'Đã tạo lại nội dung bài viết thành công!', data: refetched || updated });
+    res.json({ message: 'Đã tạo lại nội dung thành công', data: updated });
   } catch (err) {
     next(err);
   }
@@ -320,26 +307,31 @@ router.post('/:id/submit-for-approval', requireAuth, requirePermission('content.
   }
 });
 
-// 6. Approve post (Guarantees minimum 15-minute gap between posts per Facebook Page)
+// 6. Approve post (Guarantees minimum 15-minute gap between posts)
 router.post('/:id/approve', requireAuth, requirePermission('content.approve'), async (req, res, next) => {
   try {
     const authReq = req as AuthenticatedRequest;
     const post = await prisma.generatedPost.findUnique({
       where: { id: req.params.id },
-      include: { campaignPage: { include: { facebookPage: true } } },
+      include: { campaignPage: true },
+    });
+    if (!post) throw new NotFoundError('Không tìm thấy bài viết');
+
+    const cp = await prisma.campaignPage.findUnique({
+      where: { id: post.campaignPageId },
+      include: { facebookPage: true },
     });
     if (!post) throw new NotFoundError('Không tìm thấy bài viết');
 
     const now = new Date();
-    const facebookPageId = post.campaignPage?.facebookPageId;
-    const pageCustomInterval = post.campaignPage?.facebookPage?.defaultIntervalMinutes;
-    const intervalMinutes = pageCustomInterval || post.campaignPage?.intervalMinutes || 15;
+    const pageCustomInterval = cp?.facebookPage?.defaultIntervalMinutes;
+    const intervalMinutes = pageCustomInterval || cp?.intervalMinutes || 15;
     const intervalMs = intervalMinutes * 60 * 1000;
 
-    // Query latest approved/scheduled/published post for the SAME Facebook Page (across all campaigns)
+    // Find latest approved/scheduled/published post for the same page/campaign to enforce 15-min gap
     const lastApprovedPost = await prisma.generatedPost.findFirst({
       where: {
-        campaignPage: { facebookPageId },
+        campaignPageId: post.campaignPageId,
         status: { in: ['APPROVED', 'SCHEDULED', 'PUBLISHED'] },
         id: { not: post.id },
       },
@@ -348,14 +340,9 @@ router.post('/:id/approve', requireAuth, requirePermission('content.approve'), a
 
     let targetScheduledAt = now;
     if (lastApprovedPost && lastApprovedPost.scheduledAt) {
-      const lastTime = lastApprovedPost.scheduledAt.getTime();
-      if (lastTime > now.getTime()) {
-        targetScheduledAt = new Date(lastTime + intervalMs);
-      } else {
-        const diff = now.getTime() - lastTime;
-        if (diff < intervalMs) {
-          targetScheduledAt = new Date(lastTime + intervalMs);
-        }
+      const minNextTime = new Date(lastApprovedPost.scheduledAt.getTime() + intervalMs);
+      if (minNextTime.getTime() > now.getTime()) {
+        targetScheduledAt = minNextTime;
       }
     } else if (post.scheduledAt && post.scheduledAt.getTime() > now.getTime()) {
       targetScheduledAt = post.scheduledAt;
@@ -381,7 +368,7 @@ router.post('/:id/approve', requireAuth, requirePermission('content.approve'), a
         jobId: `sched-${post.id}-${Date.now()}`,
         removeOnComplete: true,
       }
-    ).catch(() => {});
+    ).catch(() => { });
 
     await prisma.approvalHistory.create({
       data: {
@@ -402,7 +389,7 @@ router.post('/:id/approve', requireAuth, requirePermission('content.approve'), a
   }
 });
 
-// 6.1 Bulk Approve Posts (Auto-spacing 15 minutes apart per Facebook Page)
+// 6.1 Bulk Approve Posts (Auto-spacing 15 minutes apart)
 router.post('/bulk-approve', requireAuth, requirePermission('content.approve'), async (req, res, next) => {
   try {
     const authReq = req as AuthenticatedRequest;
@@ -411,29 +398,23 @@ router.post('/bulk-approve', requireAuth, requirePermission('content.approve'), 
       throw new BadRequestError('Danh sách postIds không hợp lệ');
     }
 
-    // Sort posts by scheduledAt ascending (earliest scheduled time / smallest seconds first!)
     const posts = await prisma.generatedPost.findMany({
       where: { id: { in: postIds } },
       include: { campaignPage: { include: { facebookPage: true } } },
-      orderBy: [
-        { scheduledAt: 'asc' },
-        { createdAt: 'asc' },
-      ],
+      orderBy: { sequenceNumber: 'asc' },
     });
 
     const now = new Date();
     const approvedPosts = [];
 
     for (const post of posts) {
-      const facebookPageId = post.campaignPage?.facebookPageId;
       const pageCustomInterval = post.campaignPage?.facebookPage?.defaultIntervalMinutes;
       const intervalMinutes = pageCustomInterval || post.campaignPage?.intervalMinutes || 15;
       const intervalMs = intervalMinutes * 60 * 1000;
 
-      // Query latest approved/scheduled/published post for this Facebook Page
       const lastApprovedPost = await prisma.generatedPost.findFirst({
         where: {
-          campaignPage: { facebookPageId },
+          campaignPageId: post.campaignPageId,
           status: { in: ['APPROVED', 'SCHEDULED', 'PUBLISHED'] },
           id: { not: post.id },
         },
@@ -442,14 +423,9 @@ router.post('/bulk-approve', requireAuth, requirePermission('content.approve'), 
 
       let targetScheduledAt = now;
       if (lastApprovedPost && lastApprovedPost.scheduledAt) {
-        const lastTime = lastApprovedPost.scheduledAt.getTime();
-        if (lastTime > now.getTime()) {
-          targetScheduledAt = new Date(lastTime + intervalMs);
-        } else {
-          const diff = now.getTime() - lastTime;
-          if (diff < intervalMs) {
-            targetScheduledAt = new Date(lastTime + intervalMs);
-          }
+        const minNextTime = new Date(lastApprovedPost.scheduledAt.getTime() + intervalMs);
+        if (minNextTime.getTime() > now.getTime()) {
+          targetScheduledAt = minNextTime;
         }
       }
 
@@ -473,7 +449,7 @@ router.post('/bulk-approve', requireAuth, requirePermission('content.approve'), 
           jobId: `sched-${post.id}-${Date.now()}`,
           removeOnComplete: true,
         }
-      ).catch(() => {});
+      ).catch(() => { });
     }
 
     res.json({
@@ -532,14 +508,8 @@ router.post('/:id/publish-now', requireAuth, requirePermission('post.publish'), 
       data: updated,
     });
   } catch (err: any) {
-    // Extract the most useful error message from various error shapes
-    const fbApiError = err.response?.data?.error?.message;
-    const fbApiCode = err.response?.data?.error?.code;
-    const generalMsg = err.message || String(err);
-    const friendlyMsg = fbApiError
-      ? `Facebook API lỗi (Code ${fbApiCode || '?'}): ${fbApiError}`
-      : generalMsg || 'Lỗi đăng bài Facebook';
-    res.status(400).json({ success: false, message: friendlyMsg });
+    const msg = err.response?.data?.error?.message || err.message || 'Lỗi đăng bài Facebook';
+    res.status(400).json({ success: false, message: `Lỗi đăng bài Facebook: ${msg}` });
   }
 });
 
@@ -646,7 +616,7 @@ router.delete('/:id', requireAuth, requirePermission('content.edit'), async (req
           deletedOnFb,
         },
       },
-    }).catch(() => {});
+    }).catch(() => { });
 
     // Clean up DB relations
     await prisma.postMedia.deleteMany({ where: { generatedPostId: post.id } });
@@ -699,7 +669,7 @@ router.post('/:id/cancel', requireAuth, requirePermission('content.edit'), async
           status: 'REJECTED',
         },
       },
-    }).catch(() => {});
+    }).catch(() => { });
 
     res.json({
       success: true,
@@ -752,7 +722,7 @@ router.post('/bulk-cancel', requireAuth, requirePermission('content.edit'), asyn
             status: 'REJECTED',
           },
         },
-      }).catch(() => {});
+      }).catch(() => { });
     }
 
     res.json({
@@ -812,7 +782,7 @@ router.post('/bulk-delete', requireAuth, requirePermission('content.edit'), asyn
             deletedOnFb,
           },
         },
-      }).catch(() => {});
+      }).catch(() => { });
     }
 
     await prisma.postMedia.deleteMany({ where: { generatedPostId: { in: postIds } } });
