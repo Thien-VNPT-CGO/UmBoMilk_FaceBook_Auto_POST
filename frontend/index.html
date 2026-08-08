@@ -4242,7 +4242,8 @@
           targetBtn.style.background = 'linear-gradient(135deg,var(--pink),var(--dark))';
           targetBtn.innerHTML = 'Đăng ngay 🚀';
         }
-        alert('Lỗi xuất bản bài viết: ' + (e.error?.message || e.message));
+        const errMsg = e?.message || e?.error?.message || e?.data?.error?.message || (typeof e === 'string' ? e : null) || JSON.stringify(e) || 'Lỗi không xác định';
+        alert('🔴 Lỗi xuất bản bài viết: ' + errMsg);
       }
     }
 

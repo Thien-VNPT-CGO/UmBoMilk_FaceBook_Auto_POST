@@ -532,8 +532,14 @@ router.post('/:id/publish-now', requireAuth, requirePermission('post.publish'), 
       data: updated,
     });
   } catch (err: any) {
-    const msg = err.response?.data?.error?.message || err.message || 'Lỗi đăng bài Facebook';
-    res.status(400).json({ success: false, message: `Lỗi đăng bài Facebook: ${msg}` });
+    // Extract the most useful error message from various error shapes
+    const fbApiError = err.response?.data?.error?.message;
+    const fbApiCode = err.response?.data?.error?.code;
+    const generalMsg = err.message || String(err);
+    const friendlyMsg = fbApiError
+      ? `Facebook API lỗi (Code ${fbApiCode || '?'}): ${fbApiError}`
+      : generalMsg || 'Lỗi đăng bài Facebook';
+    res.status(400).json({ success: false, message: friendlyMsg });
   }
 });
 
