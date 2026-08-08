@@ -3503,6 +3503,7 @@
 
         currentCampaignApproved = true;
         loadStep7Data();
+        renderWizard();
       } catch (err) {
         if (container) {
           container.innerHTML = `<p style="color:var(--red);padding:20px">🔴 Lỗi sinh bài AI: ${err.error?.message || err.message || 'Không thể kết nối AI Engine'}</p>`;
@@ -3840,12 +3841,21 @@
       let content = currentStepObj.getHtml();
       let progressPercent = Math.round(((step + 1) / totalSteps) * 100);
 
+      const hasAiPosts = window.wizardAiPreviewPosts && window.wizardAiPreviewPosts.length > 0;
+      let nextOrSubmitBtn = '';
+      if (step < totalSteps - 1) {
+        nextOrSubmitBtn = `<button type="button" style="padding:11px 26px;border-radius:12px;font-weight:700;box-shadow:0 4px 16px rgba(244,91,154,0.35)" onclick="gotoWizardStep(step+1)">Tiếp tục →</button>`;
+      } else {
+        if (!hasAiPosts) {
+          nextOrSubmitBtn = `<button type="button" disabled style="background:#e2e8f0;color:#94a3b8;padding:12px 24px;border-radius:12px;font-weight:800;cursor:not-allowed;opacity:0.8;border:1px solid #cbd5e1;box-shadow:none" title="Vui lòng bấm 'Kích hoạt AI 9router Viết 10 Bài Content' ở trên trước">🔒 Vui lòng bấm Kích hoạt AI tạo bài trước</button>`;
+        } else {
+          nextOrSubmitBtn = `<button type="button" style="background:linear-gradient(135deg,#10b981,#059669);padding:12px 30px;border-radius:12px;font-weight:800;box-shadow:0 4px 16px rgba(16,185,129,0.35);color:#fff;cursor:pointer" onclick="submitCampaign(this)">🚀 Kích hoạt chiến dịch ngay ✓</button>`;
+        }
+      }
+
       let buttons = `<div class="row" style="margin-top:28px;justify-content:space-between;padding-top:20px;border-top:1px solid var(--line)">
     <button type="button" class="ghost" style="padding:11px 22px;border-radius:12px;font-weight:700" onclick="gotoWizardStep(Math.max(0,step-1))" ${step === 0 ? 'disabled' : ''}>← Quay lại</button>
-    ${step < totalSteps - 1 
-      ? `<button type="button" style="padding:11px 26px;border-radius:12px;font-weight:700;box-shadow:0 4px 16px rgba(244,91,154,0.35)" onclick="gotoWizardStep(step+1)">Tiếp tục →</button>` 
-      : `<button type="button" style="background:linear-gradient(135deg,#10b981,#059669);padding:12px 30px;border-radius:12px;font-weight:800;box-shadow:0 4px 16px rgba(16,185,129,0.35)" onclick="submitCampaign(this)">🚀 Kích hoạt chiến dịch ngay ✓</button>`
-    }
+    ${nextOrSubmitBtn}
   </div>`;
 
       setElHtml('wizard', `
