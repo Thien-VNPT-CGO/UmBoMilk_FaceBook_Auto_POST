@@ -3493,13 +3493,75 @@
         });
 
         const list = res.data || [];
-        window.wizardAiPreviewPosts = list.map((text, i) => ({
-          id: `ai_draft_${i + 1}`,
-          content: text,
-          status: 'APPROVED',
-          sequenceNumber: i + 1,
-          mediaType: wizardData.mediaMode === 'VIDEO' ? 'VIDEO' : 'IMAGE'
-        }));
+
+        // Resolve preview media for the selected Drive folder / Kho Media
+        let previewMediaFiles = [];
+        try {
+          const allMedia = await request('/media').then(r => r.data || []).catch(() => []);
+          const srcMode = wizardData.mediaSourceMode || '';
+          if (srcMode.startsWith('GDRIVE_')) {
+            const rawId = srcMode.replace('GDRIVE_', '');
+            // Find matching folder URL from currentDriveFolders
+            let matchedFolder = null;
+            for (const f of (currentDriveFolders || [])) {
+              if (String(f.id) === rawId) { matchedFolder = f; break; }
+              if (Array.isArray(f.children)) {
+                const ch = f.children.find(c => String(c.id || c.name) === rawId);
+                if (ch) { matchedFolder = ch; break; }
+              }
+            }
+            // Filter media files by folder tag or drive ID in filename/storageUrl
+            const folderTag = matchedFolder?.name ? matchedFolder.name.toLowerCase().replace(/[^a-z0-9]+/g, '_') : '';
+            const mediaType = wizardData.mediaMode === 'VIDEO' ? 'VIDEO' : 'IMAGE';
+            previewMediaFiles = allMedia.filter(m =>
+              m.mediaType === mediaType && (
+                (folderTag && m.fileName && m.fileName.toLowerCase().includes(folderTag)) ||
+                (rawId && m.fileName && m.fileName.includes(rawId)) ||
+                (rawId && m.storageUrl && m.storageUrl.includes(rawId))
+              )
+            );
+            // If no specific matches but we have a folder URL with files, use all media of the correct type
+            if (!previewMediaFiles.length) {
+              previewMediaFiles = allMedia.filter(m => m.mediaType === mediaType);
+            }
+            // If still nothing, store folder URL for iframe preview directly
+            if (!previewMediaFiles.length && matchedFolder?.url) {
+              const urlMatch = matchedFolder.url.match(/\/d\/([a-zA-Z0-9_-]{25,})/) || matchedFolder.url.match(/id=([a-zA-Z0-9_-]{25,})/);
+              if (urlMatch) {
+                previewMediaFiles = [{ id: 'drive_preview', storageUrl: matchedFolder.url, mediaType: mediaType, fileName: `drive_file_${urlMatch[1]}` }];
+              }
+            }
+          } else if (wizardData.selectedMediaIds && wizardData.selectedMediaIds.length > 0) {
+            previewMediaFiles = allMedia.filter(m => wizardData.selectedMediaIds.includes(m.id));
+          }
+          if (!previewMediaFiles.length) {
+            const mediaType = wizardData.mediaMode === 'VIDEO' ? 'VIDEO' : 'IMAGE';
+            previewMediaFiles = allMedia.filter(m => m.mediaType === mediaType).slice(0, 6);
+          }
+        } catch (_) {}
+
+        window.wizardAiPreviewPosts = list.map((text, i) => {
+          const isVideo = wizardData.mediaMode === 'VIDEO';
+          let postMedias = [];
+          if (isVideo) {
+            const vid = previewMediaFiles[i % Math.max(previewMediaFiles.length, 1)];
+            if (vid) postMedias = [{ mediaFile: vid, sortOrder: 0 }];
+          } else {
+            // Pick 6 images (cycling if fewer available)
+            const imgs = previewMediaFiles.filter(m => m.mediaType !== 'VIDEO');
+            for (let j = 0; j < Math.min(6, Math.max(imgs.length, 0) || 0); j++) {
+              postMedias.push({ mediaFile: imgs[j % imgs.length], sortOrder: j });
+            }
+          }
+          return {
+            id: `ai_draft_${i + 1}`,
+            content: text,
+            status: 'APPROVED',
+            sequenceNumber: i + 1,
+            mediaType: isVideo ? 'VIDEO' : 'IMAGE',
+            postMedias
+          };
+        });
 
         currentCampaignApproved = true;
         loadStep7Data();
@@ -3571,26 +3633,46 @@
 
             if (isVideo) {
               const videoMedia = postMedias.find(pm => pm.mediaFile?.mediaType === 'VIDEO') || postMedias[0];
-              const storageUrl = videoMedia?.mediaFile?.storageUrl || videoMedia?.storageUrl;
-              if (storageUrl) {
-                if (storageUrl.includes('drive.google.com')) {
-                  const driveMatch = storageUrl.match(/[?&]id=([a-zA-Z0-9_-]+)/) || storageUrl.match(/\/d\/([a-zA-Z0-9_-]+)/);
-                  const driveId = driveMatch ? driveMatch[1] : '';
-                  if (driveId) {
-                    mediaPreviewHtml = `
-                      <div style="margin-top:14px;border-radius:14px;overflow:hidden;background:#000;border:1px solid var(--line)">
-                        <iframe src="https://drive.google.com/file/d/${driveId}/preview" style="width:100%;height:260px;border:none;display:block" allow="autoplay"></iframe>
-                      </div>
-                    `;
-                  }
-                }
-                if (!mediaPreviewHtml) {
-                  mediaPreviewHtml = `
-                    <div style="margin-top:14px;border-radius:14px;overflow:hidden;background:#000;border:1px solid var(--line)">
-                      <video controls src="${storageUrl}" style="width:100%;max-height:260px;display:block;object-fit:cover"></video>
-                    </div>
-                  `;
-                }
+              const mf = videoMedia?.mediaFile || videoMedia || {};
+              const rawUrl = mf.storageUrl || mf.url || '';
+              const rawFileName = mf.fileName || mf.filename || '';
+
+              // Extract Drive ID from multiple patterns
+              function extractDriveIdForPreview(url, fname) {
+                const patterns = [
+                  /drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]{25,})/,
+                  /drive\.google\.com.*[?&]id=([a-zA-Z0-9_-]{25,})/,
+                  /lh3\.googleusercontent\.com\/d\/([a-zA-Z0-9_-]{25,})/,
+                  /\/d\/([a-zA-Z0-9_-]{25,})/,
+                  /[?&]id=([a-zA-Z0-9_-]{25,})/,
+                ];
+                for (const p of patterns) { const m = (url||'').match(p); if (m) return m[1]; }
+                // Extract from filename: drive-DRIVEID.mp4  OR  gdrive_xxx_video_DRIVEID.mp4
+                const fnPatterns = [
+                  /^drive-([a-zA-Z0-9_-]{25,})/,
+                  /_video_([a-zA-Z0-9_-]{25,})/,
+                  /_image_([a-zA-Z0-9_-]{25,})/,
+                ];
+                for (const p of fnPatterns) { const m = (fname||'').match(p); if (m) return m[1]; }
+                return null;
+              }
+
+              const driveId = extractDriveIdForPreview(rawUrl, rawFileName);
+
+              if (driveId) {
+                mediaPreviewHtml = `
+                  <div style="margin-top:14px;border-radius:14px;overflow:hidden;background:#000;border:1px solid var(--line)">
+                    <iframe src="https://drive.google.com/file/d/${driveId}/preview" style="width:100%;height:260px;border:none;display:block" allow="autoplay"></iframe>
+                    <div style="text-align:center;padding:6px 10px;background:#111;color:#aaa;font-size:11px">🎥 Video Google Drive Preview</div>
+                  </div>
+                `;
+              } else if (rawUrl) {
+                const publicUrl = rawUrl.startsWith('/') ? (window.location.origin + rawUrl) : rawUrl;
+                mediaPreviewHtml = `
+                  <div style="margin-top:14px;border-radius:14px;overflow:hidden;background:#000;border:1px solid var(--line)">
+                    <video controls src="${publicUrl}" style="width:100%;max-height:260px;display:block;object-fit:cover"></video>
+                  </div>
+                `;
               } else {
                 mediaPreviewHtml = `
                   <div style="margin-top:12px;padding:14px;background:#f8fafc;border:1px dashed #cbd5e1;border-radius:14px;text-align:center;color:var(--muted);font-size:13px">
@@ -3670,26 +3752,44 @@
 
             if (isVideo) {
               const videoMedia = postMedias.find(pm => pm.mediaFile?.mediaType === 'VIDEO') || postMedias[0];
-              const storageUrl = videoMedia?.mediaFile?.storageUrl || videoMedia?.storageUrl;
-              if (storageUrl) {
-                if (storageUrl.includes('drive.google.com')) {
-                  const driveMatch = storageUrl.match(/[?&]id=([a-zA-Z0-9_-]+)/) || storageUrl.match(/\/d\/([a-zA-Z0-9_-]+)/);
-                  const driveId = driveMatch ? driveMatch[1] : '';
-                  if (driveId) {
-                    mediaPreviewHtml = `
-                      <div style="margin-top:14px;border-radius:14px;overflow:hidden;background:#000;border:1px solid var(--line)">
-                        <iframe src="https://drive.google.com/file/d/${driveId}/preview" style="width:100%;height:260px;border:none;display:block" allow="autoplay"></iframe>
-                      </div>
-                    `;
-                  }
-                }
-                if (!mediaPreviewHtml) {
-                  mediaPreviewHtml = `
-                    <div style="margin-top:14px;border-radius:14px;overflow:hidden;background:#000;border:1px solid var(--line)">
-                      <video controls src="${storageUrl}" style="width:100%;max-height:260px;display:block;object-fit:cover"></video>
-                    </div>
-                  `;
-                }
+              const mf = videoMedia?.mediaFile || videoMedia || {};
+              const rawUrl = mf.storageUrl || mf.url || '';
+              const rawFileName = mf.fileName || mf.filename || '';
+
+              function extractDriveIdForPreview2(url, fname) {
+                const patterns = [
+                  /drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]{25,})/,
+                  /drive\.google\.com.*[?&]id=([a-zA-Z0-9_-]{25,})/,
+                  /lh3\.googleusercontent\.com\/d\/([a-zA-Z0-9_-]{25,})/,
+                  /\/d\/([a-zA-Z0-9_-]{25,})/,
+                  /[?&]id=([a-zA-Z0-9_-]{25,})/,
+                ];
+                for (const p of patterns) { const m = (url||'').match(p); if (m) return m[1]; }
+                const fnPatterns = [
+                  /^drive-([a-zA-Z0-9_-]{25,})/,
+                  /_video_([a-zA-Z0-9_-]{25,})/,
+                  /_image_([a-zA-Z0-9_-]{25,})/,
+                ];
+                for (const p of fnPatterns) { const m = (fname||'').match(p); if (m) return m[1]; }
+                return null;
+              }
+
+              const driveId = extractDriveIdForPreview2(rawUrl, rawFileName);
+
+              if (driveId) {
+                mediaPreviewHtml = `
+                  <div style="margin-top:14px;border-radius:14px;overflow:hidden;background:#000;border:1px solid var(--line)">
+                    <iframe src="https://drive.google.com/file/d/${driveId}/preview" style="width:100%;height:260px;border:none;display:block" allow="autoplay"></iframe>
+                    <div style="text-align:center;padding:6px 10px;background:#111;color:#aaa;font-size:11px">🎥 Video Google Drive Preview</div>
+                  </div>
+                `;
+              } else if (rawUrl) {
+                const publicUrl = rawUrl.startsWith('/') ? (window.location.origin + rawUrl) : rawUrl;
+                mediaPreviewHtml = `
+                  <div style="margin-top:14px;border-radius:14px;overflow:hidden;background:#000;border:1px solid var(--line)">
+                    <video controls src="${publicUrl}" style="width:100%;max-height:260px;display:block;object-fit:cover"></video>
+                  </div>
+                `;
               } else {
                 mediaPreviewHtml = `
                   <div style="margin-top:12px;padding:14px;background:#f8fafc;border:1px dashed #cbd5e1;border-radius:14px;text-align:center;color:var(--muted);font-size:13px">

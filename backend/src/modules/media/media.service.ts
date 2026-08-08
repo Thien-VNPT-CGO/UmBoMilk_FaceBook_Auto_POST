@@ -58,7 +58,22 @@ export class MediaService {
       if (setting?.valueEncrypted) {
         try {
           const folders = JSON.parse(setting.valueEncrypted);
-          const matchedFolder = folders.find((f: any) => String(f.id) === rawDriveFolderId);
+          // Search top-level folders first
+          let matchedFolder = folders.find((f: any) => String(f.id) === rawDriveFolderId);
+          // If not found at top-level, search in children arrays (for child folder IDs like '5-1')
+          if (!matchedFolder) {
+            for (const f of folders) {
+              if (Array.isArray(f.children)) {
+                const child = f.children.find((c: any) => String(c.id || c.name) === rawDriveFolderId);
+                if (child) {
+                  matchedFolder = child;
+                  // If child has no URL but parent does, use parent as fallback
+                  if (!matchedFolder.url && f.url) matchedFolder = { ...child, url: f.url };
+                  break;
+                }
+              }
+            }
+          }
           if (matchedFolder) {
             driveFolderUrl = matchedFolder.url || '';
             if (matchedFolder.name) {
