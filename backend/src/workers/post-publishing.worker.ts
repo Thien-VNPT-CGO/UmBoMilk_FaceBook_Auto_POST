@@ -169,11 +169,11 @@ export async function publishPost(postId: string) {
   }
 
   // Fallback: If post has no media assigned, auto-assign from Kho Media right before publishing
-  if (!post.postMedias || post.postMedias.length === 0) {
+  if (!post.postMedias || post.postMedias.length === 0 || (post.mediaType === 'VIDEO' && !post.postMedias.some(pm => pm.mediaFile?.mediaType === 'VIDEO'))) {
     try {
       const { MediaService } = await import('../modules/media/media.service');
       await MediaService.assignMediaToCampaign(post.campaignId);
-      const refetchedPost = await prisma.generatedPost.findUnique({
+      let refetchedPost = await prisma.generatedPost.findUnique({
         where: { id: postId },
         include: {
           postMedias: { include: { mediaFile: true }, orderBy: { sortOrder: 'asc' } },
@@ -182,19 +182,36 @@ export async function publishPost(postId: string) {
       if (refetchedPost?.postMedias) {
         post.postMedias = refetchedPost.postMedias;
       }
+
+      // If still missing a VIDEO file for a VIDEO post, find ANY active VIDEO in Kho Media
+      if (post.mediaType === 'VIDEO' && !post.postMedias.some(pm => pm.mediaFile?.mediaType === 'VIDEO')) {
+        const activeVideo = await prisma.mediaFile.findFirst({
+          where: { mediaType: 'VIDEO', status: 'ACTIVE' },
+          orderBy: { createdAt: 'desc' }
+        });
+        if (activeVideo) {
+          await prisma.postMedia.deleteMany({ where: { generatedPostId: postId } });
+          const createdPm = await prisma.postMedia.create({
+            data: { generatedPostId: postId, mediaFileId: activeVideo.id, sortOrder: 0 },
+            include: { mediaFile: true }
+          });
+          post.postMedias = [createdPm];
+        }
+      }
     } catch (e) {
       logger.warn(`Auto-assigning media before publishing failed: ${(e as Error).message}`);
     }
   }
 
   const accessToken = decryptString(page.encryptedPageAccessToken);
+  const videoMediaItem = post.postMedias?.find(pm => pm.mediaFile?.mediaType === 'VIDEO');
   const mediaCount = post.postMedias?.length || 0;
   let facebookPostId: string | null = null;
 
   try {
-    if (post.mediaType === 'VIDEO' && mediaCount > 0) {
+    if (post.mediaType === 'VIDEO' && videoMediaItem) {
       // 1. Post Video: Ensure raw video MP4 file is downloaded & verified
-      const mediaFile = post.postMedias[0].mediaFile;
+      const mediaFile = videoMediaItem.mediaFile;
       let storageUrl = mediaFile.storageUrl || '';
 
       const uploadDir = path.join(process.cwd(), 'uploads');

@@ -41,9 +41,11 @@ export class MediaService {
 
     const favIds = campaign.selectedMediaIds || [];
 
-    // Filter image & video files based on selected favorite media IDs if specified
-    let imageFiles = mediaFiles.filter((m) => m.mediaType === 'IMAGE');
-    let videoFiles = mediaFiles.filter((m) => m.mediaType === 'VIDEO');
+    const allImageFiles = mediaFiles.filter((m) => m.mediaType === 'IMAGE');
+    const allVideoFiles = mediaFiles.filter((m) => m.mediaType === 'VIDEO');
+
+    let imageFiles = [...allImageFiles];
+    let videoFiles = [...allVideoFiles];
 
     let selectedDriveFolderTag = '';
     const driveFolderId = favIds.find(id => id.startsWith('GDRIVE_'));
@@ -80,12 +82,21 @@ export class MediaService {
       if (brandText.includes('bối bối') || brandText.includes('boiboi') || brandText.includes('bối')) {
         const brandImgs = imageFiles.filter(m => m.fileName.toLowerCase().includes('b_i') || m.fileName.toLowerCase().includes('boiboi'));
         if (brandImgs.length > 0) imageFiles = brandImgs;
+
+        const brandVids = videoFiles.filter(m => m.fileName.toLowerCase().includes('b_i') || m.fileName.toLowerCase().includes('boiboi'));
+        if (brandVids.length > 0) videoFiles = brandVids;
       } else if (brandText.includes('kenstore') || brandText.includes('ken store') || brandText.includes('ken')) {
         const brandImgs = imageFiles.filter(m => m.fileName.toLowerCase().includes('ken'));
         if (brandImgs.length > 0) imageFiles = brandImgs;
+
+        const brandVids = videoFiles.filter(m => m.fileName.toLowerCase().includes('ken'));
+        if (brandVids.length > 0) videoFiles = brandVids;
       } else if (brandText.includes('mốt lab') || brandText.includes('mot lab') || brandText.includes('motlab') || brandText.includes('mốt')) {
         const brandImgs = imageFiles.filter(m => m.fileName.toLowerCase().includes('m_t') || m.fileName.toLowerCase().includes('motlab'));
         if (brandImgs.length > 0) imageFiles = brandImgs;
+
+        const brandVids = videoFiles.filter(m => m.fileName.toLowerCase().includes('m_t') || m.fileName.toLowerCase().includes('motlab'));
+        if (brandVids.length > 0) videoFiles = brandVids;
       } else if (brandText.includes('ụm bò') || brandText.includes('umbo') || brandText.includes('váng sữa')) {
         const brandImgs = imageFiles.filter(m => m.fileName.toLowerCase().includes('u_m') || m.fileName.toLowerCase().includes('umbo'));
         if (brandImgs.length > 0) imageFiles = brandImgs;
@@ -101,51 +112,50 @@ export class MediaService {
       // Clear existing assignments for clean allocation
       await prisma.postMedia.deleteMany({ where: { generatedPostId: post.id } });
 
-      const hasImages = imageFiles.length > 0;
-      const hasVideos = videoFiles.length > 0;
-
-      if (!hasImages && !hasVideos) {
-        console.warn(`[MediaService] Không có media (ảnh/video) nào trong Kho Media cho bài viết ${post.id}`);
-        continue;
-      }
-
       const isVideoMode = campaign.mediaMode === 'VIDEO' || post.mediaType === 'VIDEO';
-      const shouldAssignVideo = (isVideoMode && hasVideos) || (!hasImages && hasVideos);
 
-      if (shouldAssignVideo) {
-        // Pick 1 video (from favorite selected video or random available video)
-        const shuffled = this.shuffleArray(videoFiles);
-        const selectedVideo = shuffled[0];
+      if (isVideoMode) {
+        // VIDEO MODE: Must pick 1 video file (from filtered videoFiles or fallback to allVideoFiles)
+        const availableVideos = videoFiles.length > 0 ? videoFiles : allVideoFiles;
+        if (availableVideos.length > 0) {
+          const shuffled = this.shuffleArray(availableVideos);
+          const selectedVideo = shuffled[0];
 
-        await prisma.postMedia.create({
-          data: {
-            generatedPostId: post.id,
-            mediaFileId: selectedVideo.id,
-            sortOrder: 0,
-          },
-        });
-      } else {
-        // Pick 6 photos (from favorite selected images or random available images)
-        let selected: typeof imageFiles = [];
-        const shuffled = this.shuffleArray(imageFiles);
-
-        if (shuffled.length >= 6) {
-          selected = shuffled.slice(0, 6);
-        } else {
-          for (let i = 0; i < 6; i++) {
-            selected.push(shuffled[i % shuffled.length]);
-          }
-        }
-
-        // Save PostMedia relations
-        for (let i = 0; i < selected.length; i++) {
           await prisma.postMedia.create({
             data: {
               generatedPostId: post.id,
-              mediaFileId: selected[i].id,
-              sortOrder: i,
+              mediaFileId: selectedVideo.id,
+              sortOrder: 0,
             },
           });
+        } else {
+          console.warn(`[MediaService Warning] Bài viết ${post.id} ở chế độ VIDEO nhưng Kho Media chưa có tệp Video nào.`);
+        }
+      } else {
+        // IMAGE MODE: Pick 6 photos (from filtered imageFiles or fallback to allImageFiles)
+        const availableImages = imageFiles.length > 0 ? imageFiles : allImageFiles;
+        if (availableImages.length > 0) {
+          let selected: typeof availableImages = [];
+          const shuffled = this.shuffleArray(availableImages);
+
+          if (shuffled.length >= 6) {
+            selected = shuffled.slice(0, 6);
+          } else {
+            for (let i = 0; i < 6; i++) {
+              selected.push(shuffled[i % shuffled.length]);
+            }
+          }
+
+          // Save PostMedia relations
+          for (let i = 0; i < selected.length; i++) {
+            await prisma.postMedia.create({
+              data: {
+                generatedPostId: post.id,
+                mediaFileId: selected[i].id,
+                sortOrder: i,
+              },
+            });
+          }
         }
       }
     }
