@@ -15,62 +15,147 @@ interface PostSchedulingJob {
 }
 
 async function downloadDriveVideoBuffer(driveId: string): Promise<Buffer> {
-  const downloadUrls = [
-    `https://drive.google.com/uc?export=download&id=${driveId}&confirm=t`,
-    `https://docs.google.com/uc?export=download&id=${driveId}&confirm=t`,
-    `https://drive.usercontent.google.com/download?id=${driveId}&export=download&confirm=t`,
-    `https://lh3.googleusercontent.com/d/${driveId}`,
-  ];
-
   let lastError: Error | null = null;
 
-  for (const url of downloadUrls) {
+  // Strategy 1: drive.usercontent.google.com (most reliable modern endpoint)
+  try {
+    const usercontent1 = `https://drive.usercontent.google.com/download?id=${driveId}&export=download&authuser=0&confirm=t`;
+    const resp = await axios.get(usercontent1, {
+      responseType: 'arraybuffer',
+      timeout: 180000,
+      maxRedirects: 15,
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.9',
+        'Cache-Control': 'no-cache',
+      },
+    });
+    const buf = Buffer.from(resp.data);
+    const sample = buf.toString('utf8', 0, 500).toLowerCase();
+    if (buf.length > 50000 && !sample.includes('<!doctype html') && !sample.includes('<html')) {
+      logger.info(`[Drive Download] Strategy 1 (usercontent) thành công: ${buf.length} bytes`);
+      return buf;
+    }
+    // If HTML response, extract confirm token from cookies or body
+    const setCookieHeader = resp.headers['set-cookie'] || [];
+    const downloadWarningCookie = setCookieHeader.find((c: string) => c.includes('download_warning'));
+    if (downloadWarningCookie) {
+      const confirmMatch = downloadWarningCookie.match(/download_warning_([^=]*)=([^;]+)/i) ||
+                           downloadWarningCookie.match(/=([a-zA-Z0-9_-]+)/);
+      if (confirmMatch) {
+        const confirmToken = confirmMatch[1] || confirmMatch[2];
+        const confirmUrl = `https://drive.usercontent.google.com/download?id=${driveId}&export=download&authuser=0&confirm=${confirmToken}`;
+        const confirmResp = await axios.get(confirmUrl, {
+          responseType: 'arraybuffer',
+          timeout: 180000,
+          maxRedirects: 15,
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+            'Cookie': downloadWarningCookie.split(';')[0],
+          },
+        });
+        const confirmBuf = Buffer.from(confirmResp.data);
+        if (confirmBuf.length > 50000) {
+          logger.info(`[Drive Download] Strategy 1 confirm thành công: ${confirmBuf.length} bytes`);
+          return confirmBuf;
+        }
+      }
+    }
+  } catch (e1: any) {
+    lastError = e1;
+    logger.warn(`[Drive Download] Strategy 1 thất bại: ${e1.message}`);
+  }
+
+  // Strategy 2: drive.google.com/uc with confirm=t (legacy but sometimes works)
+  for (const confirmVal of ['t', '1', 'yes']) {
     try {
-      const resp = await axios.get(url, {
+      const url2 = `https://drive.google.com/uc?export=download&id=${driveId}&confirm=${confirmVal}`;
+      const resp2 = await axios.get(url2, {
         responseType: 'arraybuffer',
         timeout: 120000,
         maxRedirects: 10,
         headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
           'Accept': '*/*',
         },
       });
-
-      const buf = Buffer.from(resp.data);
-      const sampleText = buf.toString('utf8', 0, 300).toLowerCase();
-
-      // Check if response is HTML error/confirmation page
-      if (sampleText.includes('<!doctype html') || sampleText.includes('<html') || sampleText.includes('google.com/accounts')) {
-        const confirmMatch = sampleText.match(/confirm=([a-zA-Z0-9_-]+)/i);
-        if (confirmMatch && confirmMatch[1]) {
-          const confirmToken = confirmMatch[1];
-          const confirmUrl = `https://drive.google.com/uc?export=download&id=${driveId}&confirm=${confirmToken}`;
-          const confirmResp = await axios.get(confirmUrl, {
-            responseType: 'arraybuffer',
-            timeout: 120000,
-            maxRedirects: 10,
-            headers: {
-              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-            },
-          });
-          const confirmBuf = Buffer.from(confirmResp.data);
-          const confirmSample = confirmBuf.toString('utf8', 0, 300).toLowerCase();
-          if (!confirmSample.includes('<!doctype html') && !confirmSample.includes('<html')) {
-            return confirmBuf;
-          }
-        }
-        continue;
+      const buf2 = Buffer.from(resp2.data);
+      const sample2 = buf2.toString('utf8', 0, 300).toLowerCase();
+      if (buf2.length > 50000 && !sample2.includes('<!doctype html') && !sample2.includes('<html')) {
+        logger.info(`[Drive Download] Strategy 2 (confirm=${confirmVal}) thành công: ${buf2.length} bytes`);
+        return buf2;
       }
-
-      if (buf.length > 10000) {
-        return buf;
-      }
-    } catch (err: any) {
-      lastError = err;
+    } catch (e2: any) {
+      lastError = e2;
     }
   }
 
-  throw new Error(`Không thể tải file video MP4 từ Google Drive (ID: ${driveId}). Chi tiết lỗi: ${lastError?.message || 'Download failed'}`);
+  // Strategy 3: Two-step - get confirm token from HTML then download
+  try {
+    const step1Url = `https://drive.google.com/uc?export=download&id=${driveId}`;
+    const step1Resp = await axios.get(step1Url, {
+      responseType: 'text',
+      timeout: 30000,
+      maxRedirects: 5,
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+      },
+    });
+    const htmlText = String(step1Resp.data || '');
+    // Extract confirm token from HTML form or URL
+    const tokenMatch = htmlText.match(/confirm=([a-zA-Z0-9_\-]+)/) ||
+                       htmlText.match(/name="confirm"\s+value="([^"]+)"/) ||
+                       htmlText.match(/id="uc-download-link"[^>]*href="[^"]*confirm=([^"&]+)/);
+    const setCookies = step1Resp.headers['set-cookie'] || [];
+    const cookieStr = setCookies.map((c: string) => c.split(';')[0]).join('; ');
+
+    if (tokenMatch) {
+      const token = tokenMatch[1];
+      const step2Url = `https://drive.google.com/uc?export=download&id=${driveId}&confirm=${token}`;
+      const step2Resp = await axios.get(step2Url, {
+        responseType: 'arraybuffer',
+        timeout: 180000,
+        maxRedirects: 10,
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+          'Cookie': cookieStr,
+        },
+      });
+      const buf3 = Buffer.from(step2Resp.data);
+      if (buf3.length > 50000) {
+        logger.info(`[Drive Download] Strategy 3 (two-step confirm) thành công: ${buf3.length} bytes`);
+        return buf3;
+      }
+    }
+  } catch (e3: any) {
+    lastError = e3;
+    logger.warn(`[Drive Download] Strategy 3 thất bại: ${e3.message}`);
+  }
+
+  // Strategy 4: lh3.googleusercontent.com (for images/small files)
+  try {
+    const lh3Url = `https://lh3.googleusercontent.com/d/${driveId}`;
+    const resp4 = await axios.get(lh3Url, {
+      responseType: 'arraybuffer',
+      timeout: 60000,
+      maxRedirects: 5,
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+      },
+    });
+    const buf4 = Buffer.from(resp4.data);
+    const sample4 = buf4.toString('utf8', 0, 200).toLowerCase();
+    if (buf4.length > 50000 && !sample4.includes('<!doctype html') && !sample4.includes('<html')) {
+      logger.info(`[Drive Download] Strategy 4 (lh3) thành công: ${buf4.length} bytes`);
+      return buf4;
+    }
+  } catch (e4: any) {
+    lastError = e4;
+    logger.warn(`[Drive Download] Strategy 4 thất bại: ${e4.message}`);
+  }
+
+  throw new Error(`Không thể tải file video MP4 từ Google Drive (ID: ${driveId}). Chi tiết lỗi: ${lastError?.message || 'Tất cả phương thức download đều thất bại - Vui lòng kiểm tra quyền chia sẻ file "Bất kỳ ai có liên kết đều có thể xem"'}`);
 }
 
 function isValidVideoFile(filePath: string): boolean {
