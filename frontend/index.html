@@ -1644,6 +1644,28 @@
       }
     }
 
+    function showToast(msg, type = 'success') {
+      let container = document.getElementById('globalToastContainer');
+      if (!container) {
+        container = document.createElement('div');
+        container.id = 'globalToastContainer';
+        container.style.cssText = 'position:fixed;top:24px;right:24px;z-index:99999;display:flex;flex-direction:column;gap:10px;pointer-events:none';
+        document.body.appendChild(container);
+      }
+
+      const toast = document.createElement('div');
+      toast.style.cssText = `background:${type === 'error' ? 'linear-gradient(135deg,#ef4444,#dc2626)' : 'linear-gradient(135deg,#10b981,#059669)'};color:#fff;padding:14px 22px;border-radius:14px;font-weight:700;font-size:14px;box-shadow:0 10px 30px rgba(0,0,0,0.25);display:flex;align-items:center;gap:10px;pointer-events:auto;animation:fadeInDown 0.3s ease;max-width:440px`;
+      toast.innerHTML = `<span>${msg}</span>`;
+
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.style.transition = 'all 0.35s ease';
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(-12px)';
+        setTimeout(() => toast.remove(), 400);
+      }, 4000);
+    }
+
     function isAdminUser() {
       if (!currentUser) return false;
       const roleNames = ((currentUser.roles && currentUser.roles.length) 
@@ -3914,11 +3936,9 @@
         }, 'Đang khởi tạo chiến dịch');
 
         activeCampaignId = res.data?.id || res.id;
-        setTimeout(() => {
-          alert('🎉 Khởi tạo chiến dịch thành công! Nội dung AI đang được tạo trong nền và chuẩn bị lên lịch bài đăng.');
-          clearWizardState();
-          loadData();
-        }, 200);
+        clearWizardState();
+        showToast('🎉 Khởi tạo chiến dịch thành công! Form đã tự động xóa sạch dữ liệu và quay về Bước 1.');
+        loadData();
       } catch (e) {
         alert('Lỗi tạo chiến dịch: ' + (e.error?.message || e.message || 'Có lỗi xảy ra'));
       }
