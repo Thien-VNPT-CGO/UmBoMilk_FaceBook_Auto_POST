@@ -3071,8 +3071,8 @@
         const uid = currentUser?.id || 'guest';
         localStorage.removeItem(`pinkflow_wizard_draft_${uid}`);
         wizardData = {
-          name: 'Chiến dịch đăng bài Facebook Page',
-          description: 'Tự động hóa đăng bài viết lên Facebook Page',
+          name: '',
+          description: '',
           contentMode: 'SHARED',
           mediaMode: 'IMAGE',
           defaultPostCount: 10,
@@ -3097,7 +3097,9 @@
           mediaSourceMode: 'AUTO',
         };
         selectedPageIds = [];
+        window.wizardAiPreviewPosts = [];
         step = 0;
+        openPage('campaign');
         renderWizard();
       } catch (e) {}
     }
@@ -3872,9 +3874,8 @@
 
         activeCampaignId = res.data?.id || res.id;
         setTimeout(() => {
-          alert('🎉 Khởi tạo chiến dịch thành công! Nội dung AI đang được tạo trong nền và chờ Admin duyệt.');
+          alert('🎉 Khởi tạo chiến dịch thành công! Nội dung AI đang được tạo trong nền và chuẩn bị lên lịch bài đăng.');
           clearWizardState();
-          openPage('overview');
           loadData();
         }, 200);
       } catch (e) {
