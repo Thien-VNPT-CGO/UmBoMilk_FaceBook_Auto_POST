@@ -307,31 +307,26 @@ router.post('/:id/submit-for-approval', requireAuth, requirePermission('content.
   }
 });
 
-// 6. Approve post (Guarantees minimum 15-minute gap between posts)
+// 6. Approve post (Guarantees minimum 15-minute gap between posts per Facebook Page)
 router.post('/:id/approve', requireAuth, requirePermission('content.approve'), async (req, res, next) => {
   try {
     const authReq = req as AuthenticatedRequest;
     const post = await prisma.generatedPost.findUnique({
       where: { id: req.params.id },
-      include: { campaignPage: true },
-    });
-    if (!post) throw new NotFoundError('Không tìm thấy bài viết');
-
-    const cp = await prisma.campaignPage.findUnique({
-      where: { id: post.campaignPageId },
-      include: { facebookPage: true },
+      include: { campaignPage: { include: { facebookPage: true } } },
     });
     if (!post) throw new NotFoundError('Không tìm thấy bài viết');
 
     const now = new Date();
-    const pageCustomInterval = cp?.facebookPage?.defaultIntervalMinutes;
-    const intervalMinutes = pageCustomInterval || cp?.intervalMinutes || 15;
+    const facebookPageId = post.campaignPage?.facebookPageId;
+    const pageCustomInterval = post.campaignPage?.facebookPage?.defaultIntervalMinutes;
+    const intervalMinutes = pageCustomInterval || post.campaignPage?.intervalMinutes || 15;
     const intervalMs = intervalMinutes * 60 * 1000;
 
-    // Find latest approved/scheduled/published post for the same page/campaign to enforce 15-min gap
+    // Query latest approved/scheduled/published post for the SAME Facebook Page (across all campaigns)
     const lastApprovedPost = await prisma.generatedPost.findFirst({
       where: {
-        campaignPageId: post.campaignPageId,
+        campaignPage: { facebookPageId },
         status: { in: ['APPROVED', 'SCHEDULED', 'PUBLISHED'] },
         id: { not: post.id },
       },
@@ -340,9 +335,14 @@ router.post('/:id/approve', requireAuth, requirePermission('content.approve'), a
 
     let targetScheduledAt = now;
     if (lastApprovedPost && lastApprovedPost.scheduledAt) {
-      const minNextTime = new Date(lastApprovedPost.scheduledAt.getTime() + intervalMs);
-      if (minNextTime.getTime() > now.getTime()) {
-        targetScheduledAt = minNextTime;
+      const lastTime = lastApprovedPost.scheduledAt.getTime();
+      if (lastTime > now.getTime()) {
+        targetScheduledAt = new Date(lastTime + intervalMs);
+      } else {
+        const diff = now.getTime() - lastTime;
+        if (diff < intervalMs) {
+          targetScheduledAt = new Date(lastTime + intervalMs);
+        }
       }
     } else if (post.scheduledAt && post.scheduledAt.getTime() > now.getTime()) {
       targetScheduledAt = post.scheduledAt;
@@ -389,7 +389,7 @@ router.post('/:id/approve', requireAuth, requirePermission('content.approve'), a
   }
 });
 
-// 6.1 Bulk Approve Posts (Auto-spacing 15 minutes apart)
+// 6.1 Bulk Approve Posts (Auto-spacing 15 minutes apart per Facebook Page)
 router.post('/bulk-approve', requireAuth, requirePermission('content.approve'), async (req, res, next) => {
   try {
     const authReq = req as AuthenticatedRequest;
@@ -398,23 +398,29 @@ router.post('/bulk-approve', requireAuth, requirePermission('content.approve'), 
       throw new BadRequestError('Danh sách postIds không hợp lệ');
     }
 
+    // Sort posts by scheduledAt ascending (earliest scheduled time / smallest seconds first!)
     const posts = await prisma.generatedPost.findMany({
       where: { id: { in: postIds } },
       include: { campaignPage: { include: { facebookPage: true } } },
-      orderBy: { sequenceNumber: 'asc' },
+      orderBy: [
+        { scheduledAt: 'asc' },
+        { createdAt: 'asc' },
+      ],
     });
 
     const now = new Date();
     const approvedPosts = [];
 
     for (const post of posts) {
+      const facebookPageId = post.campaignPage?.facebookPageId;
       const pageCustomInterval = post.campaignPage?.facebookPage?.defaultIntervalMinutes;
       const intervalMinutes = pageCustomInterval || post.campaignPage?.intervalMinutes || 15;
       const intervalMs = intervalMinutes * 60 * 1000;
 
+      // Query latest approved/scheduled/published post for this Facebook Page
       const lastApprovedPost = await prisma.generatedPost.findFirst({
         where: {
-          campaignPageId: post.campaignPageId,
+          campaignPage: { facebookPageId },
           status: { in: ['APPROVED', 'SCHEDULED', 'PUBLISHED'] },
           id: { not: post.id },
         },
@@ -423,9 +429,14 @@ router.post('/bulk-approve', requireAuth, requirePermission('content.approve'), 
 
       let targetScheduledAt = now;
       if (lastApprovedPost && lastApprovedPost.scheduledAt) {
-        const minNextTime = new Date(lastApprovedPost.scheduledAt.getTime() + intervalMs);
-        if (minNextTime.getTime() > now.getTime()) {
-          targetScheduledAt = minNextTime;
+        const lastTime = lastApprovedPost.scheduledAt.getTime();
+        if (lastTime > now.getTime()) {
+          targetScheduledAt = new Date(lastTime + intervalMs);
+        } else {
+          const diff = now.getTime() - lastTime;
+          if (diff < intervalMs) {
+            targetScheduledAt = new Date(lastTime + intervalMs);
+          }
         }
       }
 

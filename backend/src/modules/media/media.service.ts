@@ -48,26 +48,40 @@ export class MediaService {
     let videoFiles = [...allVideoFiles];
 
     let selectedDriveFolderTag = '';
+    let rawDriveFolderId = '';
+    let driveFolderUrl = '';
+
     const driveFolderId = favIds.find(id => id.startsWith('GDRIVE_'));
     if (driveFolderId) {
-      const folderId = driveFolderId.replace('GDRIVE_', '');
+      rawDriveFolderId = driveFolderId.replace('GDRIVE_', '');
       const setting = await prisma.systemSetting.findUnique({ where: { key: 'gdrive_folder_links' } });
       if (setting?.valueEncrypted) {
         try {
           const folders = JSON.parse(setting.valueEncrypted);
-          const matchedFolder = folders.find((f: any) => String(f.id) === folderId);
-          if (matchedFolder && matchedFolder.name) {
-            selectedDriveFolderTag = matchedFolder.name.toLowerCase().replace(/[^a-z0-9]+/g, '_');
+          const matchedFolder = folders.find((f: any) => String(f.id) === rawDriveFolderId);
+          if (matchedFolder) {
+            driveFolderUrl = matchedFolder.url || '';
+            if (matchedFolder.name) {
+              selectedDriveFolderTag = matchedFolder.name.toLowerCase().replace(/[^a-z0-9]+/g, '_');
+            }
           }
         } catch (e) {}
       }
     }
 
-    if (selectedDriveFolderTag) {
-      const matchedImgs = imageFiles.filter(m => m.fileName.toLowerCase().includes(selectedDriveFolderTag));
+    if (selectedDriveFolderTag || rawDriveFolderId) {
+      const matchedImgs = imageFiles.filter(m => 
+        (selectedDriveFolderTag && m.fileName.toLowerCase().includes(selectedDriveFolderTag)) ||
+        (rawDriveFolderId && m.fileName.includes(rawDriveFolderId)) ||
+        (rawDriveFolderId && m.storageUrl.includes(rawDriveFolderId))
+      );
       if (matchedImgs.length > 0) imageFiles = matchedImgs;
 
-      const matchedVids = videoFiles.filter(m => m.fileName.toLowerCase().includes(selectedDriveFolderTag));
+      const matchedVids = videoFiles.filter(m => 
+        (selectedDriveFolderTag && m.fileName.toLowerCase().includes(selectedDriveFolderTag)) ||
+        (rawDriveFolderId && m.fileName.includes(rawDriveFolderId)) ||
+        (rawDriveFolderId && m.storageUrl.includes(rawDriveFolderId))
+      );
       if (matchedVids.length > 0) videoFiles = matchedVids;
     } else if (favIds.length > 0) {
       const favImages = imageFiles.filter((m) => favIds.includes(m.id));
@@ -103,6 +117,46 @@ export class MediaService {
 
         const brandVids = videoFiles.filter(m => m.fileName.toLowerCase().includes('u_m') || m.fileName.toLowerCase().includes('umbo'));
         if (brandVids.length > 0) videoFiles = brandVids;
+      }
+    }
+
+    // Auto-sync Google Drive folder if CSDL has 0 files for the requested mode
+    const isVideoMode = campaign.mediaMode === 'VIDEO';
+    if (driveFolderUrl && ((isVideoMode && videoFiles.length === 0) || (!isVideoMode && imageFiles.length === 0))) {
+      try {
+        const { extractDriveFileIds, extractFileIdsFromFolderUrl } = await import('./media.routes');
+        let fileIds = extractDriveFileIds(driveFolderUrl);
+        if (fileIds.length === 0 && driveFolderUrl.includes('/folders/')) {
+          fileIds = await extractFileIdsFromFolderUrl(driveFolderUrl);
+        }
+        if (fileIds.length > 0) {
+          const expectedType = isVideoMode ? 'VIDEO' : 'IMAGE';
+          const folderTag = selectedDriveFolderTag || 'Drive';
+          const newMediaFiles = [];
+          for (let idx = 0; idx < fileIds.length; idx++) {
+            const rawId = fileIds[idx];
+            const createdMedia = await prisma.mediaFile.create({
+              data: {
+                fileName: `${folderTag}_${rawDriveFolderId}_${idx + 1}`,
+                storageUrl: `https://drive.google.com/uc?export=download&id=${rawId}`,
+                mediaType: expectedType,
+                fileSize: 0,
+                mimeType: expectedType === 'VIDEO' ? 'video/mp4' : 'image/jpeg',
+                status: 'ACTIVE',
+                checksum: `drive_${rawId}`,
+                campaignId: campaign.id,
+              }
+            });
+            newMediaFiles.push(createdMedia);
+          }
+          if (expectedType === 'VIDEO') {
+            videoFiles = newMediaFiles;
+          } else {
+            imageFiles = newMediaFiles;
+          }
+        }
+      } catch (e) {
+        console.warn(`Auto-importing Google Drive folder media failed: ${(e as Error).message}`);
       }
     }
 

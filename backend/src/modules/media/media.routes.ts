@@ -672,7 +672,7 @@ router.post('/drive-links', requireAuth, async (req, res, next) => {
 });
 
 // Helper function to extract file IDs from Google Drive URLs
-function extractDriveFileIds(inputUrl: string): string[] {
+export function extractDriveFileIds(inputUrl: string): string[] {
   if (!inputUrl) return [];
   const ids: string[] = [];
   const items = inputUrl.split(/[\s,\n]+/);
@@ -698,7 +698,7 @@ function extractDriveFileIds(inputUrl: string): string[] {
   return [...new Set(ids)];
 }
 
-async function extractFileIdsFromFolderUrl(folderUrl: string, depth = 0): Promise<string[]> {
+export async function extractFileIdsFromFolderUrl(folderUrl: string, depth = 0): Promise<string[]> {
   if (depth > 2) return []; // Maximum 2 subfolder levels depth
   try {
     const match = folderUrl.match(/\/folders\/([a-zA-Z0-9_-]+)/);
